@@ -333,7 +333,7 @@ def main():
     if mint_cnt != 812:
         print(f"VALIDATION FAILED: mint count {mint_cnt} != 812, NOT pushing to GitHub")
         return
-    if abs(total - 999999999.99) > 1000:
+    if abs(total - 999999999.99) > 1:
         print(f"VALIDATION FAILED: total {total:,.2f} not close to 1B, NOT pushing to GitHub")
         return
     print("Validation passed")
