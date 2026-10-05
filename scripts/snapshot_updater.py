@@ -32,6 +32,11 @@ GITHUB_REPO_OWNER = "chilperbf24"
 GITHUB_REPO = "leaf-holder-data"
 GITHUB_PATH = "holders.json"
 
+def _data_path(filename):
+    """Get path for data file in BASE_DIR (avoids os scoping issues in main)."""
+    import os as _os_mod
+    return _os_mod.path.join(BASE_DIR, filename)
+
 def fetch(url, retries=3):
     for i in range(retries):
         try:
@@ -90,15 +95,19 @@ def main():
 
     # Load staking status
     try:
-        with open(os.path.join(BASE_DIR, 'staking_status.json')) as f:
+        staking_path = _data_path('staking_status.json')
+        print(f"Loading staking from: {staking_path}")
+        with open(staking_path) as f:
             staking_map = json.load(f)
-    except:
+        print(f"Loaded {len(staking_map)} staking records")
+    except Exception as e:
+        print(f"STAKING LOAD FAILED: {e}")
         staking_map = {}
     # 0=未知, 1=质押中, 2=已解锁, 3=部分解锁
     staking_code = {'未知': 0, '质押中': 1, '已解锁': 2, '部分解锁': 3}
     # Load partial unlock details
     try:
-        with open(os.path.join(BASE_DIR, 'partial_unlock_details.json')) as f:
+        with open(_data_path('partial_unlock_details.json')) as f:
             partial_details = json.load(f)
     except:
         partial_details = {}
