@@ -434,6 +434,22 @@ var modalAddr = null;
 var modalTxPage = 1;
 var MODAL_PAGE_SIZE = 10;
 
+function copyAddr(addr) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(addr).then(function() {
+      alert(LANG === 'zh' ? '地址已复制' : 'Address copied');
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = addr;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    alert(LANG === 'zh' ? '地址已复制' : 'Address copied');
+  }
+}
+
 function showDetail(addr) {
   modalAddr = addr;
   modalTxPage = 1;
@@ -460,9 +476,10 @@ function renderModalTxs() {
   var pageTxs = txs.slice(start, start + MODAL_PAGE_SIZE);
   var html = '';
   pageTxs.forEach(function(t) {
-    // t = [txid_short, op, amount, block, direction, is_trade, timestamp]
+    // t = [txid_short, op, amount, block, direction, is_trade, timestamp, counterparty]
     var dir = t[4] || '';
     var isTrade = t[5] === 1;
+    var cp = t[7] || '';
     var label, color;
     if (isTrade && dir === 'in') { label = T('buy'); color = '#4ade80'; }
     else if (isTrade && dir === 'out') { label = T('sell'); color = '#fb923c'; }
@@ -470,9 +487,16 @@ function renderModalTxs() {
     else if (dir === 'out') { label = T('tout'); color = '#fb923c'; }
     else if (dir === 'mint') { label = T('mint'); color = '#60a5fa'; }
     else { label = dir; color = '#64748b'; }
+    var cpHtml = '';
+    if (cp) {
+      cpHtml = '<a href="javascript:void(0)" onclick="showDetail(\'' + cp + '\')" style="color:#60a5fa;font-size:11px" title="' + cp + '">' +
+        (dir === 'in' ? '← ' : '→ ') + cp.slice(0,10) + '...</a>' +
+        '<a href="javascript:void(0)" onclick="copyAddr(\'' + cp + '\')" style="color:#64748b;font-size:11px;margin-left:4px" title="复制地址">📋</a>';
+    }
     html += '<div class="tx-item">' +
       '<span class="op ' + t[1] + '">' + t[1] + '</span>' +
       '<span style="color:' + color + ';font-weight:700">' + label + '</span>' +
+      cpHtml +
       '<span style="color:#64748b;font-size:11px">' + fmtTime(t[6]) + '</span>' +
       '<span>' + (t[2] ? Number(t[2]).toLocaleString() : '') + ' LEAF</span></div>';
   });
