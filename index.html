@@ -571,6 +571,7 @@ document.getElementById('tab-holders').addEventListener('click', function() { sw
 document.getElementById('tab-activity').addEventListener('click', function() { switchTab('activity'); });
 document.getElementById('search').addEventListener('input', function() { currentPage = 1; renderHolders(); });
 document.getElementById('stakeFilter').addEventListener('change', function() { currentPage = 1; renderHolders(); });
+setLang('zh');
 load();
 setInterval(load, 15 * 60 * 1000);
 </script>
