@@ -178,6 +178,8 @@ var STAKE_CLASSES = ['s0', 's1', 's2'];
 var PAGE_SIZE = 20;
 var data = null;
 var currentPage = 1;
+var sortCol = -1;  // -1 = default (by balance desc)
+var sortAsc = false;
 var filteredRows = [];
 
 function load() {
@@ -260,19 +262,62 @@ function render() {
   renderActivity();
 }
 
+function fmtChange(v) {
+  if (v === undefined || v === null) return '<span style="color:#64748b">-</span>';
+  v = Number(v);
+  if (v > 0) return '<span style="color:#4ade80">+' + v.toLocaleString() + '</span>';
+  if (v < 0) return '<span style="color:#fb923c">' + v.toLocaleString() + '</span>';
+  return '<span style="color:#64748b">0</span>';
+}
+
+function sortBy(col) {
+  if (sortCol === col) {
+    sortAsc = !sortAsc;
+  } else {
+    sortCol = col;
+    sortAsc = false;  // default descending
+  }
+  // Update arrows
+  for (var i = 1; i <= 5; i++) {
+    var el = document.getElementById('arr-' + i);
+    if (el) el.textContent = '';
+  }
+  var arrEl = document.getElementById('arr-' + col);
+  if (arrEl) arrEl.textContent = sortAsc ? '▲' : '▼';
+  currentPage = 1;
+  renderHolders();
+}
+
+function getSortedHolders() {
+  var list = filteredHolders.slice();
+  if (sortCol >= 0) {
+    list.sort(function(a, b) {
+      var va = a[sortCol], vb = b[sortCol];
+      return sortAsc ? va - vb : vb - va;
+    });
+  }
+  return list;
+}
+
 function renderHolders() {
   var q = document.getElementById('search').value.toLowerCase();
   var sf = document.getElementById('stakeFilter').value;
   var el = document.getElementById('holders-tab');
-  filteredRows = data.h;
-  if (q) filteredRows = filteredRows.filter(function(h) { return h[0].toLowerCase().indexOf(q) >= 0; });
-  if (sf !== '') filteredRows = filteredRows.filter(function(h) { return String(h[4]) === sf; });
+  var filteredHolders = data.h;
+  if (q) filteredHolders = filteredHolders.filter(function(h) { return h[0].toLowerCase().indexOf(q) >= 0; });
+  if (sf !== '') filteredHolders = filteredHolders.filter(function(h) { return String(h[4]) === sf; });
+  filteredRows = getSortedHolders();
   var totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
   if (currentPage > totalPages) currentPage = totalPages;
   if (currentPage < 1) currentPage = 1;
   var start = (currentPage - 1) * PAGE_SIZE;
   var pageRows = filteredRows.slice(start, start + PAGE_SIZE);
-  var html = '<table><tr><th>#</th><th>地址</th><th style="text-align:right">余额</th><th>状态</th><th>Mint</th><th>交易</th></tr>';
+  var html = '<table><tr><th>#</th><th>地址</th>
+<th style="text-align:right;cursor:pointer" onclick="sortBy(1)" id="th-bal">余额 <span id="arr-1"></span></th>
+<th>状态</th>
+<th style="cursor:pointer" onclick="sortBy(2)" id="th-mint">Mint <span id="arr-2"></span></th>
+<th style="cursor:pointer" onclick="sortBy(3)" id="th-tx">交易 <span id="arr-3"></span></th>
+<th style="cursor:pointer" onclick="sortBy(5)" id="th-chg">7日变化 <span id="arr-5"></span></th></tr>';
   pageRows.forEach(function(h, i) {
     var rank = start + i + 1;
     var short = h[0].slice(0,10) + '...' + h[0].slice(-8);
@@ -281,7 +326,8 @@ function renderHolders() {
       '<td><span class="addr" data-addr="' + h[0] + '">' + short + '</span></td>' +
       '<td class="bal"><b>' + Number(h[1]).toLocaleString() + '</b></td>' +
       '<td><span class="stake ' + STAKE_CLASSES[st] + '">' + stakeName(st) + '</span></td>' +
-      '<td>' + h[2] + '</td><td>' + h[3] + '</td></tr>';
+      '<td>' + h[2] + '</td><td>' + h[3] + '</td>' +
+      '<td style="text-align:right">' + fmtChange(h[5]) + '</td></tr>';
   });
   html += '</table>';
   html += '<div class="pagination">';
