@@ -49,6 +49,34 @@ tr:hover td{background:#1e293b}
 .pagination button.active{background:#4ade80;color:#0f172a;border-color:#4ade80}
 .pagination button:disabled{opacity:0.4;cursor:not-allowed}
 .pagination .info{color:#64748b;font-size:13px}
+.dash{background:#f8fafc;color:#1e293b;border-radius:16px;padding:32px;margin-bottom:16px}
+.dash h2{font-size:14px;color:#64748b;margin-bottom:8px;font-weight:500}
+.dash .total{font-size:56px;font-weight:700;margin-bottom:4px}
+.dash .total-sub{font-size:14px;color:#64748b;margin-bottom:24px}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center}
+.hourglass-wrap{text-align:center}
+.hg-label{font-size:13px;color:#64748b;margin:8px 0}
+.hg-pct{font-size:20px;font-weight:700}
+.hg-pct.green{color:#15803d}
+.hg-pct.brown{color:#b45309}
+.dash-stats{display:flex;flex-direction:column;gap:16px}
+.dash-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #e2e8f0}
+.dash-row .dot{width:10px;height:10px;border-radius:50%}
+.dash-row .dot.green{background:#15803d}
+.dash-row .dot.brown{background:#b45309}
+.dash-row .name{font-size:15px}
+.dash-row .addr-cnt{font-size:13px;color:#64748b;margin-left:8px}
+.dash-row .val{margin-left:auto;font-size:22px;font-weight:700}
+.dash-row .val.green{color:#15803d}
+.dash-row .val.brown{color:#b45309}
+.dash-nums{display:flex;gap:32px;margin:20px 0;flex-wrap:wrap}
+.dash-num .n{font-size:24px;font-weight:700}
+.dash-num .l{font-size:13px;color:#64748b}
+.dash-conc{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.dash-conc .box{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:16px}
+.dash-conc .box .l{font-size:13px;color:#64748b}
+.dash-conc .box .v{font-size:22px;font-weight:700;margin-top:4px}
+@media(max-width:640px){.dash-grid{grid-template-columns:1fr}}
 .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:100}
 .modal-content{background:#1e293b;margin:5% auto;padding:24px;border-radius:12px;max-width:700px;max-height:80vh;overflow-y:auto}
 .modal-content h2{font-size:18px;margin-bottom:16px;word-break:break-all}
@@ -77,11 +105,13 @@ tr:hover td{background:#1e293b}
 </select>
 </div>
 <div class="tabs">
-<button class="tab active" id="tab-holders">持仓排行</button>
+<button class="tab active" id="tab-dash">数据概览</button>
+<button class="tab" id="tab-holders">持仓排行</button>
 <button class="tab" id="tab-activity">最新动态</button>
 </div>
 <div class="content">
-<div id="holders-tab"></div>
+<div id="dash-tab"></div>
+<div id="holders-tab" style="display:none"></div>
 <div id="activity-tab" style="display:none"></div>
 </div>
 <div class="updated" id="updated"></div>
@@ -116,7 +146,62 @@ function load() {
   });
 }
 
+function renderDash() {
+  var el = document.getElementById('dash-tab');
+  var s = data.stats || {};
+  var total = data.ts || 1;
+  var unmovedPct = (s.unmoved_bal / total * 100);
+  var movedPct = (s.moved_bal / total * 100);
+  // Hourglass: top triangle height proportional to unmoved, bottom to moved
+  var topH = Math.max(10, Math.round(unmovedPct * 1.2));
+  var botH = Math.max(10, Math.round(movedPct * 1.2));
+  function yi(n) { return (n/1e8).toFixed(2) + '亿'; }
+  var html = '<div class="dash">';
+  html += '<h2>账本铸造总量</h2>';
+  html += '<div class="total">' + (total/1e8).toFixed(2) + '亿</div>';
+  html += '<div class="total-sub">' + Number(total).toLocaleString() + ' LEAF</div>';
+  html += '<div class="dash-grid">';
+  // Hourglass
+  html += '<div class="hourglass-wrap">';
+  html += '<div class="hg-label">未转移余额</div>';
+  html += '<div class="hg-pct green">' + unmovedPct.toFixed(1) + '%</div>';
+  html += '<svg width="180" height="240" viewBox="0 0 180 240">';
+  // Top bulb (unmoved, green)
+  html += '<path d="M20,20 L160,20 L90,110 Z" fill="#15803d" opacity="0.85"/>';
+  // Bottom bulb (moved, brown)
+  html += '<path d="M20,220 L160,220 L90,130 Z" fill="#b45309" opacity="0.85"/>';
+  // Glass outline
+  html += '<path d="M20,20 L160,20 L95,115 L160,220 L20,220 L85,115 Z" fill="none" stroke="#64748b" stroke-width="2"/>';
+  // Top and bottom caps
+  html += '<rect x="10" y="12" width="160" height="8" rx="2" fill="#15803d"/>';
+  html += '<rect x="10" y="220" width="160" height="8" rx="2" fill="#475569"/>';
+  // Sand dot in middle
+  html += '<circle cx="90" cy="120" r="4" fill="#b45309"/>';
+  html += '</svg>';
+  html += '<div class="hg-label">已转移余额</div>';
+  html += '<div class="hg-pct brown">' + movedPct.toFixed(1) + '%</div>';
+  html += '</div>';
+  // Stats
+  html += '<div class="dash-stats">';
+  html += '<div class="dash-row"><span class="dot green"></span><span class="name">未转移余额</span><span class="addr-cnt">' + s.unmoved_cnt + ' 个地址</span><span class="val green">' + yi(s.unmoved_bal) + '</span></div>';
+  html += '<div class="dash-row"><span class="dot brown"></span><span class="name">已转移余额</span><span class="addr-cnt">' + s.moved_cnt + ' 个地址</span><span class="val brown">' + yi(s.moved_bal) + '</span></div>';
+  html += '<div class="dash-nums">';
+  html += '<div class="dash-num"><div class="n">' + data.th + '</div><div class="l">持仓地址</div></div>';
+  html += '<div class="dash-num"><div class="n">' + s.mint_cnt + '</div><div class="l">mint</div></div>';
+  html += '<div class="dash-num"><div class="n">' + s.transfer_cnt + '</div><div class="l">transfer</div></div>';
+  html += '</div>';
+  html += '<div class="dash-conc">';
+  html += '<div class="box"><div class="l">TOP 10 集中度</div><div class="v">' + s.top10_pct + '%</div></div>';
+  html += '<div class="box"><div class="l">TOP 3 集中度</div><div class="v">' + s.top3_pct + '%</div></div>';
+  html += '</div>';
+  html += '</div>'; // dash-stats
+  html += '</div>'; // dash-grid
+  html += '</div>'; // dash
+  el.innerHTML = html;
+}
+
 function render() {
+  renderDash();
   document.getElementById('stats').innerHTML =
     '<span>持仓地址 <b>' + data.th + '</b></span>' +
     '<span>总供应 <b>' + Number(data.ts).toLocaleString() + '</b></span>' +
@@ -227,18 +312,16 @@ document.getElementById('modal-close').addEventListener('click', function() {
 document.getElementById('modal').addEventListener('click', function(e) {
   if (e.target === this) this.style.display = 'none';
 });
-document.getElementById('tab-holders').addEventListener('click', function() {
+function switchTab(name) {
   document.querySelectorAll('.tab').forEach(function(b) { b.classList.remove('active'); });
-  this.classList.add('active');
-  document.getElementById('holders-tab').style.display = '';
-  document.getElementById('activity-tab').style.display = 'none';
-});
-document.getElementById('tab-activity').addEventListener('click', function() {
-  document.querySelectorAll('.tab').forEach(function(b) { b.classList.remove('active'); });
-  this.classList.add('active');
-  document.getElementById('holders-tab').style.display = 'none';
-  document.getElementById('activity-tab').style.display = '';
-});
+  document.getElementById('tab-'+name).classList.add('active');
+  ['dash','holders','activity'].forEach(function(t) {
+    document.getElementById(t+'-tab').style.display = t===name ? '' : 'none';
+  });
+}
+document.getElementById('tab-dash').addEventListener('click', function() { switchTab('dash'); });
+document.getElementById('tab-holders').addEventListener('click', function() { switchTab('holders'); });
+document.getElementById('tab-activity').addEventListener('click', function() { switchTab('activity'); });
 document.getElementById('search').addEventListener('input', function() { currentPage = 1; renderHolders(); });
 document.getElementById('stakeFilter').addEventListener('change', function() { currentPage = 1; renderHolders(); });
 load();
