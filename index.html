@@ -494,7 +494,20 @@ function showDetail(addr) {
   modalTxPage = 1;
   var h = null;
   for (var i = 0; i < data.h.length; i++) { if (data.h[i][0] === addr) { h = data.h[i]; break; } }
-  if (!h) return;
+  if (!h) {
+    // Address not in holders (0 balance) - build minimal info from txs
+    var txs = (data.txs && data.txs[addr]) || [];
+    if (!txs.length) return;
+    // Check if this address has unlock events in activity
+    var st = 0;
+    if (data.la) {
+      for (var j = 0; j < data.la.length; j++) {
+        var a = data.la[j];
+        if (a[9] === 1 && a[7] === addr) { st = 2; break; }  // is_unlock and from_addr matches
+      }
+    }
+    h = [addr, 0, 0, txs.length, st];
+  }
   var st = h[4] || 0;
   document.getElementById('modal-title').innerHTML = '<span class="addr">' + addr + '</span>';
   document.getElementById('modal-stats').innerHTML =
