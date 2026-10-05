@@ -394,6 +394,16 @@ function renderHolders() {
   });
 }
 
+function addrHtml(addr, shortLen) {
+  if (!addr) return '';
+  shortLen = shortLen || 10;
+  var short = addr.slice(0, shortLen) + '...';
+  return '<a href="javascript:void(0)" onclick="showDetail(\'' + addr + '\')" ' +
+    'style="color:#60a5fa;font-size:12px" title="' + addr + '">' + short + '</a>' +
+    '<a href="javascript:void(0)" onclick="copyAddr(\'' + addr + '\')" ' +
+    'style="color:#64748b;font-size:10px;margin-left:2px" title="' + T('copyAddr') + '">📋</a>';
+}
+
 function renderActivity() {
   var el = document.getElementById('activity-tab');
   var all = data.la || [];
@@ -413,25 +423,25 @@ function renderActivity() {
     var row = '';
     if (a[1] === 'mint') {
       row = '<span class="op" style="color:#60a5fa">' + T('mint') + '</span>' + txLink +
-        '<span style="color:#94a3b8;font-size:12px">' + (a[8]||'').slice(0,12) + '...</span>';
+        addrHtml(a[8], 12);
     } else if (isUnlock) {
       var ul = LANG==='zh' ? '解锁' : 'Unlock';
       row = '<span class="op" style="color:#fb923c">' + ul + '</span>' + txLink +
-        '<span style="color:#94a3b8;font-size:12px">' + (a[7]||'').slice(0,12) + '...</span>';
+        addrHtml(a[7], 12);
     } else if (isTrade) {
       var buyL = T('buy'), sellL = T('sell');
       row = '<span class="op" style="color:#4ade80">' + buyL + '</span>' +
-        '<span style="color:#94a3b8;font-size:12px">' + (a[8]||'').slice(0,10) + '...</span>' +
+        addrHtml(a[8], 10) +
         '<span style="color:#64748b;font-size:11px">←</span>' +
         '<span class="op" style="color:#fb923c">' + sellL + '</span>' +
-        '<span style="color:#94a3b8;font-size:12px">' + (a[7]||'').slice(0,10) + '...</span>' + txLink;
+        addrHtml(a[7], 10) + txLink;
     } else {
       var inL = T('tin'), outL = T('tout');
       row = '<span class="op" style="color:#4ade80">' + inL + '</span>' +
-        '<span style="color:#94a3b8;font-size:12px">' + (a[8]||'').slice(0,10) + '...</span>' +
+        addrHtml(a[8], 10) +
         '<span style="color:#64748b;font-size:11px">←</span>' +
         '<span class="op" style="color:#fb923c">' + outL + '</span>' +
-        '<span style="color:#94a3b8;font-size:12px">' + (a[7]||'').slice(0,10) + '...</span>' + txLink;
+        addrHtml(a[7], 10) + txLink;
     }
     html += '<div class="activity-item" style="gap:8px">' + row + timeHtml + amtHtml + '</div>';
   });
