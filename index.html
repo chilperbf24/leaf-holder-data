@@ -260,7 +260,7 @@ function render() {
     '<span>区块 <b>' + data.bh + '</b></span>';
   var d = new Date(data.u);
   document.getElementById('updated').textContent =
-    '更新于 ' + d.toLocaleString('zh-CN') + ' · 每10分钟自动刷新';
+    T('updated') + ' ' + d.toLocaleString('zh-CN') + T('autoRefresh');
   renderHolders();
   renderActivity();
 }
