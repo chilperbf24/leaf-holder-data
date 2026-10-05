@@ -105,6 +105,7 @@ tr:hover td{background:#1e293b}
 <option value="">全部状态</option>
 <option value="1">质押中</option>
 <option value="2">已解锁</option>
+<option value="3">部分解锁</option>
 <option value="0">未知</option>
 </select>
 </div>
@@ -133,14 +134,14 @@ var DATA_URL = 'holders.json';
 var LANG = 'zh';
 var I18N = {
   zh: {holders:'持仓排行', activity:'最新动态', dash:'数据概览', search:'搜索地址...', all:'全部状态',
-       staked:'质押中', unlocked:'已解锁', unknown:'未知', balance:'余额', status:'状态',
+       staked:'质押中', unlocked:'已解锁', unknown:'未知', partial:'部分解锁', balance:'余额', status:'状态',
        mintCount:'Mint 次数', txCount:'交易数', recentTxs:'最近交易记录', noTx:'暂无交易记录',
        close:'关闭', totalSupply:'总供应', block:'区块', holdersAddr:'持仓地址',
        unmoved:'未转移余额', moved:'已转移余额', addrs:'个地址',
        top10:'TOP 10 集中度', top3:'TOP 3 集中度', updated:'更新于', autoRefresh:'· 每15分钟自动更新',
        buy:'买入', sell:'卖出', tin:'转入', tout:'转出', mint:'铸造'},
   en: {holders:'Holders', activity:'Activity', dash:'Overview', search:'Search address...', all:'All',
-       staked:'Staked', unlocked:'Unlocked', unknown:'Unknown', balance:'Balance', status:'Status',
+       staked:'Staked', unlocked:'Unlocked', unknown:'Unknown', partial:'Partial', balance:'Balance', status:'Status',
        mintCount:'Mints', txCount:'Txs', recentTxs:'Recent Transactions', noTx:'No transactions',
        close:'Close', totalSupply:'Total Supply', block:'Block', holdersAddr:'Holders',
        unmoved:'Unmoved', moved:'Moved', addrs:'addresses',
@@ -175,8 +176,8 @@ function setLang(l) {
   if (txTitle) txTitle.textContent = T('recentTxs');
   if (data) render();
 }
-function stakeName(i) { return [T('unknown'), T('staked'), T('unlocked')][i] || ''; }
-var STAKE_CLASSES = ['s0', 's1', 's2'];
+function stakeName(i) { return [T('unknown'), T('staked'), T('unlocked'), T('partial')][i] || ''; }
+var STAKE_CLASSES = ['s0', 's1', 's2', 's3'];
 var PAGE_SIZE = 20;
 var data = null;
 var currentPage = 1;
@@ -327,7 +328,9 @@ function renderHolders() {
     html += '<tr><td class="rank">' + rank + '</td>' +
       '<td><span class="addr" data-addr="' + h[0] + '">' + short + '</span></td>' +
       '<td class="bal"><b>' + Number(h[1]).toLocaleString() + '</b></td>' +
-      '<td><span class="stake ' + STAKE_CLASSES[st] + '">' + stakeName(st) + '</span></td>' +
+      '<td><span class="stake ' + STAKE_CLASSES[st] + '">' + stakeName(st) + 
+      (st === 3 && h[6] ? '<br><small style="color:#94a3b8">✓' + Number(h[6][0]).toLocaleString() + ' / ○' + Number(h[6][1]).toLocaleString() + '</small>' : '') + 
+      '</span></td>' +
       '<td>' + h[3] + '</td>' +
       '<td style="text-align:right">' + fmtChange(h[5]) + '</td></tr>';
   });
@@ -460,7 +463,9 @@ function showDetail(addr) {
   document.getElementById('modal-title').innerHTML = '<span class="addr">' + addr + '</span>';
   document.getElementById('modal-stats').innerHTML =
     '<div class="modal-stat"><div class="label">' + T('balance') + '</div><div class="value">' + Number(h[1]).toLocaleString() + '</div></div>' +
-    '<div class="modal-stat"><div class="label">' + T('status') + '</div><div class="value"><span class="stake ' + STAKE_CLASSES[st] + '">' + stakeName(st) + '</span></div></div>' +
+    '<div class="modal-stat"><div class="label">' + T('status') + '</div><div class="value"><span class="stake ' + STAKE_CLASSES[st] + '">' + stakeName(st) + 
+      (st === 3 && h[6] ? '<br><small>已解锁 ' + Number(h[6][0]).toLocaleString() + ' / 未解锁 ' + Number(h[6][1]).toLocaleString() + '</small>' : '') + 
+      '</span></div></div>' +
     '<div class="modal-stat"><div class="label">' + T('mintCount') + '</div><div class="value">' + h[2] + '</div></div>' +
     '<div class="modal-stat"><div class="label">' + T('txCount') + '</div><div class="value">' + h[3] + '</div></div>';
   document.getElementById('modal-txs-title').textContent = T('recentTxs');
