@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LEAF 持仓榜</title>
+<title id="page-title">LEAF 持仓榜</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
@@ -97,22 +97,22 @@ tr:hover td{background:#1e293b}
 <button id="lang-zh" onclick="setLang('zh')" style="padding:6px 16px;border-radius:6px;border:1px solid #4ade80;background:#4ade80;color:#0f172a;cursor:pointer;margin-right:8px">中文</button>
 <button id="lang-en" onclick="setLang('en')" style="padding:6px 16px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;cursor:pointer">English</button>
 </div>
-<div class="stats" id="stats"><span>加载中...</span></div>
+<div class="stats" id="stats"><span>' + T('loading') + '</span></div>
 </div>
 <div class="controls">
 <input type="text" id="search" placeholder="搜索地址...">
 <select id="stakeFilter">
-<option value="">全部状态</option>
-<option value="1">质押中</option>
-<option value="2">已解锁</option>
-<option value="3">部分解锁</option>
-<option value="0">未知</option>
+<option value="" id="opt-all">全部状态</option>
+<option value="1" id="opt-staked">质押中</option>
+<option value="2" id="opt-unlocked">已解锁</option>
+<option value="3" id="opt-partial">部分解锁</option>
+<option value="0" id="opt-unknown">未知</option>
 </select>
 </div>
 <div class="tabs">
-<button class="tab active" id="tab-dash">数据概览</button>
-<button class="tab" id="tab-holders">持仓排行</button>
-<button class="tab" id="tab-activity">最新动态</button>
+<button class="tab active" id="tab-dash"></button>
+<button class="tab" id="tab-holders"></button>
+<button class="tab" id="tab-activity"></button>
 </div>
 <div class="content">
 <div id="dash-tab"></div>
@@ -125,7 +125,7 @@ tr:hover td{background:#1e293b}
 <button class="modal-close" id="modal-close">关闭</button>
 <h2 id="modal-title"></h2>
 <div class="modal-stats" id="modal-stats"></div>
-<h3 style="margin-bottom:12px;font-size:14px;color:#94a3b8" id="modal-txs-title">最近交易记录</h3>
+<h3 style="margin-bottom:12px;font-size:14px;color:#94a3b8" id="modal-txs-title"></h3>
 <div id="modal-txs"></div>
 </div>
 </div>
@@ -139,14 +139,28 @@ var I18N = {
        close:'关闭', totalSupply:'总供应', block:'区块', holdersAddr:'持仓地址',
        unmoved:'未转移余额', moved:'已转移余额', addrs:'个地址',
        top10:'TOP 10 集中度', top3:'TOP 3 集中度', updated:'更新于', autoRefresh:'· 每15分钟自动更新',
-       buy:'买入', sell:'卖出', tin:'转入', tout:'转出', mint:'铸造'},
+       buy:'买入', sell:'卖出', tin:'转入', tout:'转出', mint:'铸造',
+       first:'首页', prev:'上一页', next:'下一页', last:'末页',
+       aPrev:'上页', aNext:'下页',
+       loading:'加载中...', loadFail:'加载失败',
+       title:'LEAF 持仓榜',
+       addrCnt:'个地址',
+       noTxModal:'暂无交易记录',
+       unlockedAmt:'已解锁', lockedAmt:'未解锁', addr:'地址', change7d:'7日变化', totalMint:'账本铸造总量', retry:'重试', conc:'集中度', copyAddr:'复制地址', unlock:'解锁'},
   en: {holders:'Holders', activity:'Activity', dash:'Overview', search:'Search address...', all:'All',
        staked:'Staked', unlocked:'Unlocked', unknown:'Unknown', partial:'Partial', balance:'Balance', status:'Status',
        mintCount:'Mints', txCount:'Txs', recentTxs:'Recent Transactions', noTx:'No transactions',
        close:'Close', totalSupply:'Total Supply', block:'Block', holdersAddr:'Holders',
        unmoved:'Unmoved', moved:'Moved', addrs:'addresses',
        top10:'TOP 10 Concentration', top3:'TOP 3 Concentration', updated:'Updated', autoRefresh:'· Auto-refresh every 15 min',
-       buy:'Buy', sell:'Sell', tin:'In', tout:'Out', mint:'Mint'}
+       buy:'Buy', sell:'Sell', tin:'In', tout:'Out', mint:'Mint',
+       first:'First', prev:'Prev', next:'Next', last:'Last',
+       aPrev:'Prev', aNext:'Next',
+       loading:'Loading...', loadFail:'Load failed',
+       title:'LEAF Holdings',
+       addrCnt:'addrs',
+       noTxModal:'No transactions',
+       unlockedAmt:'Unlocked', lockedAmt:'Locked', addr:'Address', change7d:'7d Change', totalMint:'Total Minted', retry:'Retry', conc:'Concentration', copyAddr:'Copy address', unlock:'Unlock'}
 };
 function T(k) { return I18N[LANG][k] || k; }
 function fmtTime(iso) {
@@ -168,12 +182,20 @@ function setLang(l) {
   document.getElementById('lang-en').style.color = l==='en' ? '#0f172a' : '#e2e8f0';
   document.getElementById('title-text').textContent = l==='zh' ? '持仓榜' : 'Holdings';
   document.getElementById('search').placeholder = T('search');
+  document.getElementById('page-title').textContent = T('title');
   document.getElementById('tab-dash').textContent = T('dash');
   document.getElementById('tab-holders').textContent = T('holders');
   document.getElementById('tab-activity').textContent = T('activity');
   document.getElementById('modal-close').textContent = T('close');
   var txTitle = document.getElementById('modal-txs-title');
   if (txTitle) txTitle.textContent = T('recentTxs');
+  document.getElementById('opt-all').textContent = T('all');
+  document.getElementById('opt-staked').textContent = T('staked');
+  document.getElementById('opt-unlocked').textContent = T('unlocked');
+  document.getElementById('opt-partial').textContent = T('partial');
+  document.getElementById('opt-unknown').textContent = T('unknown');
+  document.getElementById('search').placeholder = T('search');
+  document.getElementById('page-title').textContent = T('title');
   if (data) render();
 }
 function stakeName(i) { return [T('unknown'), T('staked'), T('unlocked'), T('partial')][i] || ''; }
@@ -215,7 +237,7 @@ function renderDash() {
   html += '<div class="dash-grid">';
   // Hourglass
   html += '<div class="hourglass-wrap">';
-  html += '<div class="hg-label">未转移余额</div>';
+  html += '<div class="hg-label">' + T('unmoved') + '</div>';
   html += '<div class="hg-pct green">' + unmovedPct.toFixed(1) + '%</div>';
   html += '<svg width="180" height="240" viewBox="0 0 180 240">';
   // Top bulb (unmoved, green)
@@ -230,15 +252,15 @@ function renderDash() {
   // Sand dot in middle
   html += '<circle cx="90" cy="120" r="4" fill="#b45309"/>';
   html += '</svg>';
-  html += '<div class="hg-label">已转移余额</div>';
+  html += '<div class="hg-label">' + T('moved') + '</div>';
   html += '<div class="hg-pct brown">' + movedPct.toFixed(1) + '%</div>';
   html += '</div>';
   // Stats
   html += '<div class="dash-stats">';
-  html += '<div class="dash-row"><span class="dot green"></span><span class="name">未转移余额</span><span class="addr-cnt">' + s.unmoved_cnt + ' 个地址</span><span class="val green">' + yi(s.unmoved_bal) + '</span></div>';
-  html += '<div class="dash-row"><span class="dot brown"></span><span class="name">已转移余额</span><span class="addr-cnt">' + s.moved_cnt + ' 个地址</span><span class="val brown">' + yi(s.moved_bal) + '</span></div>';
+  html += '<div class="dash-row"><span class="dot green"></span><span class="name">' + T("unmoved") + '</span><span class="addr-cnt">' + s.unmoved_cnt + ' ' + T("addrCnt") + '</span><span class="val green">' + yi(s.unmoved_bal) + '</span></div>';
+  html += '<div class="dash-row"><span class="dot brown"></span><span class="name">' + T("moved") + '</span><span class="addr-cnt">' + s.moved_cnt + ' 个地址</span><span class="val brown">' + yi(s.moved_bal) + '</span></div>';
   html += '<div class="dash-nums">';
-  html += '<div class="dash-num"><div class="n">' + data.th + '</div><div class="l">持仓地址</div></div>';
+  html += '<div class="dash-num"><div class="n">' + data.th + '</div><div class="l">' + T('holdersAddr') + '</div></div>';
   html += '<div class="dash-num"><div class="n">' + s.mint_cnt + '</div><div class="l">mint</div></div>';
   html += '<div class="dash-num"><div class="n">' + s.transfer_cnt + '</div><div class="l">transfer</div></div>';
   html += '</div>';
@@ -255,9 +277,9 @@ function renderDash() {
 function render() {
   renderDash();
   document.getElementById('stats').innerHTML =
-    '<span>持仓地址 <b>' + data.th + '</b></span>' +
-    '<span>总供应 <b>' + Number(data.ts).toLocaleString() + '</b></span>' +
-    '<span>区块 <b>' + data.bh + '</b></span>';
+    '<span>' + T('holdersAddr') + ' <b>' + data.th + '</b></span>' +
+    '<span>' + T('totalSupply') + ' <b>' + Number(data.ts).toLocaleString() + '</b></span>' +
+    '<span>' + T('block') + ' <b>' + data.bh + '</b></span>';
   var d = new Date(data.u);
   document.getElementById('updated').textContent =
     T('updated') + ' ' + d.toLocaleString('zh-CN') + T('autoRefresh');
@@ -316,11 +338,11 @@ function renderHolders() {
   if (currentPage < 1) currentPage = 1;
   var start = (currentPage - 1) * PAGE_SIZE;
   var pageRows = filteredRows.slice(start, start + PAGE_SIZE);
-  var html = '<table><tr><th>#</th><th>地址</th>' +
-    '<th style="text-align:right;cursor:pointer" onclick="sortBy(1)">余额 <span id="arr-1" style="color:#64748b;font-size:11px">↕</span></th>' +
-    '<th>状态</th>' +
-    '<th style="cursor:pointer" onclick="sortBy(3)">交易 <span id="arr-3" style="color:#64748b;font-size:11px">↕</span></th>' +
-    '<th style="cursor:pointer" onclick="sortBy(5)">7日变化 <span id="arr-5" style="color:#64748b;font-size:11px">↕</span></th></tr>';
+  var html = '<table><tr><th>#</th><th>' + T('addr') + '</th>' +
+    '<th style="text-align:right;cursor:pointer" onclick="sortBy(1)">' + T('balance') + ' <span id="arr-1" style="color:#64748b;font-size:11px">↕</span></th>' +
+    '<th>' + T('status') + '</th>' +
+    '<th style="cursor:pointer" onclick="sortBy(3)">' + T('txCount') + ' <span id="arr-3" style="color:#64748b;font-size:11px">↕</span></th>' +
+    '<th style="cursor:pointer" onclick="sortBy(5)">' + T('change7d') + ' <span id="arr-5" style="color:#64748b;font-size:11px">↕</span></th></tr>';
   pageRows.forEach(function(h, i) {
     var rank = start + i + 1;
     var short = h[0].slice(0,10) + '...' + h[0].slice(-8);
@@ -336,16 +358,16 @@ function renderHolders() {
   });
   html += '</table>';
   html += '<div class="pagination">';
-  html += '<button data-pg="1"' + (currentPage===1?' disabled':'') + '>首页</button>';
-  html += '<button data-pg="' + (currentPage-1) + '"' + (currentPage===1?' disabled':'') + '>上一页</button>';
+  html += '<button data-pg="1"' + (currentPage===1?' disabled':'') + '>' + T('first') + '</button>';
+  html += '<button data-pg="' + (currentPage-1) + '"' + (currentPage===1?' disabled':'') + '>' + T('prev') + '</button>';
   var pStart = Math.max(1, currentPage - 3);
   var pEnd = Math.min(totalPages, pStart + 6);
   if (pEnd - pStart < 6) pStart = Math.max(1, pEnd - 6);
   for (var p = pStart; p <= pEnd; p++) {
     html += '<button data-pg="' + p + '"' + (p===currentPage?' class="active"':'') + '>' + p + '</button>';
   }
-  html += '<button data-pg="' + (currentPage+1) + '"' + (currentPage===totalPages?' disabled':'') + '>下一页</button>';
-  html += '<button data-pg="' + totalPages + '"' + (currentPage===totalPages?' disabled':'') + '>末页</button>';
+  html += '<button data-pg="' + (currentPage+1) + '"' + (currentPage===totalPages?' disabled':'') + '>' + T('next') + '</button>';
+  html += '<button data-pg="' + totalPages + '"' + (currentPage===totalPages?' disabled':'') + '>' + T('last') + '</button>';
   html += '<span class="info">第 ' + currentPage + ' / ' + totalPages + ' 页，共 ' + filteredRows.length + ' 条</span>';
   html += '</div>';
   el.innerHTML = html;
@@ -393,7 +415,7 @@ function renderActivity() {
       row = '<span class="op" style="color:#fb923c">' + ul + '</span>' + txLink +
         '<span style="color:#94a3b8;font-size:12px">' + (a[7]||'').slice(0,12) + '...</span>';
     } else if (isTrade) {
-      var buyL = T('buy'), sellL = LANG==='zh' ? '卖出' : 'Sell';
+      var buyL = T('buy'), sellL = T('sell');
       row = '<span class="op" style="color:#4ade80">' + buyL + '</span>' +
         '<span style="color:#94a3b8;font-size:12px">' + (a[8]||'').slice(0,10) + '...</span>' +
         '<span style="color:#64748b;font-size:11px">←</span>' +
@@ -411,11 +433,11 @@ function renderActivity() {
   });
   if (totalPages > 1) {
     html += '<div class="pagination" style="margin-top:12px">';
-    html += '<button onclick="activityGo(1)"' + (activityPage===1?' disabled':'') + '>首页</button>';
-    html += '<button onclick="activityGo(' + (activityPage-1) + ')"' + (activityPage===1?' disabled':'') + '>上页</button>';
+    html += '<button onclick="activityGo(1)"' + (activityPage===1?' disabled':'') + '>' + T('first') + '</button>';
+    html += '<button onclick="activityGo(' + (activityPage-1) + ')"' + (activityPage===1?' disabled':'') + '>' + T('aPrev') + '</button>';
     html += '<span class="info">' + activityPage + ' / ' + totalPages + ' 页，共 ' + all.length + ' 条</span>';
-    html += '<button onclick="activityGo(' + (activityPage+1) + ')"' + (activityPage===totalPages?' disabled':'') + '>下页</button>';
-    html += '<button onclick="activityGo(' + totalPages + ')"' + (activityPage===totalPages?' disabled':'') + '>末页</button>';
+    html += '<button onclick="activityGo(' + (activityPage+1) + ')"' + (activityPage===totalPages?' disabled':'') + '>' + T('aNext') + '</button>';
+    html += '<button onclick="activityGo(' + totalPages + ')"' + (activityPage===totalPages?' disabled':'') + '>' + T('last') + '</button>';
     html += '</div>';
   }
   el.innerHTML = html || '<div class="loading">' + T('noTx') + '</div>';
@@ -464,7 +486,7 @@ function showDetail(addr) {
   document.getElementById('modal-stats').innerHTML =
     '<div class="modal-stat"><div class="label">' + T('balance') + '</div><div class="value">' + Number(h[1]).toLocaleString() + '</div></div>' +
     '<div class="modal-stat"><div class="label">' + T('status') + '</div><div class="value"><span class="stake ' + STAKE_CLASSES[st] + '">' + stakeName(st) + 
-      (st === 3 && h[6] ? '<br><small>已解锁 ' + Number(h[6][0]).toLocaleString() + ' / 未解锁 ' + Number(h[6][1]).toLocaleString() + '</small>' : '') + 
+      (st === 3 && h[6] ? '<br><small>已解锁 ' + Number(h[6][0]).toLocaleString() +  + ' / ' + T('lockedAmt') + ' ' + Number(h[6][1]).toLocaleString() + '</small>' : '') + 
       '</span></div></div>' +
     '<div class="modal-stat"><div class="label">' + T('mintCount') + '</div><div class="value">' + h[2] + '</div></div>' +
     '<div class="modal-stat"><div class="label">' + T('txCount') + '</div><div class="value">' + h[3] + '</div></div>';
@@ -507,14 +529,14 @@ function renderModalTxs() {
   });
   if (totalPages > 1) {
     html += '<div class="pagination" style="margin-top:12px">';
-    html += '<button onclick="modalTxGo(1)"' + (modalTxPage===1?' disabled':'') + '>首页</button>';
-    html += '<button onclick="modalTxGo(' + (modalTxPage-1) + ')"' + (modalTxPage===1?' disabled':'') + '>上页</button>';
+    html += '<button onclick="modalTxGo(1)"' + (modalTxPage===1?' disabled':'') + '>' + T('first') + '</button>';
+    html += '<button onclick="modalTxGo(' + (modalTxPage-1) + ')"' + (modalTxPage===1?' disabled':'') + '>' + T('aPrev') + '</button>';
     html += '<span class="info">' + modalTxPage + ' / ' + totalPages + '</span>';
-    html += '<button onclick="modalTxGo(' + (modalTxPage+1) + ')"' + (modalTxPage===totalPages?' disabled':'') + '>下页</button>';
-    html += '<button onclick="modalTxGo(' + totalPages + ')"' + (modalTxPage===totalPages?' disabled':'') + '>末页</button>';
+    html += '<button onclick="modalTxGo(' + (modalTxPage+1) + ')"' + (modalTxPage===totalPages?' disabled':'') + '>' + T('aNext') + '</button>';
+    html += '<button onclick="modalTxGo(' + totalPages + ')"' + (modalTxPage===totalPages?' disabled':'') + '>' + T('last') + '</button>';
     html += '</div>';
   }
-  document.getElementById('modal-txs').innerHTML = html || '<div style="color:#64748b">暂无交易记录</div>';
+  document.getElementById('modal-txs').innerHTML = html || T('noTxModal');
 }
 
 function modalTxGo(p) {
