@@ -92,7 +92,11 @@ tr:hover td{background:#1e293b}
 </head>
 <body>
 <div class="header">
-<h1>🍂 <span>LEAF</span> 持仓榜</h1>
+<h1>🍂 <span>LEAF</span> <span id="title-text">持仓榜</span></h1>
+<div style="margin-top:8px">
+<button id="lang-zh" onclick="setLang('zh')" style="padding:6px 16px;border-radius:6px;border:1px solid #4ade80;background:#4ade80;color:#0f172a;cursor:pointer;margin-right:8px">中文</button>
+<button id="lang-en" onclick="setLang('en')" style="padding:6px 16px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;cursor:pointer">English</button>
+</div>
 <div class="stats" id="stats"><span>加载中...</span></div>
 </div>
 <div class="controls">
@@ -120,13 +124,56 @@ tr:hover td{background:#1e293b}
 <button class="modal-close" id="modal-close">关闭</button>
 <h2 id="modal-title"></h2>
 <div class="modal-stats" id="modal-stats"></div>
-<h3 style="margin-bottom:12px;font-size:14px;color:#94a3b8">最近交易记录</h3>
+<h3 style="margin-bottom:12px;font-size:14px;color:#94a3b8">' + T('recentTxs') + '</h3>
 <div id="modal-txs"></div>
 </div>
 </div>
 <script>
 var DATA_URL = 'holders.json';
-var STAKE_NAMES = ['未知', '质押中', '已解锁'];
+var LANG = 'zh';
+var I18N = {
+  zh: {holders:'持仓排行', activity:'最新动态', dash:'数据概览', search:'搜索地址...', all:'全部状态',
+       staked:'质押中', unlocked:'已解锁', unknown:'未知', balance:'余额', status:'状态',
+       mintCount:'Mint 次数', txCount:'交易数', recentTxs:'最近交易记录', noTx:'暂无交易记录',
+       close:'关闭', totalSupply:'总供应', block:'区块', holdersAddr:'持仓地址',
+       unmoved:'未转移余额', moved:'已转移余额', addrs:'个地址',
+       top10:'TOP 10 集中度', top3:'TOP 3 集中度', updated:'更新于', autoRefresh:'· 每10分钟自动刷新',
+       buy:'买入', sell:'卖出', tin:'转入', tout:'转出', mint:'铸造'},
+  en: {holders:'Holders', activity:'Activity', dash:'Overview', search:'Search address...', all:'All',
+       staked:'Staked', unlocked:'Unlocked', unknown:'Unknown', balance:'Balance', status:'Status',
+       mintCount:'Mints', txCount:'Txs', recentTxs:'Recent Transactions', noTx:'No transactions',
+       close:'Close', totalSupply:'Total Supply', block:'Block', holdersAddr:'Holders',
+       unmoved:'Unmoved', moved:'Moved', addrs:'addresses',
+       top10:'TOP 10 Concentration', top3:'TOP 3 Concentration', updated:'Updated', autoRefresh:'· auto-refresh every 10 min',
+       buy:'Buy', sell:'Sell', tin:'In', tout:'Out', mint:'Mint'}
+};
+function T(k) { return I18N[LANG][k] || k; }
+function fmtTime(iso) {
+  if (!iso) return '';
+  var d = new Date(iso);
+  if (LANG === 'zh') {
+    // Beijing time UTC+8
+    var b = new Date(d.getTime() + 8*3600*1000);
+    return b.toISOString().slice(0,16).replace('T',' ') + ' CST';
+  } else {
+    return d.toISOString().slice(0,16).replace('T',' ') + ' UTC';
+  }
+}
+function setLang(l) {
+  LANG = l;
+  document.getElementById('lang-zh').style.background = l==='zh' ? '#4ade80' : '#1e293b';
+  document.getElementById('lang-zh').style.color = l==='zh' ? '#0f172a' : '#e2e8f0';
+  document.getElementById('lang-en').style.background = l==='en' ? '#4ade80' : '#1e293b';
+  document.getElementById('lang-en').style.color = l==='en' ? '#0f172a' : '#e2e8f0';
+  document.getElementById('title-text').textContent = l==='zh' ? '持仓榜' : 'Holdings';
+  document.getElementById('search').placeholder = T('search');
+  document.getElementById('tab-dash').textContent = T('dash');
+  document.getElementById('tab-holders').textContent = T('holders');
+  document.getElementById('tab-activity').textContent = T('activity');
+  document.getElementById('modal-close').textContent = T('close');
+  if (data) render();
+}
+function stakeName(i) { return [T('unknown'), T('staked'), T('unlocked')][i] || ''; }
 var STAKE_CLASSES = ['s0', 's1', 's2'];
 var PAGE_SIZE = 20;
 var data = null;
@@ -233,7 +280,7 @@ function renderHolders() {
     html += '<tr><td class="rank">' + rank + '</td>' +
       '<td><span class="addr" data-addr="' + h[0] + '">' + short + '</span></td>' +
       '<td class="bal"><b>' + Number(h[1]).toLocaleString() + '</b></td>' +
-      '<td><span class="stake ' + STAKE_CLASSES[st] + '">' + STAKE_NAMES[st] + '</span></td>' +
+      '<td><span class="stake ' + STAKE_CLASSES[st] + '">' + stakeName(st) + '</span></td>' +
       '<td>' + h[2] + '</td><td>' + h[3] + '</td></tr>';
   });
   html += '</table>';
@@ -273,14 +320,32 @@ function renderHolders() {
 function renderActivity() {
   var el = document.getElementById('activity-tab');
   var html = '';
+  // a = [txid, op, address, amount, block, is_trade, timestamp, from_addr, to_addr]
   (data.la || []).forEach(function(a) {
+    var isTrade = a[5] === 1;
+    var label, color;
+    if (a[1] === 'mint') { label = T('mint'); color = '#60a5fa'; }
+    else if (isTrade) {
+      // For market trades, determine buy/sell from perspective of the listed address
+      // a[2] is to_address (receiver/buyer)
+      label = T('buy'); color = '#4ade80';
+    } else { label = a[1]; color = '#94a3b8'; }
+    // Staking status of the address
+    var stHtml = '';
+    var h = null;
+    for (var i = 0; i < data.h.length; i++) { if (data.h[i][0] === a[2]) { h = data.h[i]; break; } }
+    if (h) {
+      var st = h[4] || 0;
+      stHtml = '<span class="stake ' + STAKE_CLASSES[st] + '" style="font-size:11px">' + stakeName(st) + '</span>';
+    }
     html += '<div class="activity-item">' +
-      '<span class="op ' + a[1] + '">' + a[1] + '</span>' +
+      '<span class="op" style="color:' + color + '">' + label + '</span>' +
       '<a href="https://mempool.space/tx/' + a[0] + '" target="_blank">' + a[0].slice(0,16) + '...</a>' +
-      '<span style="color:#64748b">#' + (a[4] || '') + '</span>' +
+      '<span style="color:#64748b;font-size:11px">' + fmtTime(a[6]) + '</span>' +
+      stHtml +
       '<span class="amt">' + (a[3] ? Number(a[3]).toLocaleString() : '') + ' LEAF</span></div>';
   });
-  el.innerHTML = html || '<div class="loading">暂无数据</div>';
+  el.innerHTML = html || '<div class="loading">' + T('noTx') + '</div>';
 }
 
 var modalAddr = null;
@@ -296,10 +361,10 @@ function showDetail(addr) {
   var st = h[4] || 0;
   document.getElementById('modal-title').innerHTML = '<span class="addr">' + addr + '</span>';
   document.getElementById('modal-stats').innerHTML =
-    '<div class="modal-stat"><div class="label">余额</div><div class="value">' + Number(h[1]).toLocaleString() + '</div></div>' +
-    '<div class="modal-stat"><div class="label">状态</div><div class="value"><span class="stake ' + STAKE_CLASSES[st] + '">' + STAKE_NAMES[st] + '</span></div></div>' +
-    '<div class="modal-stat"><div class="label">Mint 次数</div><div class="value">' + h[2] + '</div></div>' +
-    '<div class="modal-stat"><div class="label">交易数</div><div class="value">' + h[3] + '</div></div>';
+    '<div class="modal-stat"><div class="label">' + T('balance') + '</div><div class="value">' + Number(h[1]).toLocaleString() + '</div></div>' +
+    '<div class="modal-stat"><div class="label">' + T('status') + '</div><div class="value"><span class="stake ' + STAKE_CLASSES[st] + '">' + stakeName(st) + '</span></div></div>' +
+    '<div class="modal-stat"><div class="label">' + T('mintCount') + '</div><div class="value">' + h[2] + '</div></div>' +
+    '<div class="modal-stat"><div class="label">' + T('txCount') + '</div><div class="value">' + h[3] + '</div></div>';
   renderModalTxs();
   document.getElementById('modal').style.display = 'block';
 }
@@ -312,19 +377,20 @@ function renderModalTxs() {
   var pageTxs = txs.slice(start, start + MODAL_PAGE_SIZE);
   var html = '';
   pageTxs.forEach(function(t) {
+    // t = [txid_short, op, amount, block, direction, is_trade, timestamp]
     var dir = t[4] || '';
     var isTrade = t[5] === 1;
     var label, color;
-    if (isTrade && dir === 'in') { label = '买入'; color = '#4ade80'; }
-    else if (isTrade && dir === 'out') { label = '卖出'; color = '#fb923c'; }
-    else if (dir === 'in') { label = '转入'; color = '#4ade80'; }
-    else if (dir === 'out') { label = '转出'; color = '#fb923c'; }
-    else if (dir === 'mint') { label = '铸造'; color = '#60a5fa'; }
+    if (isTrade && dir === 'in') { label = T('buy'); color = '#4ade80'; }
+    else if (isTrade && dir === 'out') { label = T('sell'); color = '#fb923c'; }
+    else if (dir === 'in') { label = T('tin'); color = '#4ade80'; }
+    else if (dir === 'out') { label = T('tout'); color = '#fb923c'; }
+    else if (dir === 'mint') { label = T('mint'); color = '#60a5fa'; }
     else { label = dir; color = '#64748b'; }
     html += '<div class="tx-item">' +
       '<span class="op ' + t[1] + '">' + t[1] + '</span>' +
       '<span style="color:' + color + ';font-weight:700">' + label + '</span>' +
-      '<span style="color:#64748b">#' + (t[3] || '') + '</span>' +
+      '<span style="color:#64748b;font-size:11px">' + fmtTime(t[6]) + '</span>' +
       '<span>' + (t[2] ? Number(t[2]).toLocaleString() : '') + ' LEAF</span></div>';
   });
   if (totalPages > 1) {
