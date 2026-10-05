@@ -277,13 +277,14 @@ function sortBy(col) {
     sortCol = col;
     sortAsc = false;  // default descending
   }
-  // Update arrows
-  for (var i = 1; i <= 5; i++) {
-    var el = document.getElementById('arr-' + i);
-    if (el) el.textContent = '';
-  }
+  // Update arrows: reset all to ↕, active to ↑/↓
+  var cols = [1, 2, 3, 5];
+  cols.forEach(function(c) {
+    var el = document.getElementById('arr-' + c);
+    if (el) { el.textContent = '↕'; el.style.color = '#64748b'; }
+  });
   var arrEl = document.getElementById('arr-' + col);
-  if (arrEl) arrEl.textContent = sortAsc ? '▲' : '▼';
+  if (arrEl) { arrEl.textContent = sortAsc ? '↑' : '↓'; arrEl.style.color = '#4ade80'; }
   currentPage = 1;
   renderHolders();
 }
@@ -313,11 +314,11 @@ function renderHolders() {
   var start = (currentPage - 1) * PAGE_SIZE;
   var pageRows = filteredRows.slice(start, start + PAGE_SIZE);
   var html = '<table><tr><th>#</th><th>地址</th>' +
-    '<th style="text-align:right;cursor:pointer" onclick="sortBy(1)">余额 <span id="arr-1"></span></th>' +
+    '<th style="text-align:right;cursor:pointer" onclick="sortBy(1)">余额 <span id="arr-1" style="color:#64748b;font-size:11px">↕</span></th>' +
     '<th>状态</th>' +
-    '<th style="cursor:pointer" onclick="sortBy(2)">Mint <span id="arr-2"></span></th>' +
-    '<th style="cursor:pointer" onclick="sortBy(3)">交易 <span id="arr-3"></span></th>' +
-    '<th style="cursor:pointer" onclick="sortBy(5)">7日变化 <span id="arr-5"></span></th></tr>';
+    '<th style="cursor:pointer" onclick="sortBy(2)">Mint <span id="arr-2" style="color:#64748b;font-size:11px">↕</span></th>' +
+    '<th style="cursor:pointer" onclick="sortBy(3)">交易 <span id="arr-3" style="color:#64748b;font-size:11px">↕</span></th>' +
+    '<th style="cursor:pointer" onclick="sortBy(5)">7日变化 <span id="arr-5" style="color:#64748b;font-size:11px">↕</span></th></tr>';
   pageRows.forEach(function(h, i) {
     var rank = start + i + 1;
     var short = h[0].slice(0,10) + '...' + h[0].slice(-8);
