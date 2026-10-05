@@ -146,7 +146,7 @@ var I18N = {
        title:'LEAF 持仓榜',
        addrCnt:'个地址',
        noTxModal:'暂无交易记录',
-       unlockedAmt:'已解锁', lockedAmt:'未解锁', addr:'地址', change7d:'7日变化', totalMint:'账本铸造总量', retry:'重试', conc:'集中度', copyAddr:'复制地址', unlock:'解锁'},
+       unlockedAmt:'已解锁', lockedAmt:'未解锁', addr:'地址', change7d:'7日变化', totalMint:'账本铸造总量', retry:'重试', conc:'集中度', copyAddr:'复制地址', unlock:'解锁', page:'第', pageOf:'页，共', items:'条'},
   en: {holders:'Holders', activity:'Activity', dash:'Overview', search:'Search address...', all:'All',
        staked:'Staked', unlocked:'Unlocked', unknown:'Unknown', partial:'Partial', balance:'Balance', status:'Status',
        mintCount:'Mints', txCount:'Txs', recentTxs:'Recent Transactions', noTx:'No transactions',
@@ -160,7 +160,7 @@ var I18N = {
        title:'LEAF Holdings',
        addrCnt:'addrs',
        noTxModal:'No transactions',
-       unlockedAmt:'Unlocked', lockedAmt:'Locked', addr:'Address', change7d:'7d Change', totalMint:'Total Minted', retry:'Retry', conc:'Concentration', copyAddr:'Copy address', unlock:'Unlock'}
+       unlockedAmt:'Unlocked', lockedAmt:'Locked', addr:'Address', change7d:'7d Change', totalMint:'Total Minted', retry:'Retry', conc:'Concentration', copyAddr:'Copy address', unlock:'Unlock', page:'Page', pageOf:', ', items:'items'}
 };
 function T(k) { return I18N[LANG][k] || k; }
 function fmtTime(iso) {
@@ -368,7 +368,7 @@ function renderHolders() {
   }
   html += '<button data-pg="' + (currentPage+1) + '"' + (currentPage===totalPages?' disabled':'') + '>' + T('next') + '</button>';
   html += '<button data-pg="' + totalPages + '"' + (currentPage===totalPages?' disabled':'') + '>' + T('last') + '</button>';
-  html += '<span class="info">第 ' + currentPage + ' / ' + totalPages + ' 页，共 ' + filteredRows.length + ' 条</span>';
+  html += '<span class="info">' + T('page') + ' ' + currentPage + ' / ' + totalPages + ' ' + T('pageOf') + ' ' + filteredRows.length + ' ' + T('items') + '</span>';
   html += '</div>';
   el.innerHTML = html;
   // Bind pagination buttons
@@ -435,7 +435,7 @@ function renderActivity() {
     html += '<div class="pagination" style="margin-top:12px">';
     html += '<button onclick="activityGo(1)"' + (activityPage===1?' disabled':'') + '>' + T('first') + '</button>';
     html += '<button onclick="activityGo(' + (activityPage-1) + ')"' + (activityPage===1?' disabled':'') + '>' + T('aPrev') + '</button>';
-    html += '<span class="info">' + activityPage + ' / ' + totalPages + ' 页，共 ' + all.length + ' 条</span>';
+    html += '<span class="info">' + T('page') + ' ' + activityPage + ' / ' + totalPages + ' ' + T('pageOf') + ' ' + all.length + ' ' + T('items') + '</span>';
     html += '<button onclick="activityGo(' + (activityPage+1) + ')"' + (activityPage===totalPages?' disabled':'') + '>' + T('aNext') + '</button>';
     html += '<button onclick="activityGo(' + totalPages + ')"' + (activityPage===totalPages?' disabled':'') + '>' + T('last') + '</button>';
     html += '</div>';
