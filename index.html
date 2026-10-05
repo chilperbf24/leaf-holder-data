@@ -329,9 +329,15 @@ function renderActivity() {
     else if (isUnlock) { label = LANG==='zh' ? '解锁' : 'Unlock'; color = '#fb923c'; }
     else if (isTrade) { label = T('buy'); color = '#4ade80'; }
     else { label = T('tout'); color = '#94a3b8'; }
+    var txLink = '<a href="https://mempool.space/tx/' + a[0] + '" target="_blank">' + a[0].slice(0,10) + '...</a>';
+    // For plain transfers, also show from -> to
+    var routeHtml = '';
+    if (a[1] === 'transfer' && !isTrade && !isUnlock && a[7] && a[8]) {
+      routeHtml = '<span style="color:#94a3b8;font-size:11px">' + a[7].slice(0,6) + '… → ' + a[8].slice(0,6) + '…</span>';
+    }
     html += '<div class="activity-item">' +
       '<span class="op" style="color:' + color + '">' + label + '</span>' +
-      '<a href="https://mempool.space/tx/' + a[0] + '" target="_blank">' + a[0].slice(0,16) + '...</a>' +
+      txLink + routeHtml +
       '<span style="color:#64748b;font-size:11px">' + fmtTime(a[6]) + '</span>' +
       '<span class="amt">' + (a[3] ? Number(a[3]).toLocaleString() : '') + ' LEAF</span></div>';
   });
