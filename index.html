@@ -312,12 +312,12 @@ function renderHolders() {
   if (currentPage < 1) currentPage = 1;
   var start = (currentPage - 1) * PAGE_SIZE;
   var pageRows = filteredRows.slice(start, start + PAGE_SIZE);
-  var html = '<table><tr><th>#</th><th>地址</th>
-<th style="text-align:right;cursor:pointer" onclick="sortBy(1)" id="th-bal">余额 <span id="arr-1"></span></th>
-<th>状态</th>
-<th style="cursor:pointer" onclick="sortBy(2)" id="th-mint">Mint <span id="arr-2"></span></th>
-<th style="cursor:pointer" onclick="sortBy(3)" id="th-tx">交易 <span id="arr-3"></span></th>
-<th style="cursor:pointer" onclick="sortBy(5)" id="th-chg">7日变化 <span id="arr-5"></span></th></tr>';
+  var html = '<table><tr><th>#</th><th>地址</th>' +
+    '<th style="text-align:right;cursor:pointer" onclick="sortBy(1)">余额 <span id="arr-1"></span></th>' +
+    '<th>状态</th>' +
+    '<th style="cursor:pointer" onclick="sortBy(2)">Mint <span id="arr-2"></span></th>' +
+    '<th style="cursor:pointer" onclick="sortBy(3)">交易 <span id="arr-3"></span></th>' +
+    '<th style="cursor:pointer" onclick="sortBy(5)">7日变化 <span id="arr-5"></span></th></tr>';
   pageRows.forEach(function(h, i) {
     var rank = start + i + 1;
     var short = h[0].slice(0,10) + '...' + h[0].slice(-8);
