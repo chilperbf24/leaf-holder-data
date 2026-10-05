@@ -94,8 +94,14 @@ def main():
             staking_map = json.load(f)
     except:
         staking_map = {}
-    # 0=未知, 1=质押中, 2=已解锁
-    staking_code = {'未知': 0, '质押中': 1, '已解锁': 2}
+    # 0=未知, 1=质押中, 2=已解锁, 3=部分解锁
+    staking_code = {'未知': 0, '质押中': 1, '已解锁': 2, '部分解锁': 3}
+    # Load partial unlock details
+    try:
+        with open(os.path.join(BASE_DIR, 'partial_unlock_details.json')) as f:
+            partial_details = json.load(f)
+    except:
+        partial_details = {}
 
     # Fetch market trades to identify buy/sell
     # API: https://crc.garden/api/marketplace/stats?ticker=LEAF
@@ -166,12 +172,20 @@ def main():
             if to:
                 addr_txs[to].append([txid_short, 'transfer', amt, bh, 'in', is_trade, ts, frm or ''])
 
-    holders = [
-        [addr, round(bal, 2), mint_count[addr], tx_count[addr],
-         staking_code.get(staking_map.get(addr, '未知'), 0)]
-        for addr, bal in balances.items()
-        if bal > 0.01
-    ]
+    holders = []
+    for addr, bal in balances.items():
+        if bal <= 0.01:
+            continue
+        code = staking_code.get(staking_map.get(addr, '未知'), 0)
+        # For partial unlock, append [unlocked, locked] as extra field
+        extra = None
+        if code == 3 and addr in partial_details:
+            d = partial_details[addr]
+            extra = [d.get('unlocked', 0), d.get('locked', 0)]
+        holders.append(
+            [addr, round(bal, 2), mint_count[addr], tx_count[addr], code] +
+            ([extra] if extra else [])
+        )
     holders.sort(key=lambda x: -x[1])
     total = sum(h[1] for h in holders)
 
