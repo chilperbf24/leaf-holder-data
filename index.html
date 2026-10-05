@@ -137,14 +137,14 @@ var I18N = {
        mintCount:'Mint 次数', txCount:'交易数', recentTxs:'最近交易记录', noTx:'暂无交易记录',
        close:'关闭', totalSupply:'总供应', block:'区块', holdersAddr:'持仓地址',
        unmoved:'未转移余额', moved:'已转移余额', addrs:'个地址',
-       top10:'TOP 10 集中度', top3:'TOP 3 集中度', updated:'更新于', autoRefresh:'· 每10分钟自动刷新',
+       top10:'TOP 10 集中度', top3:'TOP 3 集中度', updated:'更新于', autoRefresh:'· 每15分钟自动更新',
        buy:'买入', sell:'卖出', tin:'转入', tout:'转出', mint:'铸造'},
   en: {holders:'Holders', activity:'Activity', dash:'Overview', search:'Search address...', all:'All',
        staked:'Staked', unlocked:'Unlocked', unknown:'Unknown', balance:'Balance', status:'Status',
        mintCount:'Mints', txCount:'Txs', recentTxs:'Recent Transactions', noTx:'No transactions',
        close:'Close', totalSupply:'Total Supply', block:'Block', holdersAddr:'Holders',
        unmoved:'Unmoved', moved:'Moved', addrs:'addresses',
-       top10:'TOP 10 Concentration', top3:'TOP 3 Concentration', updated:'Updated', autoRefresh:'· auto-refresh every 10 min',
+       top10:'TOP 10 Concentration', top3:'TOP 3 Concentration', updated:'Updated', autoRefresh:'· Auto-refresh every 15 min',
        buy:'Buy', sell:'Sell', tin:'In', tout:'Out', mint:'Mint'}
 };
 function T(k) { return I18N[LANG][k] || k; }
@@ -541,7 +541,7 @@ document.getElementById('tab-activity').addEventListener('click', function() { s
 document.getElementById('search').addEventListener('input', function() { currentPage = 1; renderHolders(); });
 document.getElementById('stakeFilter').addEventListener('change', function() { currentPage = 1; renderHolders(); });
 load();
-setInterval(load, 10 * 60 * 1000);
+setInterval(load, 15 * 60 * 1000);
 </script>
 </body>
 </html>
