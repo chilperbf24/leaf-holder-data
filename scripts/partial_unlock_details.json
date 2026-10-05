@@ -1,7 +1,22 @@
 {
   "bc1pjcccpks0qwhrx57jtehhww7tpv8cvkp8f43m2nj6zdu5lzq4knxshdetzs": {
-    "unlocked": 138689,
-    "locked": 2825,
-    "total": 141514
+    "unlocked": 138688.57142857,
+    "locked": 2824.76190476,
+    "total": 141513.33333333
+  },
+  "bc1p89zk84c3rereqnsh8ztptp4msgugyh0mafvcqakj3e7pf52eg96sk8ntph": {
+    "unlocked": 2568.0952381,
+    "locked": 2824.76190476,
+    "total": 5392.857142860001
+  },
+  "bc1pkgld9lsz5xxu4r5rgqw5wpp6km23a7agqkfcdd57rvnw3ka2ku2q9pv2gf": {
+    "unlocked": 1168271.9047619,
+    "locked": 540962.38095238,
+    "total": 1709234.2857142799
+  },
+  "bc1ptqczmj4w9vy8sxcwjgf79ekmpwy0md9lk6zrmw9yrvdml39ljwqqgc6zhu": {
+    "unlocked": 3606.19047619,
+    "locked": 50849.52380952,
+    "total": 54455.71428571
   }
 }
