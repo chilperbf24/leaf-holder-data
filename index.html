@@ -283,7 +283,13 @@ function renderActivity() {
   el.innerHTML = html || '<div class="loading">暂无数据</div>';
 }
 
+var modalAddr = null;
+var modalTxPage = 1;
+var MODAL_PAGE_SIZE = 10;
+
 function showDetail(addr) {
+  modalAddr = addr;
+  modalTxPage = 1;
   var h = null;
   for (var i = 0; i < data.h.length; i++) { if (data.h[i][0] === addr) { h = data.h[i]; break; } }
   if (!h) return;
@@ -294,10 +300,18 @@ function showDetail(addr) {
     '<div class="modal-stat"><div class="label">状态</div><div class="value"><span class="stake ' + STAKE_CLASSES[st] + '">' + STAKE_NAMES[st] + '</span></div></div>' +
     '<div class="modal-stat"><div class="label">Mint 次数</div><div class="value">' + h[2] + '</div></div>' +
     '<div class="modal-stat"><div class="label">交易数</div><div class="value">' + h[3] + '</div></div>';
-  var txs = (data.txs && data.txs[addr]) || [];
+  renderModalTxs();
+  document.getElementById('modal').style.display = 'block';
+}
+
+function renderModalTxs() {
+  var txs = (data.txs && data.txs[modalAddr]) || [];
+  var totalPages = Math.max(1, Math.ceil(txs.length / MODAL_PAGE_SIZE));
+  if (modalTxPage > totalPages) modalTxPage = totalPages;
+  var start = (modalTxPage - 1) * MODAL_PAGE_SIZE;
+  var pageTxs = txs.slice(start, start + MODAL_PAGE_SIZE);
   var html = '';
-  txs.forEach(function(t) {
-    // t = [txid_short, op, amount, block, direction, is_trade]
+  pageTxs.forEach(function(t) {
     var dir = t[4] || '';
     var isTrade = t[5] === 1;
     var label, color;
@@ -313,8 +327,25 @@ function showDetail(addr) {
       '<span style="color:#64748b">#' + (t[3] || '') + '</span>' +
       '<span>' + (t[2] ? Number(t[2]).toLocaleString() : '') + ' LEAF</span></div>';
   });
+  if (totalPages > 1) {
+    html += '<div class="pagination" style="margin-top:12px">';
+    html += '<button onclick="modalTxGo(1)"' + (modalTxPage===1?' disabled':'') + '>首页</button>';
+    html += '<button onclick="modalTxGo(' + (modalTxPage-1) + ')"' + (modalTxPage===1?' disabled':'') + '>上页</button>';
+    html += '<span class="info">' + modalTxPage + ' / ' + totalPages + '</span>';
+    html += '<button onclick="modalTxGo(' + (modalTxPage+1) + ')"' + (modalTxPage===totalPages?' disabled':'') + '>下页</button>';
+    html += '<button onclick="modalTxGo(' + totalPages + ')"' + (modalTxPage===totalPages?' disabled':'') + '>末页</button>';
+    html += '</div>';
+  }
   document.getElementById('modal-txs').innerHTML = html || '<div style="color:#64748b">暂无交易记录</div>';
-  document.getElementById('modal').style.display = 'block';
+}
+
+function modalTxGo(p) {
+  var txs = (data.txs && data.txs[modalAddr]) || [];
+  var totalPages = Math.max(1, Math.ceil(txs.length / MODAL_PAGE_SIZE));
+  if (p < 1) p = 1;
+  if (p > totalPages) p = totalPages;
+  modalTxPage = p;
+  renderModalTxs();
 }
 
 document.getElementById('modal-close').addEventListener('click', function() {
