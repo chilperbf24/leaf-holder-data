@@ -365,9 +365,15 @@ function renderHolders() {
 
 function renderActivity() {
   var el = document.getElementById('activity-tab');
+  var all = data.la || [];
+  var totalPages = Math.max(1, Math.ceil(all.length / ACTIVITY_PAGE_SIZE));
+  if (activityPage > totalPages) activityPage = totalPages;
+  if (activityPage < 1) activityPage = 1;
+  var start = (activityPage - 1) * ACTIVITY_PAGE_SIZE;
+  var pageItems = all.slice(start, start + ACTIVITY_PAGE_SIZE);
   var html = '';
   // a = [txid, op, address, amount, block, is_trade, timestamp, from_addr, to_addr, is_unlock]
-  (data.la || []).forEach(function(a) {
+  pageItems.forEach(function(a) {
     var isTrade = a[5] === 1;
     var isUnlock = a[9] === 1;
     var txLink = '<a href="https://mempool.space/tx/' + a[0] + '" target="_blank" style="color:#60a5fa">' + a[0].slice(0,10) + '...</a>';
@@ -375,16 +381,13 @@ function renderActivity() {
     var amtHtml = '<span class="amt">' + (a[3] ? Number(a[3]).toLocaleString() : '') + ' LEAF</span>';
     var row = '';
     if (a[1] === 'mint') {
-      // 铸造: to_address
       row = '<span class="op" style="color:#60a5fa">' + T('mint') + '</span>' + txLink +
         '<span style="color:#94a3b8;font-size:12px">' + (a[8]||'').slice(0,12) + '...</span>';
     } else if (isUnlock) {
-      // 解锁: from_address (staking -> unlocked)
       var ul = LANG==='zh' ? '解锁' : 'Unlock';
       row = '<span class="op" style="color:#fb923c">' + ul + '</span>' + txLink +
         '<span style="color:#94a3b8;font-size:12px">' + (a[7]||'').slice(0,12) + '...</span>';
     } else if (isTrade) {
-      // 买入-卖出: buyer (to) and seller (from)
       var buyL = T('buy'), sellL = LANG==='zh' ? '卖出' : 'Sell';
       row = '<span class="op" style="color:#4ade80">' + buyL + '</span>' +
         '<span style="color:#94a3b8;font-size:12px">' + (a[8]||'').slice(0,10) + '...</span>' +
@@ -392,7 +395,6 @@ function renderActivity() {
         '<span class="op" style="color:#fb923c">' + sellL + '</span>' +
         '<span style="color:#94a3b8;font-size:12px">' + (a[7]||'').slice(0,10) + '...</span>' + txLink;
     } else {
-      // 转入-转出: receiver (to) and sender (from)
       var inL = T('tin'), outL = T('tout');
       row = '<span class="op" style="color:#4ade80">' + inL + '</span>' +
         '<span style="color:#94a3b8;font-size:12px">' + (a[8]||'').slice(0,10) + '...</span>' +
@@ -402,9 +404,30 @@ function renderActivity() {
     }
     html += '<div class="activity-item" style="gap:8px">' + row + timeHtml + amtHtml + '</div>';
   });
+  if (totalPages > 1) {
+    html += '<div class="pagination" style="margin-top:12px">';
+    html += '<button onclick="activityGo(1)"' + (activityPage===1?' disabled':'') + '>首页</button>';
+    html += '<button onclick="activityGo(' + (activityPage-1) + ')"' + (activityPage===1?' disabled':'') + '>上页</button>';
+    html += '<span class="info">' + activityPage + ' / ' + totalPages + ' 页，共 ' + all.length + ' 条</span>';
+    html += '<button onclick="activityGo(' + (activityPage+1) + ')"' + (activityPage===totalPages?' disabled':'') + '>下页</button>';
+    html += '<button onclick="activityGo(' + totalPages + ')"' + (activityPage===totalPages?' disabled':'') + '>末页</button>';
+    html += '</div>';
+  }
   el.innerHTML = html || '<div class="loading">' + T('noTx') + '</div>';
 }
 
+function activityGo(p) {
+  var all = data.la || [];
+  var totalPages = Math.max(1, Math.ceil(all.length / ACTIVITY_PAGE_SIZE));
+  if (p < 1) p = 1;
+  if (p > totalPages) p = totalPages;
+  activityPage = p;
+  renderActivity();
+  document.getElementById('activity-tab').scrollIntoView();
+}
+
+var activityPage = 1;
+var ACTIVITY_PAGE_SIZE = 20;
 var modalAddr = null;
 var modalTxPage = 1;
 var MODAL_PAGE_SIZE = 10;
