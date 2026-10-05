@@ -43,6 +43,12 @@ tr:hover td{background:#1e293b}
 .activity-item a{color:#60a5fa;font-family:monospace;font-size:12px}
 .activity-item .amt{margin-left:auto;font-variant-numeric:tabular-nums}
 .updated{text-align:center;padding:12px;color:#475569;font-size:12px}
+.pagination{display:flex;justify-content:center;gap:8px;margin:16px 0;flex-wrap:wrap}
+.pagination button{background:#1e293b;border:1px solid #334155;color:#e2e8f0;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:14px}
+.pagination button:hover{background:#334155}
+.pagination button.active{background:#4ade80;color:#0f172a;border-color:#4ade80}
+.pagination button:disabled{opacity:0.4;cursor:not-allowed}
+.pagination .info{color:#64748b;font-size:13px;align-self:center}
 .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:100}
 .modal-content{background:#1e293b;margin:5% auto;padding:24px;border-radius:12px;max-width:700px;max-height:80vh;overflow-y:auto}
 .modal-content h2{font-size:18px;margin-bottom:16px;word-break:break-all}
@@ -64,7 +70,7 @@ tr:hover td{background:#1e293b}
 </div>
 <div class="controls">
 <input type="text" id="search" placeholder="搜索地址...">
-<select id="stakeFilter" onchange="renderHolders()">
+<select id="stakeFilter" onchange="currentPage=1;renderHolders()">
 <option value="">全部状态</option>
 <option value="1">质押中</option>
 <option value="2">已解锁</option>
@@ -192,7 +198,10 @@ function showTab(t) {
   document.getElementById('activity-tab').style.display = t === 'activity' ? '' : 'none';
 }
 
-document.getElementById('search').addEventListener('input', renderHolders);
+let currentPage = 1;
+const PAGE_SIZE = 20;
+let filteredRows = [];
+document.getElementById('search').addEventListener('input', () => { currentPage = 1; renderHolders(); });
 load();
 setInterval(load, 10 * 60 * 1000);
 </script>
