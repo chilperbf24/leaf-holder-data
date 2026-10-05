@@ -181,28 +181,6 @@ def main():
             if to:
                 addr_txs[to].append([txid_short, 'transfer', amt, bh, 'in', is_trade, ts, frm or ''])
 
-    # Ensure all activity addresses have txs entries (for clickable detail view)
-    # Some old activity addresses may not be in all_records
-    for r in hist_records.values():
-        txid = r.get('txid', '')
-        txid_short = txid[:16] if txid else ''
-        op = r.get('op', '')
-        amt = r.get('amount')
-        bh = r.get('block_height')
-        ts = r.get('timestamp', '')
-        frm = r.get('from_address') or ''
-        to = r.get('to_address') or ''
-        is_trade = 1 if txid in trade_txids else 0
-        if op == 'transfer':
-            if frm and frm not in addr_txs:
-                # Add minimal entry so address is clickable
-                addr_txs[frm].append([txid_short, 'transfer', amt, bh, 'out', is_trade, ts, to])
-            if to and to not in addr_txs:
-                addr_txs[to].append([txid_short, 'transfer', amt, bh, 'in', is_trade, ts, frm])
-        elif op == 'mint':
-            if to and to not in addr_txs:
-                addr_txs[to].append([txid_short, 'mint', amt, bh, 'mint', 0, ts, ''])
-
     holders = []
     for addr, bal in balances.items():
         if bal <= 0.01:
@@ -302,6 +280,26 @@ def main():
             hist_records[key] = r
             new_act += 1
     print(f"Activity history: {len(hist_records)} total ({new_act} new)")
+
+    # Ensure all activity addresses have txs entries (for clickable detail view)
+    for r in hist_records.values():
+        txid = r.get('txid', '')
+        txid_short = txid[:16] if txid else ''
+        op = r.get('op', '')
+        amt = r.get('amount')
+        bh = r.get('block_height')
+        ts = r.get('timestamp', '')
+        frm = r.get('from_address') or ''
+        to = r.get('to_address') or ''
+        is_trade = 1 if txid in trade_txids else 0
+        if op == 'transfer':
+            if frm and frm not in addr_txs:
+                addr_txs[frm].append([txid_short, 'transfer', amt, bh, 'out', is_trade, ts, to])
+            if to and to not in addr_txs:
+                addr_txs[to].append([txid_short, 'transfer', amt, bh, 'in', is_trade, ts, frm])
+        elif op == 'mint':
+            if to and to not in addr_txs:
+                addr_txs[to].append([txid_short, 'mint', amt, bh, 'mint', 0, ts, ''])
     # Save updated history
     try:
         with open(ACT_HISTORY_FILE, 'w') as f:
