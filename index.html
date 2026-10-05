@@ -15,6 +15,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .controls{max-width:1200px;margin:16px auto;padding:0 16px;display:flex;gap:12px;flex-wrap:wrap}
 .controls input{flex:1;min-width:200px;padding:10px 14px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:14px}
 .controls input::placeholder{color:#64748b}
+.controls select{padding:10px 14px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:14px}
 .tabs{max-width:1200px;margin:0 auto;padding:0 16px;display:flex;gap:8px}
 .tab{padding:10px 20px;border-radius:8px 8px 0 0;background:#1e293b;color:#94a3b8;cursor:pointer;border:none;font-size:14px}
 .tab.active{background:#0f172a;color:#4ade80;border-bottom:2px solid #4ade80}
@@ -23,11 +24,15 @@ table{width:100%;border-collapse:collapse;font-size:14px}
 th{background:#1e293b;padding:12px 8px;text-align:left;position:sticky;top:0;color:#94a3b8;font-weight:600}
 td{padding:10px 8px;border-bottom:1px solid #1e293b}
 tr:hover td{background:#1e293b}
-.rank{color:#64748b;width:60px}
+.rank{color:#64748b;width:50px}
 .addr{font-family:monospace;font-size:12px;color:#60a5fa;cursor:pointer}
 .addr:hover{text-decoration:underline}
 .bal{text-align:right;font-variant-numeric:tabular-nums}
 .bal b{color:#4ade80}
+.stake{font-size:12px;padding:3px 10px;border-radius:12px;white-space:nowrap}
+.stake.s1{background:#14532d;color:#4ade80}
+.stake.s2{background:#7c2d12;color:#fb923c}
+.stake.s0{background:#334155;color:#94a3b8}
 .loading{text-align:center;padding:60px;color:#64748b}
 .error{text-align:center;padding:40px;color:#f87171}
 .error button{margin-top:12px;padding:10px 24px;border-radius:8px;border:none;background:#4ade80;color:#0f172a;cursor:pointer;font-size:14px}
@@ -38,7 +43,18 @@ tr:hover td{background:#1e293b}
 .activity-item a{color:#60a5fa;font-family:monospace;font-size:12px}
 .activity-item .amt{margin-left:auto;font-variant-numeric:tabular-nums}
 .updated{text-align:center;padding:12px;color:#475569;font-size:12px}
-@media(max-width:640px){th:nth-child(4),td:nth-child(4){display:none}}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:100}
+.modal-content{background:#1e293b;margin:5% auto;padding:24px;border-radius:12px;max-width:700px;max-height:80vh;overflow-y:auto}
+.modal-content h2{font-size:18px;margin-bottom:16px;word-break:break-all}
+.modal-content h2 .addr{font-size:14px}
+.modal-close{float:right;background:#334155;border:none;color:#e2e8f0;padding:8px 16px;border-radius:8px;cursor:pointer}
+.modal-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.modal-stat{background:#0f172a;padding:12px;border-radius:8px}
+.modal-stat .label{font-size:12px;color:#64748b}
+.modal-stat .value{font-size:18px;color:#4ade80;margin-top:4px}
+.tx-item{padding:10px;border-bottom:1px solid #334155;font-size:13px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tx-item a{color:#60a5fa;font-family:monospace;font-size:11px}
+@media(max-width:640px){th:nth-child(5),td:nth-child(5),th:nth-child(6),td:nth-child(6){display:none}}
 </style>
 </head>
 <body>
@@ -48,6 +64,12 @@ tr:hover td{background:#1e293b}
 </div>
 <div class="controls">
 <input type="text" id="search" placeholder="搜索地址...">
+<select id="stakeFilter" onchange="renderHolders()">
+<option value="">全部状态</option>
+<option value="1">质押中</option>
+<option value="2">已解锁</option>
+<option value="0">未知</option>
+</select>
 </div>
 <div class="tabs">
 <button class="tab active" onclick="showTab('holders')">持仓排行</button>
@@ -58,10 +80,22 @@ tr:hover td{background:#1e293b}
 <div id="activity-tab" style="display:none"></div>
 </div>
 <div class="updated" id="updated"></div>
+
+<div class="modal" id="modal" onclick="if(event.target==this)closeModal()">
+<div class="modal-content">
+<button class="modal-close" onclick="closeModal()">关闭</button>
+<h2 id="modal-title"></h2>
+<div class="modal-stats" id="modal-stats"></div>
+<h3 style="margin-bottom:12px;font-size:14px;color:#94a3b8">最近交易记录</h3>
+<div id="modal-txs"></div>
+</div>
+</div>
+
 <script>
 const DATA_URL = 'holders.json';
+const STAKE_NAMES = ['未知', '质押中', '已解锁'];
+const STAKE_CLASSES = ['s0', 's1', 's2'];
 let data = null;
-let currentTab = 'holders';
 
 async function load() {
   const holdersEl = document.getElementById('holders-tab');
@@ -77,7 +111,6 @@ async function load() {
 }
 
 function render() {
-  // Stats: u=updated, bh=block, th=holders, ts=supply
   document.getElementById('stats').innerHTML =
     '<span>持仓地址 <b>' + data.th + '</b></span>' +
     '<span>总供应 <b>' + Number(data.ts).toLocaleString() + '</b></span>' +
@@ -91,15 +124,19 @@ function render() {
 
 function renderHolders() {
   const q = document.getElementById('search').value.toLowerCase();
+  const sf = document.getElementById('stakeFilter').value;
   const el = document.getElementById('holders-tab');
-  let rows = data.h; // [address, balance, mint_count, tx_count]
+  let rows = data.h; // [address, balance, mint_count, tx_count, staking]
   if (q) rows = rows.filter(h => h[0].toLowerCase().includes(q));
-  let html = '<table><tr><th>#</th><th>地址</th><th style="text-align:right">余额</th><th>Mint</th><th>交易</th></tr>';
+  if (sf !== '') rows = rows.filter(h => String(h[4]) === sf);
+  let html = '<table><tr><th>#</th><th>地址</th><th style="text-align:right">余额</th><th>状态</th><th>Mint</th><th>交易</th></tr>';
   rows.slice(0, 500).forEach((h, i) => {
     const short = h[0].slice(0,10) + '...' + h[0].slice(-8);
+    const st = h[4] || 0;
     html += '<tr><td class="rank">' + (i+1) + '</td>' +
-      '<td><span class="addr" title="' + h[0] + '" onclick="navigator.clipboard.writeText(\'' + h[0] + "');this.textContent='已复制!';setTimeout(()=>this.textContent='" + short + "',1000)\">" + short + '</span></td>' +
+      '<td><span class="addr" onclick="showDetail(\'' + h[0] + "')\">" + short + '</span></td>' +
       '<td class="bal"><b>' + Number(h[1]).toLocaleString() + '</b></td>' +
+      '<td><span class="stake ' + STAKE_CLASSES[st] + '">' + STAKE_NAMES[st] + '</span></td>' +
       '<td>' + h[2] + '</td><td>' + h[3] + '</td></tr>';
   });
   html += '</table>';
@@ -110,18 +147,45 @@ function renderHolders() {
 function renderActivity() {
   const el = document.getElementById('activity-tab');
   let html = '';
-  (data.la || []).forEach(a => { // [txid, op, address, amount, block]
+  (data.la || []).forEach(a => {
     html += '<div class="activity-item">' +
       '<span class="op ' + a[1] + '">' + a[1] + '</span>' +
       '<a href="https://mempool.space/tx/' + a[0] + '" target="_blank">' + a[0].slice(0,16) + '...</a>' +
-      '<span style="color:#64748b">' + (a[4] || '') + '</span>' +
+      '<span style="color:#64748b">#' + (a[4] || '') + '</span>' +
       '<span class="amt">' + (a[3] ? Number(a[3]).toLocaleString() : '') + ' LEAF</span></div>';
   });
   el.innerHTML = html || '<div class="loading">暂无数据</div>';
 }
 
+function showDetail(addr) {
+  const h = data.h.find(x => x[0] === addr);
+  if (!h) return;
+  const st = h[4] || 0;
+  document.getElementById('modal-title').innerHTML =
+    '<span class="addr">' + addr + '</span>';
+  document.getElementById('modal-stats').innerHTML =
+    '<div class="modal-stat"><div class="label">余额</div><div class="value">' + Number(h[1]).toLocaleString() + '</div></div>' +
+    '<div class="modal-stat"><div class="label">状态</div><div class="value"><span class="stake ' + STAKE_CLASSES[st] + '">' + STAKE_NAMES[st] + '</span></div></div>' +
+    '<div class="modal-stat"><div class="label">Mint 次数</div><div class="value">' + h[2] + '</div></div>' +
+    '<div class="modal-stat"><div class="label">交易数</div><div class="value">' + h[3] + '</div></div>';
+  const txs = (data.txs && data.txs[addr]) || [];
+  let html = '';
+  txs.forEach(t => {
+    // t = [txid_short, op, amount, block]
+    html += '<div class="tx-item">' +
+      '<span class="op ' + t[1] + '">' + t[1] + '</span>' +
+      '<span style="color:#64748b">#' + (t[3] || '') + '</span>' +
+      '<span>' + (t[2] ? Number(t[2]).toLocaleString() : '') + ' LEAF</span></div>';
+  });
+  document.getElementById('modal-txs').innerHTML = html || '<div style="color:#64748b">暂无交易记录</div>';
+  document.getElementById('modal').style.display = 'block';
+}
+
+function closeModal() {
+  document.getElementById('modal').style.display = 'none';
+}
+
 function showTab(t) {
-  currentTab = t;
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
   document.getElementById('holders-tab').style.display = t === 'holders' ? '' : 'none';
@@ -130,7 +194,7 @@ function showTab(t) {
 
 document.getElementById('search').addEventListener('input', renderHolders);
 load();
-setInterval(load, 10 * 60 * 1000); // auto-refresh every 10 min
+setInterval(load, 10 * 60 * 1000);
 </script>
 </body>
 </html>
