@@ -97,7 +97,7 @@ tr:hover td{background:#1e293b}
 <button id="lang-zh" onclick="setLang('zh')" style="padding:6px 16px;border-radius:6px;border:1px solid #4ade80;background:#4ade80;color:#0f172a;cursor:pointer;margin-right:8px">中文</button>
 <button id="lang-en" onclick="setLang('en')" style="padding:6px 16px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;cursor:pointer">English</button>
 </div>
-<div class="stats" id="stats"><span>' + T('loading') + '</span></div>
+<div class="stats" id="stats"><span id="loading-text">加载中...</span></div>
 </div>
 <div class="controls">
 <input type="text" id="search" placeholder="搜索地址...">
@@ -183,6 +183,8 @@ function setLang(l) {
   document.getElementById('title-text').textContent = l==='zh' ? '持仓榜' : 'Holdings';
   document.getElementById('search').placeholder = T('search');
   document.getElementById('page-title').textContent = T('title');
+  var lt = document.getElementById('loading-text');
+  if (lt) lt.textContent = T('loading');
   document.getElementById('tab-dash').textContent = T('dash');
   document.getElementById('tab-holders').textContent = T('holders');
   document.getElementById('tab-activity').textContent = T('activity');
@@ -196,6 +198,8 @@ function setLang(l) {
   document.getElementById('opt-unknown').textContent = T('unknown');
   document.getElementById('search').placeholder = T('search');
   document.getElementById('page-title').textContent = T('title');
+  var lt = document.getElementById('loading-text');
+  if (lt) lt.textContent = T('loading');
   if (data) render();
 }
 function stakeName(i) { return [T('unknown'), T('staked'), T('unlocked'), T('partial')][i] || ''; }
@@ -208,7 +212,7 @@ var sortAsc = false;
 var filteredRows = [];
 
 function load() {
-  document.getElementById('holders-tab').innerHTML = '<div class="loading">加载中...</div>';
+  document.getElementById('holders-tab').innerHTML = '<div class="loading">' + T('loading') + '</div>';
   fetch(DATA_URL + '?t=' + Date.now()).then(function(r) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.json();
