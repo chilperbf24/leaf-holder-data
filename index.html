@@ -288,15 +288,15 @@ function sortBy(col) {
   renderHolders();
 }
 
-function getSortedHolders() {
-  var list = filteredHolders.slice();
+function getSortedHolders(list) {
+  var arr = list.slice();
   if (sortCol >= 0) {
-    list.sort(function(a, b) {
+    arr.sort(function(a, b) {
       var va = a[sortCol], vb = b[sortCol];
       return sortAsc ? va - vb : vb - va;
     });
   }
-  return list;
+  return arr;
 }
 
 function renderHolders() {
@@ -306,7 +306,7 @@ function renderHolders() {
   var filteredHolders = data.h;
   if (q) filteredHolders = filteredHolders.filter(function(h) { return h[0].toLowerCase().indexOf(q) >= 0; });
   if (sf !== '') filteredHolders = filteredHolders.filter(function(h) { return String(h[4]) === sf; });
-  filteredRows = getSortedHolders();
+  filteredRows = getSortedHolders(filteredHolders);
   var totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
   if (currentPage > totalPages) currentPage = totalPages;
   if (currentPage < 1) currentPage = 1;
