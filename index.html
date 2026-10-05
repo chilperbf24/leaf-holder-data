@@ -324,22 +324,37 @@ function renderActivity() {
   (data.la || []).forEach(function(a) {
     var isTrade = a[5] === 1;
     var isUnlock = a[9] === 1;
-    var label, color;
-    if (a[1] === 'mint') { label = T('mint'); color = '#60a5fa'; }
-    else if (isUnlock) { label = LANG==='zh' ? '解锁' : 'Unlock'; color = '#fb923c'; }
-    else if (isTrade) { label = T('buy'); color = '#4ade80'; }
-    else { label = T('tout'); color = '#94a3b8'; }
-    var txLink = '<a href="https://mempool.space/tx/' + a[0] + '" target="_blank">' + a[0].slice(0,10) + '...</a>';
-    // For plain transfers, also show from -> to
-    var routeHtml = '';
-    if (a[1] === 'transfer' && !isTrade && !isUnlock && a[7] && a[8]) {
-      routeHtml = '<span style="color:#94a3b8;font-size:11px">' + a[7].slice(0,6) + '… → ' + a[8].slice(0,6) + '…</span>';
+    var txLink = '<a href="https://mempool.space/tx/' + a[0] + '" target="_blank" style="color:#60a5fa">' + a[0].slice(0,10) + '...</a>';
+    var timeHtml = '<span style="color:#64748b;font-size:11px">' + fmtTime(a[6]) + '</span>';
+    var amtHtml = '<span class="amt">' + (a[3] ? Number(a[3]).toLocaleString() : '') + ' LEAF</span>';
+    var row = '';
+    if (a[1] === 'mint') {
+      // 铸造: to_address
+      row = '<span class="op" style="color:#60a5fa">' + T('mint') + '</span>' + txLink +
+        '<span style="color:#94a3b8;font-size:12px">' + (a[8]||'').slice(0,12) + '...</span>';
+    } else if (isUnlock) {
+      // 解锁: from_address (staking -> unlocked)
+      var ul = LANG==='zh' ? '解锁' : 'Unlock';
+      row = '<span class="op" style="color:#fb923c">' + ul + '</span>' + txLink +
+        '<span style="color:#94a3b8;font-size:12px">' + (a[7]||'').slice(0,12) + '...</span>';
+    } else if (isTrade) {
+      // 买入-卖出: buyer (to) and seller (from)
+      var buyL = T('buy'), sellL = LANG==='zh' ? '卖出' : 'Sell';
+      row = '<span class="op" style="color:#4ade80">' + buyL + '</span>' +
+        '<span style="color:#94a3b8;font-size:12px">' + (a[8]||'').slice(0,10) + '...</span>' +
+        '<span style="color:#64748b;font-size:11px">←</span>' +
+        '<span class="op" style="color:#fb923c">' + sellL + '</span>' +
+        '<span style="color:#94a3b8;font-size:12px">' + (a[7]||'').slice(0,10) + '...</span>' + txLink;
+    } else {
+      // 转入-转出: receiver (to) and sender (from)
+      var inL = T('tin'), outL = T('tout');
+      row = '<span class="op" style="color:#4ade80">' + inL + '</span>' +
+        '<span style="color:#94a3b8;font-size:12px">' + (a[8]||'').slice(0,10) + '...</span>' +
+        '<span style="color:#64748b;font-size:11px">←</span>' +
+        '<span class="op" style="color:#fb923c">' + outL + '</span>' +
+        '<span style="color:#94a3b8;font-size:12px">' + (a[7]||'').slice(0,10) + '...</span>' + txLink;
     }
-    html += '<div class="activity-item">' +
-      '<span class="op" style="color:' + color + '">' + label + '</span>' +
-      txLink + routeHtml +
-      '<span style="color:#64748b;font-size:11px">' + fmtTime(a[6]) + '</span>' +
-      '<span class="amt">' + (a[3] ? Number(a[3]).toLocaleString() : '') + ' LEAF</span></div>';
+    html += '<div class="activity-item" style="gap:8px">' + row + timeHtml + amtHtml + '</div>';
   });
   el.innerHTML = html || '<div class="loading">' + T('noTx') + '</div>';
 }
