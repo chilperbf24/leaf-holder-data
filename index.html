@@ -124,7 +124,7 @@ tr:hover td{background:#1e293b}
 <button class="modal-close" id="modal-close">关闭</button>
 <h2 id="modal-title"></h2>
 <div class="modal-stats" id="modal-stats"></div>
-<h3 style="margin-bottom:12px;font-size:14px;color:#94a3b8">' + T('recentTxs') + '</h3>
+<h3 style="margin-bottom:12px;font-size:14px;color:#94a3b8" id="modal-txs-title">最近交易记录</h3>
 <div id="modal-txs"></div>
 </div>
 </div>
@@ -171,6 +171,8 @@ function setLang(l) {
   document.getElementById('tab-holders').textContent = T('holders');
   document.getElementById('tab-activity').textContent = T('activity');
   document.getElementById('modal-close').textContent = T('close');
+  var txTitle = document.getElementById('modal-txs-title');
+  if (txTitle) txTitle.textContent = T('recentTxs');
   if (data) render();
 }
 function stakeName(i) { return [T('unknown'), T('staked'), T('unlocked')][i] || ''; }
@@ -445,6 +447,7 @@ function showDetail(addr) {
     '<div class="modal-stat"><div class="label">' + T('status') + '</div><div class="value"><span class="stake ' + STAKE_CLASSES[st] + '">' + stakeName(st) + '</span></div></div>' +
     '<div class="modal-stat"><div class="label">' + T('mintCount') + '</div><div class="value">' + h[2] + '</div></div>' +
     '<div class="modal-stat"><div class="label">' + T('txCount') + '</div><div class="value">' + h[3] + '</div></div>';
+  document.getElementById('modal-txs-title').textContent = T('recentTxs');
   renderModalTxs();
   document.getElementById('modal').style.display = 'block';
 }
@@ -491,6 +494,7 @@ function modalTxGo(p) {
   if (p < 1) p = 1;
   if (p > totalPages) p = totalPages;
   modalTxPage = p;
+  document.getElementById('modal-txs-title').textContent = T('recentTxs');
   renderModalTxs();
 }
 
