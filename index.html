@@ -296,9 +296,13 @@ function showDetail(addr) {
     '<div class="modal-stat"><div class="label">交易数</div><div class="value">' + h[3] + '</div></div>';
   var txs = (data.txs && data.txs[addr]) || [];
   var html = '';
+  var DIR_LABEL = {'in': '转入', 'out': '转出', 'mint': '铸造'};
+  var DIR_COLOR = {'in': '#4ade80', 'out': '#fb923c', 'mint': '#60a5fa'};
   txs.forEach(function(t) {
+    var dir = t[4] || '';
     html += '<div class="tx-item">' +
       '<span class="op ' + t[1] + '">' + t[1] + '</span>' +
+      '<span style="color:' + (DIR_COLOR[dir]||'#64748b') + ';font-weight:700">' + (DIR_LABEL[dir]||'') + '</span>' +
       '<span style="color:#64748b">#' + (t[3] || '') + '</span>' +
       '<span>' + (t[2] ? Number(t[2]).toLocaleString() : '') + ' LEAF</span></div>';
   });
