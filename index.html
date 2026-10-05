@@ -43,16 +43,15 @@ tr:hover td{background:#1e293b}
 .activity-item a{color:#60a5fa;font-family:monospace;font-size:12px}
 .activity-item .amt{margin-left:auto;font-variant-numeric:tabular-nums}
 .updated{text-align:center;padding:12px;color:#475569;font-size:12px}
-.pagination{display:flex;justify-content:center;gap:8px;margin:16px 0;flex-wrap:wrap}
+.pagination{display:flex;justify-content:center;gap:8px;margin:16px 0;flex-wrap:wrap;align-items:center}
 .pagination button{background:#1e293b;border:1px solid #334155;color:#e2e8f0;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:14px}
 .pagination button:hover{background:#334155}
 .pagination button.active{background:#4ade80;color:#0f172a;border-color:#4ade80}
 .pagination button:disabled{opacity:0.4;cursor:not-allowed}
-.pagination .info{color:#64748b;font-size:13px;align-self:center}
+.pagination .info{color:#64748b;font-size:13px}
 .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:100}
 .modal-content{background:#1e293b;margin:5% auto;padding:24px;border-radius:12px;max-width:700px;max-height:80vh;overflow-y:auto}
 .modal-content h2{font-size:18px;margin-bottom:16px;word-break:break-all}
-.modal-content h2 .addr{font-size:14px}
 .modal-close{float:right;background:#334155;border:none;color:#e2e8f0;padding:8px 16px;border-radius:8px;cursor:pointer}
 .modal-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .modal-stat{background:#0f172a;padding:12px;border-radius:8px}
@@ -70,7 +69,7 @@ tr:hover td{background:#1e293b}
 </div>
 <div class="controls">
 <input type="text" id="search" placeholder="搜索地址...">
-<select id="stakeFilter" onchange="currentPage=1;renderHolders()">
+<select id="stakeFilter">
 <option value="">全部状态</option>
 <option value="1">质押中</option>
 <option value="2">已解锁</option>
@@ -78,42 +77,43 @@ tr:hover td{background:#1e293b}
 </select>
 </div>
 <div class="tabs">
-<button class="tab active" onclick="showTab('holders')">持仓排行</button>
-<button class="tab" onclick="showTab('activity')">最新动态</button>
+<button class="tab active" id="tab-holders">持仓排行</button>
+<button class="tab" id="tab-activity">最新动态</button>
 </div>
 <div class="content">
 <div id="holders-tab"></div>
 <div id="activity-tab" style="display:none"></div>
 </div>
 <div class="updated" id="updated"></div>
-
-<div class="modal" id="modal" onclick="if(event.target==this)closeModal()">
+<div class="modal" id="modal">
 <div class="modal-content">
-<button class="modal-close" onclick="closeModal()">关闭</button>
+<button class="modal-close" id="modal-close">关闭</button>
 <h2 id="modal-title"></h2>
 <div class="modal-stats" id="modal-stats"></div>
 <h3 style="margin-bottom:12px;font-size:14px;color:#94a3b8">最近交易记录</h3>
 <div id="modal-txs"></div>
 </div>
 </div>
-
 <script>
-const DATA_URL = 'holders.json';
-const STAKE_NAMES = ['未知', '质押中', '已解锁'];
-const STAKE_CLASSES = ['s0', 's1', 's2'];
-let data = null;
+var DATA_URL = 'holders.json';
+var STAKE_NAMES = ['未知', '质押中', '已解锁'];
+var STAKE_CLASSES = ['s0', 's1', 's2'];
+var PAGE_SIZE = 20;
+var data = null;
+var currentPage = 1;
+var filteredRows = [];
 
-async function load() {
-  const holdersEl = document.getElementById('holders-tab');
-  holdersEl.innerHTML = '<div class="loading">加载中...</div>';
-  try {
-    const r = await fetch(DATA_URL + '?t=' + Date.now());
+function load() {
+  document.getElementById('holders-tab').innerHTML = '<div class="loading">加载中...</div>';
+  fetch(DATA_URL + '?t=' + Date.now()).then(function(r) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
-    data = await r.json();
+    return r.json();
+  }).then(function(d) {
+    data = d;
     render();
-  } catch(e) {
-    holdersEl.innerHTML = '<div class="error">加载失败: ' + e.message + '<br><button onclick="load()">重试</button></div>';
-  }
+  }).catch(function(e) {
+    document.getElementById('holders-tab').innerHTML = '<div class="error">加载失败: ' + e.message + '<br><button onclick="load()">重试</button></div>';
+  });
 }
 
 function render() {
@@ -121,7 +121,7 @@ function render() {
     '<span>持仓地址 <b>' + data.th + '</b></span>' +
     '<span>总供应 <b>' + Number(data.ts).toLocaleString() + '</b></span>' +
     '<span>区块 <b>' + data.bh + '</b></span>';
-  const d = new Date(data.u);
+  var d = new Date(data.u);
   document.getElementById('updated').textContent =
     '更新于 ' + d.toLocaleString('zh-CN') + ' · 每10分钟自动刷新';
   renderHolders();
@@ -129,31 +129,66 @@ function render() {
 }
 
 function renderHolders() {
-  const q = document.getElementById('search').value.toLowerCase();
-  const sf = document.getElementById('stakeFilter').value;
-  const el = document.getElementById('holders-tab');
-  let rows = data.h; // [address, balance, mint_count, tx_count, staking]
-  if (q) rows = rows.filter(h => h[0].toLowerCase().includes(q));
-  if (sf !== '') rows = rows.filter(h => String(h[4]) === sf);
-  let html = '<table><tr><th>#</th><th>地址</th><th style="text-align:right">余额</th><th>状态</th><th>Mint</th><th>交易</th></tr>';
-  rows.slice(0, 500).forEach((h, i) => {
-    const short = h[0].slice(0,10) + '...' + h[0].slice(-8);
-    const st = h[4] || 0;
-    html += '<tr><td class="rank">' + (i+1) + '</td>' +
-      '<td><span class="addr" onclick="showDetail(\'' + h[0] + "')\">" + short + '</span></td>' +
+  var q = document.getElementById('search').value.toLowerCase();
+  var sf = document.getElementById('stakeFilter').value;
+  var el = document.getElementById('holders-tab');
+  filteredRows = data.h;
+  if (q) filteredRows = filteredRows.filter(function(h) { return h[0].toLowerCase().indexOf(q) >= 0; });
+  if (sf !== '') filteredRows = filteredRows.filter(function(h) { return String(h[4]) === sf; });
+  var totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+  var start = (currentPage - 1) * PAGE_SIZE;
+  var pageRows = filteredRows.slice(start, start + PAGE_SIZE);
+  var html = '<table><tr><th>#</th><th>地址</th><th style="text-align:right">余额</th><th>状态</th><th>Mint</th><th>交易</th></tr>';
+  pageRows.forEach(function(h, i) {
+    var rank = start + i + 1;
+    var short = h[0].slice(0,10) + '...' + h[0].slice(-8);
+    var st = h[4] || 0;
+    html += '<tr><td class="rank">' + rank + '</td>' +
+      '<td><span class="addr" data-addr="' + h[0] + '">' + short + '</span></td>' +
       '<td class="bal"><b>' + Number(h[1]).toLocaleString() + '</b></td>' +
       '<td><span class="stake ' + STAKE_CLASSES[st] + '">' + STAKE_NAMES[st] + '</span></td>' +
       '<td>' + h[2] + '</td><td>' + h[3] + '</td></tr>';
   });
   html += '</table>';
-  if (rows.length > 500) html += '<div class="updated">仅显示前 500 条，搜索可过滤</div>';
+  html += '<div class="pagination">';
+  html += '<button data-pg="1"' + (currentPage===1?' disabled':'') + '>首页</button>';
+  html += '<button data-pg="' + (currentPage-1) + '"' + (currentPage===1?' disabled':'') + '>上一页</button>';
+  var pStart = Math.max(1, currentPage - 3);
+  var pEnd = Math.min(totalPages, pStart + 6);
+  if (pEnd - pStart < 6) pStart = Math.max(1, pEnd - 6);
+  for (var p = pStart; p <= pEnd; p++) {
+    html += '<button data-pg="' + p + '"' + (p===currentPage?' class="active"':'') + '>' + p + '</button>';
+  }
+  html += '<button data-pg="' + (currentPage+1) + '"' + (currentPage===totalPages?' disabled':'') + '>下一页</button>';
+  html += '<button data-pg="' + totalPages + '"' + (currentPage===totalPages?' disabled':'') + '>末页</button>';
+  html += '<span class="info">第 ' + currentPage + ' / ' + totalPages + ' 页，共 ' + filteredRows.length + ' 条</span>';
+  html += '</div>';
   el.innerHTML = html;
+  // Bind pagination buttons
+  var btns = el.querySelectorAll('.pagination button[data-pg]');
+  btns.forEach(function(b) {
+    b.addEventListener('click', function() {
+      var p = parseInt(b.getAttribute('data-pg'), 10);
+      if (p >= 1 && p <= totalPages && p !== currentPage) {
+        currentPage = p;
+        renderHolders();
+        window.scrollTo(0, 0);
+      }
+    });
+  });
+  // Bind address clicks
+  var addrs = el.querySelectorAll('.addr[data-addr]');
+  addrs.forEach(function(a) {
+    a.addEventListener('click', function() { showDetail(a.getAttribute('data-addr')); });
+  });
 }
 
 function renderActivity() {
-  const el = document.getElementById('activity-tab');
-  let html = '';
-  (data.la || []).forEach(a => {
+  var el = document.getElementById('activity-tab');
+  var html = '';
+  (data.la || []).forEach(function(a) {
     html += '<div class="activity-item">' +
       '<span class="op ' + a[1] + '">' + a[1] + '</span>' +
       '<a href="https://mempool.space/tx/' + a[0] + '" target="_blank">' + a[0].slice(0,16) + '...</a>' +
@@ -164,20 +199,19 @@ function renderActivity() {
 }
 
 function showDetail(addr) {
-  const h = data.h.find(x => x[0] === addr);
+  var h = null;
+  for (var i = 0; i < data.h.length; i++) { if (data.h[i][0] === addr) { h = data.h[i]; break; } }
   if (!h) return;
-  const st = h[4] || 0;
-  document.getElementById('modal-title').innerHTML =
-    '<span class="addr">' + addr + '</span>';
+  var st = h[4] || 0;
+  document.getElementById('modal-title').innerHTML = '<span class="addr">' + addr + '</span>';
   document.getElementById('modal-stats').innerHTML =
     '<div class="modal-stat"><div class="label">余额</div><div class="value">' + Number(h[1]).toLocaleString() + '</div></div>' +
     '<div class="modal-stat"><div class="label">状态</div><div class="value"><span class="stake ' + STAKE_CLASSES[st] + '">' + STAKE_NAMES[st] + '</span></div></div>' +
     '<div class="modal-stat"><div class="label">Mint 次数</div><div class="value">' + h[2] + '</div></div>' +
     '<div class="modal-stat"><div class="label">交易数</div><div class="value">' + h[3] + '</div></div>';
-  const txs = (data.txs && data.txs[addr]) || [];
-  let html = '';
-  txs.forEach(t => {
-    // t = [txid_short, op, amount, block]
+  var txs = (data.txs && data.txs[addr]) || [];
+  var html = '';
+  txs.forEach(function(t) {
     html += '<div class="tx-item">' +
       '<span class="op ' + t[1] + '">' + t[1] + '</span>' +
       '<span style="color:#64748b">#' + (t[3] || '') + '</span>' +
@@ -187,21 +221,26 @@ function showDetail(addr) {
   document.getElementById('modal').style.display = 'block';
 }
 
-function closeModal() {
+document.getElementById('modal-close').addEventListener('click', function() {
   document.getElementById('modal').style.display = 'none';
-}
-
-function showTab(t) {
-  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
-  document.getElementById('holders-tab').style.display = t === 'holders' ? '' : 'none';
-  document.getElementById('activity-tab').style.display = t === 'activity' ? '' : 'none';
-}
-
-let currentPage = 1;
-const PAGE_SIZE = 20;
-let filteredRows = [];
-document.getElementById('search').addEventListener('input', () => { currentPage = 1; renderHolders(); });
+});
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
+document.getElementById('tab-holders').addEventListener('click', function() {
+  document.querySelectorAll('.tab').forEach(function(b) { b.classList.remove('active'); });
+  this.classList.add('active');
+  document.getElementById('holders-tab').style.display = '';
+  document.getElementById('activity-tab').style.display = 'none';
+});
+document.getElementById('tab-activity').addEventListener('click', function() {
+  document.querySelectorAll('.tab').forEach(function(b) { b.classList.remove('active'); });
+  this.classList.add('active');
+  document.getElementById('holders-tab').style.display = 'none';
+  document.getElementById('activity-tab').style.display = '';
+});
+document.getElementById('search').addEventListener('input', function() { currentPage = 1; renderHolders(); });
+document.getElementById('stakeFilter').addEventListener('change', function() { currentPage = 1; renderHolders(); });
 load();
 setInterval(load, 10 * 60 * 1000);
 </script>
