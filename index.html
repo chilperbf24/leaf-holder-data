@@ -470,6 +470,7 @@ function activityGo(p) {
 var activityPage = 1;
 var ACTIVITY_PAGE_SIZE = 20;
 var modalAddr = null;
+var modalTxsOverride = null;
 var modalTxPage = 1;
 var MODAL_PAGE_SIZE = 10;
 
@@ -495,8 +496,21 @@ function showDetail(addr) {
   var h = null;
   for (var i = 0; i < data.h.length; i++) { if (data.h[i][0] === addr) { h = data.h[i]; break; } }
   if (!h) {
-    // Address not in holders (0 balance) - build minimal info from txs
+    // Address not in holders (0 balance) - build from txs or activity
     var txs = (data.txs && data.txs[addr]) || [];
+    if (!txs.length && data.la) {
+      // Build from activity list
+      txs = [];
+      for (var k = 0; k < data.la.length; k++) {
+        var a = data.la[k];
+        // a = [txid, op, address, amount, block, is_trade, timestamp, from_addr, to_addr, is_unlock]
+        if (a[7] === addr || a[8] === addr) {
+          var dir = a[7] === addr ? 'out' : 'in';
+          if (a[1] === 'mint') dir = 'mint';
+          txs.push([a[0] ? a[0].slice(0,16) : '', a[1], a[3], a[4], dir, a[5], a[6], a[7] === addr ? a[8] : a[7]]);
+        }
+      }
+    }
     if (!txs.length) return;
     // Check if this address has unlock events in activity
     var st = 0;
@@ -507,6 +521,9 @@ function showDetail(addr) {
       }
     }
     h = [addr, 0, 0, txs.length, st];
+    modalTxsOverride = txs;
+  } else {
+    modalTxsOverride = null;
   }
   var st = h[4] || 0;
   document.getElementById('modal-title').innerHTML = '<span class="addr">' + addr + '</span>';
@@ -523,7 +540,7 @@ function showDetail(addr) {
 }
 
 function renderModalTxs() {
-  var txs = (data.txs && data.txs[modalAddr]) || [];
+  var txs = modalTxsOverride || (data.txs && data.txs[modalAddr]) || [];
   var totalPages = Math.max(1, Math.ceil(txs.length / MODAL_PAGE_SIZE));
   if (modalTxPage > totalPages) modalTxPage = totalPages;
   var start = (modalTxPage - 1) * MODAL_PAGE_SIZE;
@@ -567,7 +584,7 @@ function renderModalTxs() {
 }
 
 function modalTxGo(p) {
-  var txs = (data.txs && data.txs[modalAddr]) || [];
+  var txs = modalTxsOverride || (data.txs && data.txs[modalAddr]) || [];
   var totalPages = Math.max(1, Math.ceil(txs.length / MODAL_PAGE_SIZE));
   if (p < 1) p = 1;
   if (p > totalPages) p = totalPages;
