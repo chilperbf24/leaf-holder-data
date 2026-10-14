@@ -154,7 +154,7 @@ var I18N = {
        title:'LEAF 持仓榜',
        addrCnt:'个地址',
        noTxModal:'暂无交易记录',
-       unlockedAmt:'已解锁', lockedAmt:'未解锁', addr:'地址', change7d:'7日变化', totalMint:'账本铸造总量', retry:'重试', conc:'集中度', copyAddr:'复制地址', unlock:'解锁', page:'第', pageOf:'页，共', items:'条', poolTag:'流动池', teamLeaf:'项目方', teamKoala:'考拉团队', swapOp:'兑换', orderbook:'订单簿', vaultOpen:'添加金库', vaultClose:'撤出金库', vaultRepay:'金库还款', vaultTab:'金库', vType:'类型', vOwner:'地址', vColl:'抵押(BTC)', vDebt:'债务', vStatus:'状态', vTime:'时间', poolTab:'流动池', pBal:'池子余额', pDeps:'存入次数', pSwaps:'兑换次数', pVol24:'24h兑换量', pAddr:'对手方', addLP:'添加LP', removeLP:'撤出LP'},
+       unlockedAmt:'已解锁', lockedAmt:'未解锁', addr:'地址', change7d:'7日变化', totalMint:'账本铸造总量', retry:'重试', conc:'集中度', copyAddr:'复制地址', unlock:'解锁', page:'第', pageOf:'页，共', items:'条', poolTag:'流动池', teamLeaf:'项目方', teamKoala:'考拉团队', swapOp:'兑换', orderbook:'订单簿', vaultOpen:'添加金库', vaultClose:'撤出金库', vaultRepay:'金库还款', vaultTab:'金库', vType:'类型', vOwner:'地址', vColl:'抵押(BTC)', vDebt:'债务', vStatus:'状态', vTime:'时间', poolTab:'流动池', pBal:'池子余额', pDeps:'存入次数', pSwaps:'兑换次数', pVol24:'24h兑换量', pUsd:'池子价值', pAddr:'对手方', addLP:'添加LP', removeLP:'撤出LP'},
   en: {holders:'Holders', activity:'Activity', dash:'Overview', search:'Search address...', all:'All',
        staked:'Staked', unlocked:'Unlocked', unknown:'Unknown', partial:'Partial', balance:'Balance', status:'Status',
        mintCount:'Mints', txCount:'Txs', recentTxs:'Recent Transactions', noTx:'No transactions',
@@ -168,7 +168,7 @@ var I18N = {
        title:'LEAF Holdings',
        addrCnt:'addrs',
        noTxModal:'No transactions',
-       unlockedAmt:'Unlocked', lockedAmt:'Locked', addr:'Address', change7d:'7d Change', totalMint:'Total Minted', retry:'Retry', conc:'Concentration', copyAddr:'Copy address', unlock:'Unlock', page:'Page', pageOf:', ', items:'items', poolTag:'Liquidity Pool', teamLeaf:'Team', teamKoala:'Koala Team', swapOp:'Swap', orderbook:'Orderbook', vaultOpen:'Vault Open', vaultClose:'Vault Close', vaultRepay:'Vault Repay', vaultTab:'Vault', vType:'Type', vOwner:'Owner', vColl:'Collateral(BTC)', vDebt:'Debt', vStatus:'Status', vTime:'Time', poolTab:'Pool', pBal:'Pool Balance', pDeps:'Deposits', pSwaps:'Swaps', pVol24:'24h Volume', pAddr:'Counterparty', addLP:'Add LP', removeLP:'Remove LP'}
+       unlockedAmt:'Unlocked', lockedAmt:'Locked', addr:'Address', change7d:'7d Change', totalMint:'Total Minted', retry:'Retry', conc:'Concentration', copyAddr:'Copy address', unlock:'Unlock', page:'Page', pageOf:', ', items:'items', poolTag:'Liquidity Pool', teamLeaf:'Team', teamKoala:'Koala Team', swapOp:'Swap', orderbook:'Orderbook', vaultOpen:'Vault Open', vaultClose:'Vault Close', vaultRepay:'Vault Repay', vaultTab:'Vault', vType:'Type', vOwner:'Owner', vColl:'Collateral(BTC)', vDebt:'Debt', vStatus:'Status', vTime:'Time', poolTab:'Pool', pBal:'Pool Balance', pDeps:'Deposits', pSwaps:'Swaps', pVol24:'24h Volume', pUsd:'Pool Value', pAddr:'Counterparty', addLP:'Add LP', removeLP:'Remove LP'}
 };
 function T(k) { return I18N[LANG][k] || k; }
 function fmtTime(iso) {
@@ -641,6 +641,10 @@ document.getElementById('modal-close').addEventListener('click', function() {
 document.getElementById('modal').addEventListener('click', function(e) {
   if (e.target === this) this.style.display = 'none';
 });
+var vaultPage = 1, poolPage = 1;
+var VAULT_PAGE_SIZE = 20, POOL_PAGE_SIZE = 20;
+function vaultGo(p) { vaultPage = p; renderVaults(); }
+function poolGo(p) { poolPage = p; renderPool(); }
 function renderPool() {
   var el = document.getElementById('pool-tab');
   var txs = (data.txs && data.txs[POOL_ID]) || [];
@@ -661,10 +665,16 @@ function renderPool() {
   html += '<div class="modal-stat"><div class="label">' + T('pDeps') + '</div><div class="value">' + nDep + '</div></div>';
   html += '<div class="modal-stat"><div class="label">' + T('pSwaps') + '</div><div class="value">' + nSwap + '</div></div>';
   html += '<div class="modal-stat"><div class="label">' + T('pVol24') + '</div><div class="value">' + Number(Math.round(vol24)).toLocaleString() + '</div></div>';
+  if (data.pool_usd) {
+    html += '<div class="modal-stat"><div class="label">' + T('pUsd') + '</div><div class="value" style="color:#f472b6">$' + Number(data.pool_usd).toLocaleString() + '</div></div>';
+  }
   html += '</div>';
   html += '<table><tr><th>' + T('vTime') + '</th><th>' + T('vType') + '</th><th>' + T('pAddr') + '</th>' +
     '<th style="text-align:right">' + T('balance') + ' (LEAF)</th></tr>';
-  txs.slice(0, 100).forEach(function(t) {
+  var pTotal = Math.max(1, Math.ceil(txs.length / POOL_PAGE_SIZE));
+  if (poolPage > pTotal) poolPage = pTotal;
+  if (poolPage < 1) poolPage = 1;
+  txs.slice((poolPage-1)*POOL_PAGE_SIZE, poolPage*POOL_PAGE_SIZE).forEach(function(t) {
     var lbl, col;
     if (t[1] === 'liquidity') { lbl = T('addLP'); col = '#4ade80'; }
     else if (t[4] === 'out') { lbl = T('swapOp') + '·' + T('buy'); col = '#4ade80'; }
@@ -675,12 +685,24 @@ function renderPool() {
       '<td class="bal">' + Number(t[2]).toLocaleString() + '</td></tr>';
   });
   html += '</table>';
+  if (pTotal > 1) {
+    html += '<div class="pagination" style="margin-top:12px">';
+    html += '<button onclick="poolGo(1)"' + (poolPage===1?' disabled':'') + '>' + T('first') + '</button>';
+    html += '<button onclick="poolGo(' + (poolPage-1) + ')"' + (poolPage===1?' disabled':'') + '>' + T('aPrev') + '</button>';
+    html += '<span class="info">' + T('page') + ' ' + poolPage + ' / ' + pTotal + ' ' + T('pageOf') + ' ' + txs.length + ' ' + T('items') + '</span>';
+    html += '<button onclick="poolGo(' + (poolPage+1) + ')"' + (poolPage===pTotal?' disabled':'') + '>' + T('aNext') + '</button>';
+    html += '<button onclick="poolGo(' + pTotal + ')"' + (poolPage===pTotal?' disabled':'') + '>' + T('last') + '</button>';
+    html += '</div>';
+  }
   el.innerHTML = html || '<div class="loading">' + T('noTx') + '</div>';
 }
 
 function renderVaults() {
   var el = document.getElementById('vault-tab');
   var vs = data.vaults || [];
+  var vTotal = Math.max(1, Math.ceil(vs.length / VAULT_PAGE_SIZE));
+  if (vaultPage > vTotal) vaultPage = vTotal;
+  if (vaultPage < 1) vaultPage = 1;
   var cnt = {vault_open: 0, vault_close: 0, vault_repay: 0};
   var totColl = 0;
   vs.forEach(function(v) {
@@ -695,7 +717,7 @@ function renderVaults() {
   html += '</div>';
   html += '<table><tr><th>' + T('vTime') + '</th><th>' + T('vType') + '</th><th>' + T('vOwner') + '</th>' +
     '<th style="text-align:right">' + T('vColl') + '</th><th style="text-align:right">' + T('vDebt') + '</th><th>' + T('vStatus') + '</th></tr>';
-  vs.slice(0, 100).forEach(function(v) {
+  vs.slice((vaultPage-1)*VAULT_PAGE_SIZE, vaultPage*VAULT_PAGE_SIZE).forEach(function(v) {
     var lbl = v[1]==='vault_open' ? T('vaultOpen') : (v[1]==='vault_close' ? T('vaultClose') : T('vaultRepay'));
     var col = v[1]==='vault_open' ? '#4ade80' : (v[1]==='vault_close' ? '#fb923c' : '#60a5fa');
     html += '<tr><td style="font-size:11px;color:#64748b">' + fmtTime(v[7]) + '</td>' +
@@ -706,6 +728,15 @@ function renderVaults() {
       '<td style="font-size:11px;color:#94a3b8">' + (v[5] || '-') + '</td></tr>';
   });
   html += '</table>';
+  if (vTotal > 1) {
+    html += '<div class="pagination" style="margin-top:12px">';
+    html += '<button onclick="vaultGo(1)"' + (vaultPage===1?' disabled':'') + '>' + T('first') + '</button>';
+    html += '<button onclick="vaultGo(' + (vaultPage-1) + ')"' + (vaultPage===1?' disabled':'') + '>' + T('aPrev') + '</button>';
+    html += '<span class="info">' + T('page') + ' ' + vaultPage + ' / ' + vTotal + ' ' + T('pageOf') + ' ' + vs.length + ' ' + T('items') + '</span>';
+    html += '<button onclick="vaultGo(' + (vaultPage+1) + ')"' + (vaultPage===vTotal?' disabled':'') + '>' + T('aNext') + '</button>';
+    html += '<button onclick="vaultGo(' + vTotal + ')"' + (vaultPage===vTotal?' disabled':'') + '>' + T('last') + '</button>';
+    html += '</div>';
+  }
   el.innerHTML = html || '<div class="loading">' + T('noTx') + '</div>';
 }
 
