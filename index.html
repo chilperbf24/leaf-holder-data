@@ -755,8 +755,10 @@ function renderVaults() {
   var _unexp = [], _exp = [];
   vs.forEach(function(v) {
     var _liq = v[9] || 0;
-    var _isOpen = v[1] === 'vault_open';
-    if (_isOpen && _liq > _bh) _unexp.push(v);
+    var _isOpenOp = v[1] === 'vault_open';
+    var _stillOpen = v[5] === 'open';
+    if (_isOpenOp && _stillOpen && _liq > _bh) _unexp.push(v);
+    else if (_isOpenOp && !_stillOpen) { /* skip: open record of closed vault, covered by close record */ }
     else _exp.push(v);
   });
   _unexp.sort(function(a, b) { return (a[9]||0) - (b[9]||0); });  // nearest expiry first
