@@ -658,6 +658,8 @@ document.getElementById('modal').addEventListener('click', function(e) {
   if (e.target === this) this.style.display = 'none';
 });
 var vaultPage = 1, poolPage = 1;
+var vaultCat = 'unexpired';
+function vaultCatGo(c) { vaultCat = c; vaultPage = 1; renderVaults(); }
 var VAULT_PAGE_SIZE = 20, POOL_PAGE_SIZE = 10;
 function vaultGo(p) { vaultPage = p; renderVaults(); }
 function poolGo(p) { poolPage = p; renderPool(); }
