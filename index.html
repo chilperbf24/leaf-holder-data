@@ -456,6 +456,7 @@ function renderActivity() {
     var timeHtml = '<span style="color:#64748b;font-size:11px">' + fmtTime(a[6]) + '</span>';
     var isVaultOp = a[1].indexOf('vault_') === 0;
     var amtHtml = '<span class="amt">' + (a[3] ? (isVaultOp ? Number(a[3]).toFixed(8) + ' BTC' : Number(a[3]).toLocaleString() + ' LEAF') : '') + '</span>';
+    if (a[10] != null && a[10] > 0) { amtHtml += ' <span style="color:#94a3b8;font-size:11px">≈$' + Number(a[10]).toLocaleString(undefined, {maximumFractionDigits: 2}) + '</span>'; }
     var row = '';
     if (a[1] === 'mint') {
       row = '<span class="op" style="color:#60a5fa">' + T('mint') + '</span>' + txLink +
