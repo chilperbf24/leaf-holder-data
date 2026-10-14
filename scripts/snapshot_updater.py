@@ -299,11 +299,8 @@ def main():
     liq_cnt = sum(1 for r in records if r['op'] == 'liquidity')
 
     now_iso = datetime.now(timezone.utc).isoformat()
-    _diag = (f"mint_cnt={mint_cnt} total={total!r} "
-             f"IN_ACTIONS={IN_ACTIONS} HOLDERS_OUTPUT={HOLDERS_OUTPUT}")
     snapshot = {
         'u': now_iso,
-        '_diag': _diag,
         'bh': max((r['block'] or 0 for r in records), default=0),
         'tr': len(records),
         'th': len(holders),
@@ -340,13 +337,15 @@ def main():
     # - mint count must be exactly 812 (fully covered by the new indexer)
     # - holder total must be within [990M, 1B]; the 7 liquidity payback ops are
     #   currently missing from the upstream history listing, so the computed
-    #   total can sit slightly below 1B
-    print("DIAG:", _diag)
+    #   total can sit slightly below 1B.
+    #   NOTE: compare on round(total, 2) — raw float sums can exceed 1B by
+    #   ~1e-7 of pure floating-point dust (seen live: 1000000000.0000005).
+    total_r = round(total, 2)
     if mint_cnt != EXPECTED_MINTS:
         print(f"VALIDATION FAILED: mint count {mint_cnt} != {EXPECTED_MINTS}, NOT updating holders.json")
         return
-    if not (TOTAL_LO <= total <= TOTAL_HI):
-        print(f"VALIDATION FAILED: total {total:,.2f} outside [{TOTAL_LO:,}, {TOTAL_HI:,}], NOT updating holders.json")
+    if not (TOTAL_LO <= total_r <= TOTAL_HI):
+        print(f"VALIDATION FAILED: total {total_r:,.2f} outside [{TOTAL_LO:,}, {TOTAL_HI:,}], NOT updating holders.json")
         return
     print("Validation passed")
 
