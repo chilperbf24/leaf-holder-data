@@ -498,7 +498,7 @@ def main():
             vaults_detail.append(
                 [it.get('txid'), t, owner, round(collateral, 8), round(debt, 8),
                  v.get('status', ''), it.get('block_height'), it.get('block_time', ''),
-                 v.get('funding_txid') or '']
+                 v.get('funding_txid') or '', v.get('liquidation_height') or 0]
             )
         # USD at confirmation minute for vault ops (amount is BTC)
         _v_minutes = {}
