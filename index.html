@@ -294,8 +294,8 @@ function renderDash() {
   // Pool & Vault summary
   var pi2 = data.pool_info || {};
   var vs2 = data.vaults || [];
-  var vOpen = 0, vColl = 0;
-  vs2.forEach(function(v) { if (v[1]==='vault_open') { vOpen++; vColl += v[3]||0; } });
+  var vOpen = data.vault_open_count || 0, vColl = data.vault_locked_btc || 0;
+  if (!vOpen && vs2.length) { vs2.forEach(function(v) { if (v[1]==='vault_open') { vOpen++; vColl += v[3]||0; } }); }
   html += '<div class="dash-conc" style="margin-top:12px">';
   if (pi2.pool_btc) {
     html += '<div class="box"><div class="l">' + T('dPool') + ' ' + T('pBtc') + '</div><div class="v">' + pi2.pool_btc + ' BTC' +
@@ -750,13 +750,11 @@ function renderVaults() {
   if (vaultPage > vTotal) vaultPage = vTotal;
   if (vaultPage < 1) vaultPage = 1;
   var cnt = {vault_open: 0, vault_close: 0, vault_repay: 0};
-  var totColl = 0;
-  vs.forEach(function(v) {
-    if (cnt[v[1]] !== undefined) cnt[v[1]]++;
-    if (v[1] === 'vault_open') totColl += v[3] || 0;
-  });
+  vs.forEach(function(v) { if (cnt[v[1]] !== undefined) cnt[v[1]]++; });
+  var totColl = data.vault_locked_btc || 0;
+  var nOpen = data.vault_open_count || cnt.vault_open;
   var html = '<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">';
-  html += '<div class="modal-stat"><div class="label">' + T('vaultOpen') + '</div><div class="value" style="color:#4ade80">' + cnt.vault_open + '</div></div>';
+  html += '<div class="modal-stat"><div class="label">' + T('vaultOpen') + '</div><div class="value" style="color:#4ade80">' + nOpen + '</div></div>';
   html += '<div class="modal-stat"><div class="label">' + T('vaultClose') + '</div><div class="value" style="color:#fb923c">' + cnt.vault_close + '</div></div>';
   html += '<div class="modal-stat"><div class="label">' + T('vaultRepay') + '</div><div class="value" style="color:#60a5fa">' + cnt.vault_repay + '</div></div>';
   html += '<div class="modal-stat"><div class="label">' + T('vColl') + '</div><div class="value">' + totColl.toFixed(8) + '</div></div>';
