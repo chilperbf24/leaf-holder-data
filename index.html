@@ -34,6 +34,9 @@ tr:hover td{background:#1e293b}
 .stake.s2{background:#7c2d12;color:#fb923c}
 .stake.s0{background:#334155;color:#94a3b8}
 .pool-tag{font-size:11px;padding:2px 8px;border-radius:10px;background:#312e81;color:#a5b4fc;white-space:nowrap;margin-left:6px}
+.team-tag{font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap;margin-left:6px}
+.team-tag.teamLeaf{background:#7c2d12;color:#fb923c}
+.team-tag.teamKoala{background:#14532d;color:#4ade80}
 .loading{text-align:center;padding:60px;color:#64748b}
 .error{text-align:center;padding:40px;color:#f87171}
 .error button{margin-top:12px;padding:10px 24px;border-radius:8px;border:none;background:#4ade80;color:#0f172a;cursor:pointer;font-size:14px}
@@ -147,7 +150,7 @@ var I18N = {
        title:'LEAF 持仓榜',
        addrCnt:'个地址',
        noTxModal:'暂无交易记录',
-       unlockedAmt:'已解锁', lockedAmt:'未解锁', addr:'地址', change7d:'7日变化', totalMint:'账本铸造总量', retry:'重试', conc:'集中度', copyAddr:'复制地址', unlock:'解锁', page:'第', pageOf:'页，共', items:'条', poolTag:'流动池'},
+       unlockedAmt:'已解锁', lockedAmt:'未解锁', addr:'地址', change7d:'7日变化', totalMint:'账本铸造总量', retry:'重试', conc:'集中度', copyAddr:'复制地址', unlock:'解锁', page:'第', pageOf:'页，共', items:'条', poolTag:'流动池', teamLeaf:'项目方', teamKoala:'考拉团队'},
   en: {holders:'Holders', activity:'Activity', dash:'Overview', search:'Search address...', all:'All',
        staked:'Staked', unlocked:'Unlocked', unknown:'Unknown', partial:'Partial', balance:'Balance', status:'Status',
        mintCount:'Mints', txCount:'Txs', recentTxs:'Recent Transactions', noTx:'No transactions',
@@ -161,7 +164,7 @@ var I18N = {
        title:'LEAF Holdings',
        addrCnt:'addrs',
        noTxModal:'No transactions',
-       unlockedAmt:'Unlocked', lockedAmt:'Locked', addr:'Address', change7d:'7d Change', totalMint:'Total Minted', retry:'Retry', conc:'Concentration', copyAddr:'Copy address', unlock:'Unlock', page:'Page', pageOf:', ', items:'items', poolTag:'Liquidity Pool'}
+       unlockedAmt:'Unlocked', lockedAmt:'Locked', addr:'Address', change7d:'7d Change', totalMint:'Total Minted', retry:'Retry', conc:'Concentration', copyAddr:'Copy address', unlock:'Unlock', page:'Page', pageOf:', ', items:'items', poolTag:'Liquidity Pool', teamLeaf:'Team', teamKoala:'Koala Team'}
 };
 function T(k) { return I18N[LANG][k] || k; }
 function fmtTime(iso) {
@@ -207,6 +210,11 @@ function stakeName(i) { return [T('unknown'), T('staked'), T('unlocked'), T('par
 var POOL_ID = 'SWAP_POOL:4:AXBT:4:LEAF';
 function isPool(a) { return a === POOL_ID; }
 function poolTag() { return '<span class="pool-tag">' + T('poolTag') + '</span>'; }
+var TEAM_TAGS = {
+  'bc1pa8vrkzs2wrrh6nsu862vj50vgmsajtju5yv52atlm6xdf0nmaesqrffjrs': 'teamLeaf',
+  'bc1pd5nxm9rvd9hjs62sp5k5h20axqvyvglpfzkzh042k2ryummsfz4sgarden': 'teamKoala'
+};
+function teamTag(a) { var k = TEAM_TAGS[a]; return k ? '<span class="team-tag ' + k + '">' + T(k) + '</span>' : ''; }
 var STAKE_CLASSES = ['s0', 's1', 's2', 's3'];
 var PAGE_SIZE = 20;
 var data = null;
@@ -356,7 +364,7 @@ function renderHolders() {
     var short = h[0].slice(0,10) + '...' + h[0].slice(-8);
     var st = h[4] || 0;
     html += '<tr><td class="rank">' + rank + '</td>' +
-      '<td><span class="addr" data-addr="' + h[0] + '">' + short + '</span>' + (isPool(h[0]) ? poolTag() : '') + '</td>' +
+      '<td><span class="addr" data-addr="' + h[0] + '">' + short + '</span>' + (isPool(h[0]) ? poolTag() : '') + teamTag(h[0]) + '</td>' +
       '<td class="bal"><b>' + Number(h[1]).toLocaleString() + '</b></td>' +
       '<td><span class="stake ' + STAKE_CLASSES[st] + '">' + stakeName(st) + 
       (st === 3 && h[6] ? '<br><small style="color:#94a3b8">✓' + Number(h[6][0]).toLocaleString() + ' / ○' + Number(h[6][1]).toLocaleString() + '</small>' : '') + 
@@ -402,7 +410,7 @@ function addrHtml(addr, shortLen) {
   if (!addr) return '';
   shortLen = shortLen || 10;
   var short = addr.slice(0, shortLen) + '...';
-  var tag = isPool(addr) ? poolTag() : '';
+  var tag = (isPool(addr) ? poolTag() : '') + teamTag(addr);
   return '<a href="javascript:void(0)" onclick="showDetail(\'' + addr + '\')" ' +
     'style="color:#60a5fa;font-size:12px" title="' + addr + '">' + short + '</a>' + tag +
     '<a href="javascript:void(0)" onclick="copyAddr(\'' + addr + '\')" ' +
@@ -531,7 +539,7 @@ function showDetail(addr) {
     modalTxsOverride = null;
   }
   var st = h[4] || 0;
-  document.getElementById('modal-title').innerHTML = '<span class="addr">' + addr + '</span>' + (isPool(addr) ? poolTag() : '');
+  document.getElementById('modal-title').innerHTML = '<span class="addr">' + addr + '</span>' + (isPool(addr) ? poolTag() : '') + teamTag(addr);
   document.getElementById('modal-stats').innerHTML =
     '<div class="modal-stat"><div class="label">' + T('balance') + '</div><div class="value">' + Number(h[1]).toLocaleString() + '</div></div>' +
     '<div class="modal-stat"><div class="label">' + T('status') + '</div><div class="value"><span class="stake ' + STAKE_CLASSES[st] + '">' + stakeName(st) + 
