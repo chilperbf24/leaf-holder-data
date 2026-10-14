@@ -113,6 +113,15 @@ def fetch_axbt_vaults():
 
 
 _cb_cache = {}  # minute_epoch -> BTC USD close price
+try:
+    _pcp = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'price_cache.json')
+    if os.path.exists(_pcp):
+        _pcd = json.load(open(_pcp))
+        for _k, _v in _pcd.items():
+            _cb_cache[int(_k)] = float(_v)
+        print('Loaded %d cached BTC prices' % len(_cb_cache))
+except Exception as _e:
+    print('Price cache load: %s' % _e)
 
 def coinbase_1m_prices(minute_epochs):
     """Fetch Coinbase 1m BTC-USD close prices for the given minute epochs.
@@ -122,11 +131,11 @@ def coinbase_1m_prices(minute_epochs):
     need = sorted(set(m for m in minute_epochs if m and m not in _cb_cache))
     if not need:
         return {m: _cb_cache[m] for m in minute_epochs if m in _cb_cache}
-    # Cluster: new cluster when gap > 290 minutes (300 candle limit)
+    # Cluster: span <= 250 min and gap <= 250 min (300 candle limit)
     clusters = []
     cs, ce = need[0], need[0]
     for m in need[1:]:
-        if m - ce > 290 * 60:
+        if m - ce > 250 * 60 or m - cs > 250 * 60:
             clusters.append((cs, ce))
             cs = m
         ce = m
@@ -581,6 +590,14 @@ def main():
             with open(HOLDERS_OUTPUT, 'w') as f:
                 json.dump(snapshot, f, separators=(',', ':'))
             print(f"Wrote {HOLDERS_OUTPUT}")
+        # Persist price cache for next run
+        try:
+            _pcp2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'price_cache.json')
+            with open(_pcp2, 'w') as f:
+                json.dump({str(k): v for k, v in _cb_cache.items()}, f)
+            print(f"Saved {len(_cb_cache)} BTC prices to cache")
+        except Exception as _e:
+            print(f"Price cache save: {_e}")
     else:
         push_to_github(snapshot, now_iso)
 
