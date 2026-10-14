@@ -134,16 +134,26 @@ def coinbase_1m_prices(minute_epochs):
     for cs, ce in clusters:
         url = (f"https://api.exchange.coinbase.com/products/BTC-USD/candles"
                f"?start={cs - 60}&end={ce + 120}&granularity=60")
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent": "leaf/1.0"})
-            d = json.load(urllib.request.urlopen(req, timeout=20))
-            # d: [[time, low, high, open, close, volume], ...]
-            for c in d:
-                if isinstance(c, list) and len(c) >= 5:
-                    _cb_cache[int(c[0])] = float(c[4])
-        except Exception as e:
-            print(f"Coinbase fetch failed: {e}")
-        time.sleep(0.3)
+        _ok = False
+        for _attempt in range(3):
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": "leaf/1.0"})
+                d = json.load(urllib.request.urlopen(req, timeout=20))
+                # d: [[time, low, high, open, close, volume], ...]
+                _n = 0
+                for c in d:
+                    if isinstance(c, list) and len(c) >= 5:
+                        _cb_cache[int(c[0])] = float(c[4])
+                        _n += 1
+                if _n > 0:
+                    _ok = True
+                    break
+            except Exception as e:
+                print(f"Coinbase fetch failed (attempt {_attempt+1}): {e}")
+            time.sleep(1.5 * (_attempt + 1))
+        if not _ok:
+            print(f"Coinbase cluster {cs}-{ce} failed after retries")
+        time.sleep(1.0)
     return {m: _cb_cache[m] for m in minute_epochs if m in _cb_cache}
 
 def minute_epoch(ts_iso):
