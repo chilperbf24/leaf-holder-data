@@ -112,6 +112,37 @@ def fetch_axbt_vaults():
     return items
 
 
+def fetch_pool_usd():
+    """Fetch AXBT/LEAF pool reserves and BTC price, return (pool_btc, btc_usd, pool_usd).
+    Non-fatal: returns (0, 0, 0) on failure."""
+    try:
+        pool = fetch(f"{API}/pools/AXBT-LEAF")
+        res = pool.get('reserves') or {}
+        axbt_btc = atoms(res.get('AXBT')) / 100000000
+        leaf_amt = atoms(res.get('LEAF')) / 100000000
+        price = pool.get('price') or {}
+        leaf_btc = float(price.get('axbt_per_leaf') or 0)
+        pool_btc = axbt_btc + leaf_amt * leaf_btc
+        # BTC/USD price (coingecko primary, mempool fallback)
+        btc_usd = 0
+        try:
+            cg = fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd")
+            btc_usd = float(((cg.get('bitcoin') or {}).get('usd') or 0))
+        except Exception:
+            pass
+        if not btc_usd:
+            try:
+                mp = fetch("https://mempool.space/api/v1/prices")
+                btc_usd = float(mp.get('USD') or 0)
+            except Exception:
+                pass
+        pool_usd = round(pool_btc * btc_usd, 2) if pool_btc and btc_usd else 0
+        return round(pool_btc, 8), btc_usd, pool_usd
+    except Exception as e:
+        print(f"Pool USD fetch failed (non-fatal): {e}")
+        return 0, 0, 0
+
+
 def atoms(v):
     try:
         return int(str(v))
@@ -354,6 +385,9 @@ def main():
     swap_cnt = sum(1 for r in records if r['op'] == 'swap')
     liq_cnt = sum(1 for r in records if r['op'] == 'liquidity')
 
+    pool_btc, btc_usd, pool_usd = fetch_pool_usd()
+    print(f"Pool: {pool_btc} BTC @ ${btc_usd} = ${pool_usd}")
+
     now_iso = datetime.now(timezone.utc).isoformat()
     snapshot = {
         'u': now_iso,
@@ -364,6 +398,9 @@ def main():
         'h': holders,
         'la': latest_compact,
         'vaults': vaults_detail,
+        'pool_btc': pool_btc,
+        'btc_usd': btc_usd,
+        'pool_usd': pool_usd,
         'txs': {addr: txs for addr, txs in addr_txs.items() if txs},
         'stats': {
             'moved_bal': round(moved_bal, 2),
