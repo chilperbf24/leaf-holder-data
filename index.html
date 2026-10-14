@@ -150,7 +150,7 @@ var I18N = {
        title:'LEAF 持仓榜',
        addrCnt:'个地址',
        noTxModal:'暂无交易记录',
-       unlockedAmt:'已解锁', lockedAmt:'未解锁', addr:'地址', change7d:'7日变化', totalMint:'账本铸造总量', retry:'重试', conc:'集中度', copyAddr:'复制地址', unlock:'解锁', page:'第', pageOf:'页，共', items:'条', poolTag:'流动池', teamLeaf:'项目方', teamKoala:'考拉团队', swapOp:'兑换', orderbook:'订单簿', addLP:'添加LP', removeLP:'撤出LP'},
+       unlockedAmt:'已解锁', lockedAmt:'未解锁', addr:'地址', change7d:'7日变化', totalMint:'账本铸造总量', retry:'重试', conc:'集中度', copyAddr:'复制地址', unlock:'解锁', page:'第', pageOf:'页，共', items:'条', poolTag:'流动池', teamLeaf:'项目方', teamKoala:'考拉团队', swapOp:'兑换', orderbook:'订单簿', vaultOpen:'添加金库', vaultClose:'撤出金库', vaultRepay:'金库还款', addLP:'添加LP', removeLP:'撤出LP'},
   en: {holders:'Holders', activity:'Activity', dash:'Overview', search:'Search address...', all:'All',
        staked:'Staked', unlocked:'Unlocked', unknown:'Unknown', partial:'Partial', balance:'Balance', status:'Status',
        mintCount:'Mints', txCount:'Txs', recentTxs:'Recent Transactions', noTx:'No transactions',
@@ -164,7 +164,7 @@ var I18N = {
        title:'LEAF Holdings',
        addrCnt:'addrs',
        noTxModal:'No transactions',
-       unlockedAmt:'Unlocked', lockedAmt:'Locked', addr:'Address', change7d:'7d Change', totalMint:'Total Minted', retry:'Retry', conc:'Concentration', copyAddr:'Copy address', unlock:'Unlock', page:'Page', pageOf:', ', items:'items', poolTag:'Liquidity Pool', teamLeaf:'Team', teamKoala:'Koala Team', swapOp:'Swap', orderbook:'Orderbook', addLP:'Add LP', removeLP:'Remove LP'}
+       unlockedAmt:'Unlocked', lockedAmt:'Locked', addr:'Address', change7d:'7d Change', totalMint:'Total Minted', retry:'Retry', conc:'Concentration', copyAddr:'Copy address', unlock:'Unlock', page:'Page', pageOf:', ', items:'items', poolTag:'Liquidity Pool', teamLeaf:'Team', teamKoala:'Koala Team', swapOp:'Swap', orderbook:'Orderbook', vaultOpen:'Vault Open', vaultClose:'Vault Close', vaultRepay:'Vault Repay', addLP:'Add LP', removeLP:'Remove LP'}
 };
 function T(k) { return I18N[LANG][k] || k; }
 function fmtTime(iso) {
@@ -433,7 +433,8 @@ function renderActivity() {
     var isUnlock = a[9] === 1;
     var txLink = '<a href="https://mempool.space/tx/' + a[0] + '" target="_blank" style="color:#60a5fa">' + a[0].slice(0,10) + '...</a>';
     var timeHtml = '<span style="color:#64748b;font-size:11px">' + fmtTime(a[6]) + '</span>';
-    var amtHtml = '<span class="amt">' + (a[3] ? Number(a[3]).toLocaleString() : '') + ' LEAF</span>';
+    var isVaultOp = a[1].indexOf('vault_') === 0;
+    var amtHtml = '<span class="amt">' + (a[3] ? (isVaultOp ? Number(a[3]).toFixed(8) + ' BTC' : Number(a[3]).toLocaleString() + ' LEAF') : '') + '</span>';
     var row = '';
     if (a[1] === 'mint') {
       row = '<span class="op" style="color:#60a5fa">' + T('mint') + '</span>' + txLink +
@@ -453,6 +454,11 @@ function renderActivity() {
       var liqLbl = '<span class="op" style="color:' + (isDep ? '#4ade80' : '#fb923c') + '">' +
         (isDep ? T('addLP') : T('removeLP')) + '</span>';
       row = liqLbl + txLink + addrHtml(isDep ? a[7] : a[8], 12);
+    } else if (a[1] === 'vault_open' || a[1] === 'vault_close' || a[1] === 'vault_repay') {
+      var vKey = a[1] === 'vault_open' ? 'vaultOpen' : (a[1] === 'vault_close' ? 'vaultClose' : 'vaultRepay');
+      var vColor = a[1] === 'vault_open' ? '#4ade80' : '#fb923c';
+      row = '<span class="op" style="color:' + vColor + '">' + T(vKey) + '</span>' + txLink +
+        addrHtml(a[7] || a[2], 12);
     } else if (isUnlock) {
       var ul = LANG==='zh' ? '解锁' : 'Unlock';
       row = '<span class="op" style="color:#fb923c">' + ul + '</span>' + txLink +
