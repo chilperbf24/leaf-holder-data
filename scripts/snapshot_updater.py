@@ -362,6 +362,19 @@ def main():
             if to:
                 addr_txs[to].append([txid_short, 'liquidity', amt, bh, 'in', 0, ts, frm])
 
+    # Override pool balance with official reserves: history misses 7 liquidity_payback ops
+    try:
+        _pr = json.load(urllib.request.urlopen(
+            urllib.request.Request("https://crc20.org/api/v1/pools/AXBT-LEAF",
+                                   headers={"User-Agent": "leaf/1.0"}), timeout=20))
+        _official_leaf = int(_pr.get('reserves', {}).get('LEAF', 0)) / 100000000
+        if _official_leaf > 0 and POOL_ADDR in balances:
+            _diff = balances[POOL_ADDR] - _official_leaf
+            balances[POOL_ADDR] = _official_leaf
+            print(f"Pool corrected: {balances[POOL_ADDR]+_diff:.2f} -> {_official_leaf:.2f} (missing paybacks: {_diff:.2f})")
+    except Exception as _e:
+        print(f"Pool reserve override failed: {_e}")
+
     holders = []
     for addr, bal in balances.items():
         if bal <= 0.01:
