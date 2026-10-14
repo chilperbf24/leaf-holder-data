@@ -154,7 +154,7 @@ var I18N = {
        title:'LEAF 持仓榜',
        addrCnt:'个地址',
        noTxModal:'暂无交易记录',
-       unlockedAmt:'已解锁', lockedAmt:'未解锁', addr:'地址', change7d:'7日变化', totalMint:'账本铸造总量', retry:'重试', conc:'集中度', copyAddr:'复制地址', unlock:'解锁', page:'第', pageOf:'页，共', items:'条', poolTag:'流动池', teamLeaf:'项目方', teamKoala:'考拉团队', swapOp:'兑换', orderbook:'订单簿', vaultOpen:'添加金库', vaultClose:'撤出金库', vaultRepay:'金库还款', vaultTab:'金库', vType:'类型', vOwner:'地址', vColl:'抵押(BTC)', vDebt:'债务', vStatus:'状态', vTime:'时间', poolTab:'流动池', pBal:'池子余额', pDeps:'存入次数', pSwaps:'兑换次数', pVol24:'24h兑换量', pUsd:'池子价值', pAddr:'对手方', addLP:'添加LP', removeLP:'撤出LP'},
+       unlockedAmt:'已解锁', lockedAmt:'未解锁', addr:'地址', change7d:'7日变化', totalMint:'账本铸造总量', retry:'重试', conc:'集中度', copyAddr:'复制地址', unlock:'解锁', page:'第', pageOf:'页，共', items:'条', poolTag:'流动池', teamLeaf:'项目方', teamKoala:'考拉团队', swapOp:'兑换', orderbook:'订单簿', vaultOpen:'添加金库', vaultClose:'撤出金库', vaultRepay:'金库还款', vaultTab:'金库', vType:'类型', vOwner:'地址', vColl:'抵押(BTC)', vDebt:'债务', vStatus:'状态', vTime:'时间', poolTab:'流动池', pBal:'池子余额', pDeps:'存入次数', pSwaps:'兑换次数', pVol24:'24h兑换量', pUsd:'池子价值', pPrice:'价格', pBtc:'池价值(BTC)', pPos:'仓位', pShare:'份额', pDep:'存入', pClaim:'现值', pExp:'到期区块', pAddr:'对手方', addLP:'添加LP', removeLP:'撤出LP'},
   en: {holders:'Holders', activity:'Activity', dash:'Overview', search:'Search address...', all:'All',
        staked:'Staked', unlocked:'Unlocked', unknown:'Unknown', partial:'Partial', balance:'Balance', status:'Status',
        mintCount:'Mints', txCount:'Txs', recentTxs:'Recent Transactions', noTx:'No transactions',
@@ -168,7 +168,7 @@ var I18N = {
        title:'LEAF Holdings',
        addrCnt:'addrs',
        noTxModal:'No transactions',
-       unlockedAmt:'Unlocked', lockedAmt:'Locked', addr:'Address', change7d:'7d Change', totalMint:'Total Minted', retry:'Retry', conc:'Concentration', copyAddr:'Copy address', unlock:'Unlock', page:'Page', pageOf:', ', items:'items', poolTag:'Liquidity Pool', teamLeaf:'Team', teamKoala:'Koala Team', swapOp:'Swap', orderbook:'Orderbook', vaultOpen:'Vault Open', vaultClose:'Vault Close', vaultRepay:'Vault Repay', vaultTab:'Vault', vType:'Type', vOwner:'Owner', vColl:'Collateral(BTC)', vDebt:'Debt', vStatus:'Status', vTime:'Time', poolTab:'Pool', pBal:'Pool Balance', pDeps:'Deposits', pSwaps:'Swaps', pVol24:'24h Volume', pUsd:'Pool Value', pAddr:'Counterparty', addLP:'Add LP', removeLP:'Remove LP'}
+       unlockedAmt:'Unlocked', lockedAmt:'Locked', addr:'Address', change7d:'7d Change', totalMint:'Total Minted', retry:'Retry', conc:'Concentration', copyAddr:'Copy address', unlock:'Unlock', page:'Page', pageOf:', ', items:'items', poolTag:'Liquidity Pool', teamLeaf:'Team', teamKoala:'Koala Team', swapOp:'Swap', orderbook:'Orderbook', vaultOpen:'Vault Open', vaultClose:'Vault Close', vaultRepay:'Vault Repay', vaultTab:'Vault', vType:'Type', vOwner:'Owner', vColl:'Collateral(BTC)', vDebt:'Debt', vStatus:'Status', vTime:'Time', poolTab:'Pool', pBal:'Pool Balance', pDeps:'Deposits', pSwaps:'Swaps', pVol24:'24h Volume', pUsd:'Pool Value', pPrice:'Price', pBtc:'Pool Value (BTC)', pPos:'Positions', pShare:'Share', pDep:'Deposited', pClaim:'Current', pExp:'Expiry', pAddr:'Counterparty', addLP:'Add LP', removeLP:'Remove LP'}
 };
 function T(k) { return I18N[LANG][k] || k; }
 function fmtTime(iso) {
@@ -648,6 +648,7 @@ function poolGo(p) { poolPage = p; renderPool(); }
 function renderPool() {
   var el = document.getElementById('pool-tab');
   var txs = (data.txs && data.txs[POOL_ID]) || [];
+  var pi = data.pool_info || {};
   var poolBal = 0;
   data.h.forEach(function(h) { if (h[0] === POOL_ID) poolBal = h[1]; });
   var nDep = 0, nSwap = 0, vol24 = 0;
@@ -661,14 +662,30 @@ function renderPool() {
     }
   });
   var html = '<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">';
+  if (pi.leaf_sat) html += '<div class="modal-stat"><div class="label">' + T('pPrice') + '</div><div class="value">' + pi.leaf_sat + ' sat</div></div>';
+  if (pi.pool_btc) html += '<div class="modal-stat"><div class="label">' + T('pBtc') + '</div><div class="value">' + pi.pool_btc + '</div></div>';
+  if (pi.pool_usd) html += '<div class="modal-stat"><div class="label">' + T('pUsd') + '</div><div class="value" style="color:#f472b6">$' + Number(pi.pool_usd).toLocaleString() + '</div></div>';
   html += '<div class="modal-stat"><div class="label">' + T('pBal') + '</div><div class="value" style="color:#4ade80">' + Number(poolBal).toLocaleString() + '</div></div>';
-  html += '<div class="modal-stat"><div class="label">' + T('pDeps') + '</div><div class="value">' + nDep + '</div></div>';
-  html += '<div class="modal-stat"><div class="label">' + T('pSwaps') + '</div><div class="value">' + nSwap + '</div></div>';
-  html += '<div class="modal-stat"><div class="label">' + T('pVol24') + '</div><div class="value">' + Number(Math.round(vol24)).toLocaleString() + '</div></div>';
-  if (data.pool_usd) {
-    html += '<div class="modal-stat"><div class="label">' + T('pUsd') + '</div><div class="value" style="color:#f472b6">$' + Number(data.pool_usd).toLocaleString() + '</div></div>';
-  }
+  html += '<div class="modal-stat"><div class="label">' + T('pPos') + '</div><div class="value">' + (pi.n_positions || nDep) + '</div></div>';
+  html += '<div class="modal-stat"><div class="label">' + T('pSwaps') + '</div><div class="value">' + (pi.swaps || nSwap) + '</div></div>';
   html += '</div>';
+  // positions table
+  var poss = pi.positions || [];
+  if (poss.length) {
+    html += '<h4 style="margin:16px 0 8px">' + T('pPos') + ' (' + poss.length + ')</h4>';
+    html += '<table><tr><th>' + T('pAddr') + '</th><th style="text-align:right">' + T('pShare') + ' %</th>' +
+      '<th style="text-align:right">' + T('pDep') + ' LEAF</th><th style="text-align:right">' + T('pClaim') + ' LEAF</th><th>' + T('pExp') + '</th></tr>';
+    poss.forEach(function(ps) {
+      html += '<tr><td>' + addrHtml(ps[0], 10) + '</td>' +
+        '<td class="bal">' + ps[1] + '%</td>' +
+        '<td class="bal">' + Number(ps[2]).toLocaleString() + '</td>' +
+        '<td class="bal">' + Number(ps[4]).toLocaleString() + '</td>' +
+        '<td style="font-size:11px;color:#64748b">' + ps[6] + '</td></tr>';
+    });
+    html += '</table>';
+  }
+  // activity table
+  html += '<h4 style="margin:16px 0 8px">' + T('activity') + '</h4>';
   html += '<table><tr><th>' + T('vTime') + '</th><th>' + T('vType') + '</th><th>' + T('pAddr') + '</th>' +
     '<th style="text-align:right">' + T('balance') + ' (LEAF)</th></tr>';
   var pTotal = Math.max(1, Math.ceil(txs.length / POOL_PAGE_SIZE));
