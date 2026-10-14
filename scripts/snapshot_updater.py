@@ -361,6 +361,8 @@ def main():
     # Merge AXBT vault operations into activity feed (display only)
     # and build detailed vault list for the vault tab
     vaults_detail = []
+    vault_open_count = 0
+    vault_locked_btc = 0
     try:
         for it in fetch_axbt_vaults():
             t = it.get('type')
@@ -384,11 +386,23 @@ def main():
             )
             vaults_detail.append(
                 [it.get('txid'), t, owner, round(collateral, 8), round(debt, 8),
-                 v.get('status', ''), it.get('block_height'), it.get('block_time', '')]
+                 v.get('status', ''), it.get('block_height'), it.get('block_time', ''),
+                 v.get('funding_txid') or '']
             )
         latest_compact.sort(key=lambda x: x[4] or 0, reverse=True)
         vaults_detail.sort(key=lambda x: x[6] or 0, reverse=True)
-        print(f"Merged {len(vaults_detail)} AXBT vault ops into activity")
+        # Correct open-vault accounting: match closes to opens by funding_txid
+        # Process oldest-first so closes remove their opens
+        _open_vaults = {}
+        for _vd in reversed(vaults_detail):
+            _fid = _vd[8] or _vd[0]
+            if _vd[1] == 'vault_open':
+                _open_vaults[_fid] = _vd[3]
+            elif _vd[1] == 'vault_close':
+                _open_vaults.pop(_fid, None)
+        vault_open_count = len(_open_vaults)
+        vault_locked_btc = round(sum(_open_vaults.values()), 8)
+        print(f"Merged {len(vaults_detail)} AXBT vault ops; open: {vault_open_count}, locked: {vault_locked_btc} BTC")
     except Exception as e:
         print(f"AXBT vault merge failed (non-fatal): {e}")
 
@@ -424,6 +438,8 @@ def main():
         'h': holders,
         'la': latest_compact,
         'vaults': vaults_detail,
+        'vault_open_count': vault_open_count,
+        'vault_locked_btc': vault_locked_btc,
         'pool_info': pool_info,
         'txs': {addr: txs for addr, txs in addr_txs.items() if txs},
         'stats': {
