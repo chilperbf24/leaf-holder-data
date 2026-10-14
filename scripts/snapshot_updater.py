@@ -300,6 +300,27 @@ def main():
     print(f"Normalized {len(records)} LEAF records")
 
     # Compute balances
+    # Fetch liquidity paybacks from AXBT history (missing from LEAF history upstream)
+    try:
+        for _it in fetch_axbt_vaults():
+            if _it.get('type') == 'liquidity':
+                _liq = _it.get('liquidity') or {}
+                if _liq.get('action') == 'payback':
+                    _credited = _liq.get('credited') or {}
+                    _leaf_pb = atoms(_credited.get('LEAF')) / 100000000
+                    _pb_to = _it.get('to')
+                    if _leaf_pb > 0 and _pb_to:
+                        records.append({'txid': _it.get('txid'), 'op': 'liquidity',
+                                        'frm': POOL_ADDR, 'to': _pb_to, 'amt': _leaf_pb,
+                                        'block': _it.get('block_height'),
+                                        'ts': _it.get('block_time', ''), 'is_trade': 0,
+                                        'btc': atoms(_credited.get('AXBT')) / 100000000,
+                                        'is_payback': 1})
+        _pb_cnt = sum(1 for _r in records if _r.get('is_payback'))
+        print(f"Added {_pb_cnt} liquidity paybacks from AXBT history")
+    except Exception as _e:
+        print(f"Payback fetch failed: {_e}")
+
     balances = defaultdict(float)
     mint_count = defaultdict(int)
     tx_count = defaultdict(int)
@@ -361,19 +382,6 @@ def main():
                 addr_txs[frm].append([txid_short, 'liquidity', amt, bh, 'out', 0, ts, to])
             if to:
                 addr_txs[to].append([txid_short, 'liquidity', amt, bh, 'in', 0, ts, frm])
-
-    # Override pool balance with official reserves: history misses 7 liquidity_payback ops
-    try:
-        _pr = json.load(urllib.request.urlopen(
-            urllib.request.Request("https://crc20.org/api/v1/pools/AXBT-LEAF",
-                                   headers={"User-Agent": "leaf/1.0"}), timeout=20))
-        _official_leaf = int(_pr.get('reserves', {}).get('LEAF', 0)) / 100000000
-        if _official_leaf > 0 and POOL_ADDR in balances:
-            _diff = balances[POOL_ADDR] - _official_leaf
-            balances[POOL_ADDR] = _official_leaf
-            print(f"Pool corrected: {balances[POOL_ADDR]+_diff:.2f} -> {_official_leaf:.2f} (missing paybacks: {_diff:.2f})")
-    except Exception as _e:
-        print(f"Pool reserve override failed: {_e}")
 
     holders = []
     for addr, bal in balances.items():
