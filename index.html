@@ -657,9 +657,11 @@ document.getElementById('modal').addEventListener('click', function(e) {
   if (e.target === this) this.style.display = 'none';
 });
 var vaultPage = 1, poolPage = 1;
-var VAULT_PAGE_SIZE = 20, POOL_PAGE_SIZE = 20;
+var VAULT_PAGE_SIZE = 20, POOL_PAGE_SIZE = 10;
 function vaultGo(p) { vaultPage = p; renderVaults(); }
 function poolGo(p) { poolPage = p; renderPool(); }
+var posPage = 1;
+function posGo(p) { posPage = p; renderPool(); }
 function renderPool() {
   var el = document.getElementById('pool-tab');
   var txs = (data.txs && data.txs[POOL_ID]) || [];
@@ -686,11 +688,14 @@ function renderPool() {
   html += '</div>';
   // positions table
   var poss = pi.positions || [];
+  var posTotal = Math.max(1, Math.ceil(poss.length / 10));
+  if (posPage > posTotal) posPage = posTotal;
+  if (posPage < 1) posPage = 1;
   if (poss.length) {
     html += '<h4 style="margin:16px 0 8px">' + T('pPos') + ' (' + poss.length + ')</h4>';
     html += '<table><tr><th>' + T('pAddr') + '</th><th style="text-align:right">' + T('pShare') + ' %</th>' +
       '<th style="text-align:right">' + T('pDep') + ' LEAF</th><th style="text-align:right">' + T('pClaim') + ' LEAF</th><th>' + T('pExp') + '</th></tr>';
-    poss.forEach(function(ps) {
+    poss.slice((posPage-1)*10, posPage*10).forEach(function(ps) {
       html += '<tr><td>' + addrHtml(ps[0], 10) + '</td>' +
         '<td class="bal">' + ps[1] + '%</td>' +
         '<td class="bal">' + Number(ps[2]).toLocaleString() + '</td>' +
@@ -698,6 +703,15 @@ function renderPool() {
         '<td style="font-size:11px;color:#64748b">' + ps[6] + '</td></tr>';
     });
     html += '</table>';
+    if (posTotal > 1) {
+      html += '<div class="pagination" style="margin-top:12px">';
+      html += '<button onclick="posGo(1)"' + (posPage===1?' disabled':'') + '>' + T('first') + '</button>';
+      html += '<button onclick="posGo(' + (posPage-1) + ')"' + (posPage===1?' disabled':'') + '>' + T('aPrev') + '</button>';
+      html += '<span class="info">' + T('page') + ' ' + posPage + ' / ' + posTotal + ' ' + T('pageOf') + ' ' + poss.length + ' ' + T('items') + '</span>';
+      html += '<button onclick="posGo(' + (posPage+1) + ')"' + (posPage===posTotal?' disabled':'') + '>' + T('aNext') + '</button>';
+      html += '<button onclick="posGo(' + posTotal + ')"' + (posPage===posTotal?' disabled':'') + '>' + T('last') + '</button>';
+      html += '</div>';
+    }
   }
   // activity table
   html += '<h4 style="margin:16px 0 8px">' + T('pActs') + '</h4>';
