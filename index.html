@@ -150,7 +150,7 @@ var I18N = {
        title:'LEAF 持仓榜',
        addrCnt:'个地址',
        noTxModal:'暂无交易记录',
-       unlockedAmt:'已解锁', lockedAmt:'未解锁', addr:'地址', change7d:'7日变化', totalMint:'账本铸造总量', retry:'重试', conc:'集中度', copyAddr:'复制地址', unlock:'解锁', page:'第', pageOf:'页，共', items:'条', poolTag:'流动池', teamLeaf:'项目方', teamKoala:'考拉团队'},
+       unlockedAmt:'已解锁', lockedAmt:'未解锁', addr:'地址', change7d:'7日变化', totalMint:'账本铸造总量', retry:'重试', conc:'集中度', copyAddr:'复制地址', unlock:'解锁', page:'第', pageOf:'页，共', items:'条', poolTag:'流动池', teamLeaf:'项目方', teamKoala:'考拉团队', swapOp:'兑换', addLP:'添加LP', removeLP:'撤出LP'},
   en: {holders:'Holders', activity:'Activity', dash:'Overview', search:'Search address...', all:'All',
        staked:'Staked', unlocked:'Unlocked', unknown:'Unknown', partial:'Partial', balance:'Balance', status:'Status',
        mintCount:'Mints', txCount:'Txs', recentTxs:'Recent Transactions', noTx:'No transactions',
@@ -164,7 +164,7 @@ var I18N = {
        title:'LEAF Holdings',
        addrCnt:'addrs',
        noTxModal:'No transactions',
-       unlockedAmt:'Unlocked', lockedAmt:'Locked', addr:'Address', change7d:'7d Change', totalMint:'Total Minted', retry:'Retry', conc:'Concentration', copyAddr:'Copy address', unlock:'Unlock', page:'Page', pageOf:', ', items:'items', poolTag:'Liquidity Pool', teamLeaf:'Team', teamKoala:'Koala Team'}
+       unlockedAmt:'Unlocked', lockedAmt:'Locked', addr:'Address', change7d:'7d Change', totalMint:'Total Minted', retry:'Retry', conc:'Concentration', copyAddr:'Copy address', unlock:'Unlock', page:'Page', pageOf:', ', items:'items', poolTag:'Liquidity Pool', teamLeaf:'Team', teamKoala:'Koala Team', swapOp:'Swap', addLP:'Add LP', removeLP:'Remove LP'}
 };
 function T(k) { return I18N[LANG][k] || k; }
 function fmtTime(iso) {
@@ -438,6 +438,21 @@ function renderActivity() {
     if (a[1] === 'mint') {
       row = '<span class="op" style="color:#60a5fa">' + T('mint') + '</span>' + txLink +
         addrHtml(a[8], 12);
+    } else if (a[1] === 'swap') {
+      var isSwapBuy = a[7] === POOL_ID;
+      var swLbl = '<span class="op" style="color:#a5b4fc">' + T('swapOp') + '</span>';
+      if (isSwapBuy) {
+        row = swLbl + '<span class="op" style="color:#4ade80">' + T('buy') + '</span>' +
+          addrHtml(a[8], 10) + txLink;
+      } else {
+        row = swLbl + '<span class="op" style="color:#fb923c">' + T('sell') + '</span>' +
+          addrHtml(a[7], 10) + txLink;
+      }
+    } else if (a[1] === 'liquidity') {
+      var isDep = a[8] === POOL_ID;
+      var liqLbl = '<span class="op" style="color:' + (isDep ? '#4ade80' : '#fb923c') + '">' +
+        (isDep ? T('addLP') : T('removeLP')) + '</span>';
+      row = liqLbl + txLink + addrHtml(isDep ? a[7] : a[8], 12);
     } else if (isUnlock) {
       var ul = LANG==='zh' ? '解锁' : 'Unlock';
       row = '<span class="op" style="color:#fb923c">' + ul + '</span>' + txLink +
