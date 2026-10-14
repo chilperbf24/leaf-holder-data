@@ -259,8 +259,14 @@ def main():
                                 'amt': amt, 'block': bh, 'ts': ts, 'is_trade': 0})
         elif t == 'transfer':
             amt = atoms(it.get('amount')) / ATOMS_PER_LEAF
-            records.append({'txid': txid, 'op': 'transfer', 'frm': frm, 'to': to,
-                            'amt': amt, 'block': bh, 'ts': ts, 'is_trade': is_trade})
+            _rec = {'txid': txid, 'op': 'transfer', 'frm': frm, 'to': to,
+                    'amt': amt, 'block': bh, 'ts': ts, 'is_trade': is_trade}
+            if is_trade:
+                _mk = it.get('market') or {}
+                _paid = atoms(_mk.get('buyer_paid_sat')) / 100000000
+                if _paid > 0:
+                    _rec['btc'] = _paid
+            records.append(_rec)
         elif t == 'swap':
             sw = it.get('swap') or {}
             side = sw.get('side')
