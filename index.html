@@ -150,7 +150,7 @@ var I18N = {
        title:'LEAF 持仓榜',
        addrCnt:'个地址',
        noTxModal:'暂无交易记录',
-       unlockedAmt:'已解锁', lockedAmt:'未解锁', addr:'地址', change7d:'7日变化', totalMint:'账本铸造总量', retry:'重试', conc:'集中度', copyAddr:'复制地址', unlock:'解锁', page:'第', pageOf:'页，共', items:'条', poolTag:'流动池', teamLeaf:'项目方', teamKoala:'考拉团队', swapOp:'兑换', addLP:'添加LP', removeLP:'撤出LP'},
+       unlockedAmt:'已解锁', lockedAmt:'未解锁', addr:'地址', change7d:'7日变化', totalMint:'账本铸造总量', retry:'重试', conc:'集中度', copyAddr:'复制地址', unlock:'解锁', page:'第', pageOf:'页，共', items:'条', poolTag:'流动池', teamLeaf:'项目方', teamKoala:'考拉团队', swapOp:'兑换', orderbook:'订单簿', addLP:'添加LP', removeLP:'撤出LP'},
   en: {holders:'Holders', activity:'Activity', dash:'Overview', search:'Search address...', all:'All',
        staked:'Staked', unlocked:'Unlocked', unknown:'Unknown', partial:'Partial', balance:'Balance', status:'Status',
        mintCount:'Mints', txCount:'Txs', recentTxs:'Recent Transactions', noTx:'No transactions',
@@ -164,7 +164,7 @@ var I18N = {
        title:'LEAF Holdings',
        addrCnt:'addrs',
        noTxModal:'No transactions',
-       unlockedAmt:'Unlocked', lockedAmt:'Locked', addr:'Address', change7d:'7d Change', totalMint:'Total Minted', retry:'Retry', conc:'Concentration', copyAddr:'Copy address', unlock:'Unlock', page:'Page', pageOf:', ', items:'items', poolTag:'Liquidity Pool', teamLeaf:'Team', teamKoala:'Koala Team', swapOp:'Swap', addLP:'Add LP', removeLP:'Remove LP'}
+       unlockedAmt:'Unlocked', lockedAmt:'Locked', addr:'Address', change7d:'7d Change', totalMint:'Total Minted', retry:'Retry', conc:'Concentration', copyAddr:'Copy address', unlock:'Unlock', page:'Page', pageOf:', ', items:'items', poolTag:'Liquidity Pool', teamLeaf:'Team', teamKoala:'Koala Team', swapOp:'Swap', orderbook:'Orderbook', addLP:'Add LP', removeLP:'Remove LP'}
 };
 function T(k) { return I18N[LANG][k] || k; }
 function fmtTime(iso) {
@@ -459,7 +459,8 @@ function renderActivity() {
         addrHtml(a[7], 12);
     } else if (isTrade) {
       var buyL = T('buy'), sellL = T('sell');
-      row = '<span class="op" style="color:#4ade80">' + buyL + '</span>' +
+      var obLbl = '<span class="op" style="color:#f472b6">' + T('orderbook') + '</span>';
+      row = obLbl + '<span class="op" style="color:#4ade80">' + buyL + '</span>' +
         addrHtml(a[8], 10) +
         '<span style="color:#64748b;font-size:11px">←</span>' +
         '<span class="op" style="color:#fb923c">' + sellL + '</span>' +
