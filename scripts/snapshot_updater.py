@@ -112,41 +112,39 @@ def fetch_axbt_vaults():
     return items
 
 
-_kraken_cache = {}  # minute_epoch -> BTC USD close price
+_cb_cache = {}  # minute_epoch -> BTC USD close price
 
-def kraken_1m_prices(minute_epochs):
-    """Fetch Kraken 1m XBTUSD close prices for the given minute epochs.
-    Clusters nearby minutes into range fetches (720 candles max per call).
+def coinbase_1m_prices(minute_epochs):
+    """Fetch Coinbase 1m BTC-USD close prices for the given minute epochs.
+    Clusters nearby minutes into range fetches (300 candles max per call).
     Returns dict minute_epoch -> price. Missing minutes are absent."""
-    global _kraken_cache
-    need = sorted(set(m for m in minute_epochs if m and m not in _kraken_cache))
+    global _cb_cache
+    need = sorted(set(m for m in minute_epochs if m and m not in _cb_cache))
     if not need:
-        return {m: _kraken_cache[m] for m in minute_epochs if m in _kraken_cache}
-    # Cluster: new cluster when gap > 700 minutes
+        return {m: _cb_cache[m] for m in minute_epochs if m in _cb_cache}
+    # Cluster: new cluster when gap > 290 minutes (300 candle limit)
     clusters = []
     cs, ce = need[0], need[0]
     for m in need[1:]:
-        if m - ce > 700 * 60:
+        if m - ce > 290 * 60:
             clusters.append((cs, ce))
             cs = m
         ce = m
     clusters.append((cs, ce))
     for cs, ce in clusters:
-        url = (f"https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=1"
-               f"&since={cs - 60}")
+        url = (f"https://api.exchange.coinbase.com/products/BTC-USD/candles"
+               f"?start={cs - 60}&end={ce + 120}&granularity=60")
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "leaf/1.0"})
             d = json.load(urllib.request.urlopen(req, timeout=20))
-            if d.get('error'):
-                print(f"Kraken error: {d['error']}")
-                continue
-            key = next(iter(d['result']))
-            for c in d['result'][key]:
-                _kraken_cache[int(c[0])] = float(c[4])
+            # d: [[time, low, high, open, close, volume], ...]
+            for c in d:
+                if isinstance(c, list) and len(c) >= 5:
+                    _cb_cache[int(c[0])] = float(c[4])
         except Exception as e:
-            print(f"Kraken fetch failed: {e}")
+            print(f"Coinbase fetch failed: {e}")
         time.sleep(0.3)
-    return {m: _kraken_cache[m] for m in minute_epochs if m in _kraken_cache}
+    return {m: _cb_cache[m] for m in minute_epochs if m in _cb_cache}
 
 def minute_epoch(ts_iso):
     """Floor an ISO UTC timestamp to its minute epoch."""
@@ -409,7 +407,7 @@ def main():
         if r.get('btc', 0) > 0 and r.get('ts'):
             _usd_minutes[r['txid']] = minute_epoch(r['ts'])
     if _usd_minutes:
-        _prices = kraken_1m_prices(list(_usd_minutes.values()))
+        _prices = coinbase_1m_prices(list(_usd_minutes.values()))
         for r in records:
             _m = _usd_minutes.get(r['txid'])
             if _m and _m in _prices and r.get('btc', 0) > 0:
@@ -462,7 +460,7 @@ def main():
             if isinstance(_e[1], str) and _e[1].startswith('vault_') and _e[6] and _e[3]:
                 _v_minutes[_e[0]] = minute_epoch(_e[6])
         if _v_minutes:
-            _vp = kraken_1m_prices(list(_v_minutes.values()))
+            _vp = coinbase_1m_prices(list(_v_minutes.values()))
             for _e in latest_compact:
                 _m = _v_minutes.get(_e[0])
                 if _m and _m in _vp:
