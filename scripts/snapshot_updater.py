@@ -112,6 +112,50 @@ def fetch_axbt_vaults():
     return items
 
 
+_kraken_cache = {}  # minute_epoch -> BTC USD close price
+
+def kraken_1m_prices(minute_epochs):
+    """Fetch Kraken 1m XBTUSD close prices for the given minute epochs.
+    Clusters nearby minutes into range fetches (720 candles max per call).
+    Returns dict minute_epoch -> price. Missing minutes are absent."""
+    global _kraken_cache
+    need = sorted(set(m for m in minute_epochs if m and m not in _kraken_cache))
+    if not need:
+        return {m: _kraken_cache[m] for m in minute_epochs if m in _kraken_cache}
+    # Cluster: new cluster when gap > 700 minutes
+    clusters = []
+    cs, ce = need[0], need[0]
+    for m in need[1:]:
+        if m - ce > 700 * 60:
+            clusters.append((cs, ce))
+            cs = m
+        ce = m
+    clusters.append((cs, ce))
+    for cs, ce in clusters:
+        url = (f"https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=1"
+               f"&since={cs - 60}")
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "leaf/1.0"})
+            d = json.load(urllib.request.urlopen(req, timeout=20))
+            if d.get('error'):
+                print(f"Kraken error: {d['error']}")
+                continue
+            key = next(iter(d['result']))
+            for c in d['result'][key]:
+                _kraken_cache[int(c[0])] = float(c[4])
+        except Exception as e:
+            print(f"Kraken fetch failed: {e}")
+        time.sleep(0.3)
+    return {m: _kraken_cache[m] for m in minute_epochs if m in _kraken_cache}
+
+def minute_epoch(ts_iso):
+    """Floor an ISO UTC timestamp to its minute epoch."""
+    try:
+        dt = datetime.fromisoformat(ts_iso.replace('Z', '+00:00'))
+        return int(dt.timestamp() // 60 * 60)
+    except Exception:
+        return 0
+
 def fetch_pool_info():
     """Fetch AXBT/LEAF pool data + BTC price.
     Returns dict with reserves, price, positions, totals, usd valuation.
@@ -205,19 +249,30 @@ def main():
             side = sw.get('side')
             if side == 'buy' and sw.get('output_tick') == 'LEAF' and to:
                 amt = atoms(sw.get('output_atoms')) / ATOMS_PER_LEAF
+                btc = atoms(sw.get('input_atoms')) / 100000000
                 records.append({'txid': txid, 'op': 'swap', 'frm': POOL_ADDR, 'to': to,
-                                'amt': amt, 'block': bh, 'ts': ts, 'is_trade': 0})
+                                'amt': amt, 'block': bh, 'ts': ts, 'is_trade': 0,
+                                'btc': btc})
             elif side == 'sell' and sw.get('input_tick') == 'LEAF' and frm:
                 amt = atoms(sw.get('input_atoms')) / ATOMS_PER_LEAF
+                btc = atoms(sw.get('output_atoms')) / 100000000
                 records.append({'txid': txid, 'op': 'swap', 'frm': frm, 'to': POOL_ADDR,
-                                'amt': amt, 'block': bh, 'ts': ts, 'is_trade': 0})
+                                'amt': amt, 'block': bh, 'ts': ts, 'is_trade': 0,
+                                'btc': btc})
         elif t == 'liquidity':
             liq = it.get('liquidity') or {}
             action = liq.get('action')
-            leaf_amt = atoms((liq.get('deposit') or {}).get('LEAF')) / ATOMS_PER_LEAF
+            dep = liq.get('deposit') or {}
+            leaf_amt = atoms(dep.get('LEAF')) / ATOMS_PER_LEAF
+            btc_dep = 0
+            for _tok, _v in dep.items():
+                if _tok != 'LEAF':
+                    btc_dep = atoms(_v) / 100000000
+                    break
             if action == 'deposit' and frm and leaf_amt > 0:
                 records.append({'txid': txid, 'op': 'liquidity', 'frm': frm, 'to': POOL_ADDR,
-                                'amt': leaf_amt, 'block': bh, 'ts': ts, 'is_trade': 0})
+                                'amt': leaf_amt, 'block': bh, 'ts': ts, 'is_trade': 0,
+                                'btc': btc_dep})
             elif action == 'payback' and leaf_amt > 0:
                 addr = to or frm
                 if addr:
@@ -348,6 +403,18 @@ def main():
 
     # Latest activity, newest first
     # Format: [txid, op, address, amount, block, is_trade, timestamp, from_addr, to_addr, is_unlock]
+    # USD at confirmation minute for swap/liquidity (via BTC side)
+    _usd_minutes = {}
+    for r in records:
+        if r.get('btc', 0) > 0 and r.get('ts'):
+            _usd_minutes[r['txid']] = minute_epoch(r['ts'])
+    if _usd_minutes:
+        _prices = kraken_1m_prices(list(_usd_minutes.values()))
+        for r in records:
+            _m = _usd_minutes.get(r['txid'])
+            if _m and _m in _prices and r.get('btc', 0) > 0:
+                r['usd'] = round(r['btc'] * _prices[_m], 2)
+        print(f"USD priced {sum(1 for r in records if r.get('usd'))} swap/liquidity records")
     latest_compact = []
     for r in sorted(records, key=lambda x: x['block'] or 0, reverse=True):
         frm, to = r['frm'], r['to']
@@ -355,7 +422,7 @@ def main():
                           and first_out.get(frm) == r['txid']) else 0
         latest_compact.append(
             [r['txid'], r['op'], to or frm, r['amt'], r['block'],
-             r['is_trade'], r['ts'], frm, to, is_unlock]
+             r['is_trade'], r['ts'], frm, to, is_unlock, r.get('usd')]
         )
 
     # Merge AXBT vault operations into activity feed (display only)
@@ -389,6 +456,24 @@ def main():
                  v.get('status', ''), it.get('block_height'), it.get('block_time', ''),
                  v.get('funding_txid') or '']
             )
+        # USD at confirmation minute for vault ops (amount is BTC)
+        _v_minutes = {}
+        for _e in latest_compact:
+            if isinstance(_e[1], str) and _e[1].startswith('vault_') and _e[6] and _e[3]:
+                _v_minutes[_e[0]] = minute_epoch(_e[6])
+        if _v_minutes:
+            _vp = kraken_1m_prices(list(_v_minutes.values()))
+            for _e in latest_compact:
+                _m = _v_minutes.get(_e[0])
+                if _m and _m in _vp:
+                    _e.append(round(_e[3] * _vp[_m], 2))
+                else:
+                    _e.append(None)
+            print(f"USD priced {sum(1 for _e in latest_compact if len(_e) > 10 and _e[10])} vault ops")
+        # ensure all entries have 11 elements
+        for _e in latest_compact:
+            while len(_e) < 11:
+                _e.append(None)
         latest_compact.sort(key=lambda x: x[4] or 0, reverse=True)
         vaults_detail.sort(key=lambda x: x[6] or 0, reverse=True)
         # Correct open-vault accounting: match closes to opens by funding_txid
