@@ -55,7 +55,7 @@ GITHUB_PATH = "holders.json"
 
 EXPECTED_MINTS = 812
 TOTAL_LO = 990_000_000
-TOTAL_HI = 1_000_000_000
+TOTAL_HI = 1_000_000_001  # allow 1 LEAF float dust
 
 
 def _data_path(filename):
