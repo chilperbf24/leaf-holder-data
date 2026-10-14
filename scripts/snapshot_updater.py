@@ -17,6 +17,8 @@ Field mapping (crc20.org -> internal):
   type=liquidity action=deposit -> from -= LEAF deposit (locked in pool)
   type=liquidity action=payback -> to += LEAF (defensive; currently absent
                                  from the history listing upstream)
+  The pool itself is tracked as pseudo-holder SWAP_POOL:4:AXBT:4:LEAF so its
+  LEAF stays in the holder ranking and the total reconciles to 1B.
 
 Amounts are atoms (8 decimals) as strings -> LEAF float.
 """
@@ -35,6 +37,9 @@ IN_ACTIONS = os.environ.get('GITHUB_ACTIONS') == 'true'
 API = "https://crc20.org/api/v1"
 TICK = "LEAF"
 ATOMS_PER_LEAF = 100_000_000
+# The AMM pool has no on-chain address in the new indexer (to/from are null
+# on its side); track it as a pseudo-holder so pool-locked LEAF stays counted.
+POOL_ADDR = "SWAP_POOL:4:AXBT:4:LEAF"
 
 OUTPUT = os.path.join(BASE_DIR, "ledger_snapshot.json")
 
@@ -121,23 +126,23 @@ def main():
             side = sw.get('side')
             if side == 'buy' and sw.get('output_tick') == 'LEAF' and to:
                 amt = atoms(sw.get('output_atoms')) / ATOMS_PER_LEAF
-                records.append({'txid': txid, 'op': 'swap', 'frm': '', 'to': to,
+                records.append({'txid': txid, 'op': 'swap', 'frm': POOL_ADDR, 'to': to,
                                 'amt': amt, 'block': bh, 'ts': ts, 'is_trade': 0})
             elif side == 'sell' and sw.get('input_tick') == 'LEAF' and frm:
                 amt = atoms(sw.get('input_atoms')) / ATOMS_PER_LEAF
-                records.append({'txid': txid, 'op': 'swap', 'frm': frm, 'to': '',
+                records.append({'txid': txid, 'op': 'swap', 'frm': frm, 'to': POOL_ADDR,
                                 'amt': amt, 'block': bh, 'ts': ts, 'is_trade': 0})
         elif t == 'liquidity':
             liq = it.get('liquidity') or {}
             action = liq.get('action')
             leaf_amt = atoms((liq.get('deposit') or {}).get('LEAF')) / ATOMS_PER_LEAF
             if action == 'deposit' and frm and leaf_amt > 0:
-                records.append({'txid': txid, 'op': 'liquidity', 'frm': frm, 'to': '',
+                records.append({'txid': txid, 'op': 'liquidity', 'frm': frm, 'to': POOL_ADDR,
                                 'amt': leaf_amt, 'block': bh, 'ts': ts, 'is_trade': 0})
             elif action == 'payback' and leaf_amt > 0:
                 addr = to or frm
                 if addr:
-                    records.append({'txid': txid, 'op': 'liquidity', 'frm': '', 'to': addr,
+                    records.append({'txid': txid, 'op': 'liquidity', 'frm': POOL_ADDR, 'to': addr,
                                     'amt': leaf_amt, 'block': bh, 'ts': ts, 'is_trade': 0})
         # vault_* ops are AXBT-side; ignored for LEAF balances
 
