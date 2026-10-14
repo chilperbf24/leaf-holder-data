@@ -112,9 +112,10 @@ def fetch_axbt_vaults():
     return items
 
 
-def fetch_pool_usd():
-    """Fetch AXBT/LEAF pool reserves and BTC price, return (pool_btc, btc_usd, pool_usd).
-    Non-fatal: returns (0, 0, 0) on failure."""
+def fetch_pool_info():
+    """Fetch AXBT/LEAF pool data + BTC price.
+    Returns dict with reserves, price, positions, totals, usd valuation.
+    Non-fatal: returns {} on failure."""
     try:
         pool = fetch(f"{API}/pools/AXBT-LEAF")
         res = pool.get('reserves') or {}
@@ -123,7 +124,6 @@ def fetch_pool_usd():
         price = pool.get('price') or {}
         leaf_btc = float(price.get('axbt_per_leaf') or 0)
         pool_btc = axbt_btc + leaf_amt * leaf_btc
-        # BTC/USD price (coingecko primary, mempool fallback)
         btc_usd = 0
         try:
             cg = fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd")
@@ -136,11 +136,37 @@ def fetch_pool_usd():
                 btc_usd = float(mp.get('USD') or 0)
             except Exception:
                 pass
-        pool_usd = round(pool_btc * btc_usd, 2) if pool_btc and btc_usd else 0
-        return round(pool_btc, 8), btc_usd, pool_usd
+        # positions (compact)
+        positions = []
+        for ps in (pool.get('positions') or [])[:50]:
+            dep = ps.get('deposited') or {}
+            clm = ps.get('claim') or {}
+            positions.append([
+                ps.get('owner', ''),
+                round(float(ps.get('share') or 0), 2),
+                round(atoms(dep.get('LEAF')) / 100000000, 2),
+                round(atoms(dep.get('AXBT')) / 100000000, 8),
+                round(atoms(clm.get('LEAF')) / 100000000, 2),
+                round(atoms(clm.get('AXBT')) / 100000000, 8),
+                ps.get('expiry_height') or 0,
+            ])
+        totals = pool.get('totals') or {}
+        fees = totals.get('fees') or {}
+        return {
+            'axbt_btc': round(axbt_btc, 8),
+            'leaf_amt': round(leaf_amt, 2),
+            'leaf_sat': round(leaf_btc * 100000000, 3),
+            'pool_btc': round(pool_btc, 8),
+            'btc_usd': btc_usd,
+            'pool_usd': round(pool_btc * btc_usd, 2) if pool_btc and btc_usd else 0,
+            'positions': positions,
+            'n_positions': pool.get('active_positions') or len(positions),
+            'swaps': totals.get('swaps') or 0,
+            'fees_btc': round((atoms(fees.get('AXBT')) + atoms(fees.get('LEAF')) * leaf_btc) / 100000000, 8),
+        }
     except Exception as e:
-        print(f"Pool USD fetch failed (non-fatal): {e}")
-        return 0, 0, 0
+        print(f"Pool info fetch failed (non-fatal): {e}")
+        return {}
 
 
 def atoms(v):
@@ -385,8 +411,8 @@ def main():
     swap_cnt = sum(1 for r in records if r['op'] == 'swap')
     liq_cnt = sum(1 for r in records if r['op'] == 'liquidity')
 
-    pool_btc, btc_usd, pool_usd = fetch_pool_usd()
-    print(f"Pool: {pool_btc} BTC @ ${btc_usd} = ${pool_usd}")
+    pool_info = fetch_pool_info()
+    print(f"Pool: {pool_info.get('pool_btc')} BTC = ${pool_info.get('pool_usd')}")
 
     now_iso = datetime.now(timezone.utc).isoformat()
     snapshot = {
@@ -398,9 +424,7 @@ def main():
         'h': holders,
         'la': latest_compact,
         'vaults': vaults_detail,
-        'pool_btc': pool_btc,
-        'btc_usd': btc_usd,
-        'pool_usd': pool_usd,
+        'pool_info': pool_info,
         'txs': {addr: txs for addr, txs in addr_txs.items() if txs},
         'stats': {
             'moved_bal': round(moved_bal, 2),
