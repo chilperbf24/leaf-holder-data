@@ -37,6 +37,7 @@ tr:hover td{background:#1e293b}
 .team-tag{font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap;margin-left:6px}
 .team-tag.teamLeaf{background:#7c2d12;color:#fb923c}
 .team-tag.teamKoala{background:#14532d;color:#4ade80}
+.team-tag.teamBuyback{background:#78350f;color:#fcd34d}
 .loading{text-align:center;padding:60px;color:#64748b}
 .error{text-align:center;padding:40px;color:#f87171}
 .error button{margin-top:12px;padding:10px 24px;border-radius:8px;border:none;background:#4ade80;color:#0f172a;cursor:pointer;font-size:14px}
@@ -150,7 +151,7 @@ var I18N = {
        title:'LEAF 持仓榜',
        addrCnt:'个地址',
        noTxModal:'暂无交易记录',
-       unlockedAmt:'已解锁', lockedAmt:'未解锁', addr:'地址', change7d:'7日变化', totalMint:'账本铸造总量', retry:'重试', conc:'集中度', copyAddr:'复制地址', unlock:'解锁', page:'第', pageOf:'页，共', items:'条', poolTag:'流动池', teamLeaf:'项目方', teamKoala:'考拉团队'},
+       unlockedAmt:'已解锁', lockedAmt:'未解锁', addr:'地址', change7d:'7日变化', totalMint:'账本铸造总量', retry:'重试', conc:'集中度', copyAddr:'复制地址', unlock:'解锁', page:'第', pageOf:'页，共', items:'条', poolTag:'流动池', teamLeaf:'项目方', teamKoala:'考拉团队', teamBuyback:'项目方回购'},
   en: {holders:'Holders', activity:'Activity', dash:'Overview', search:'Search address...', all:'All',
        staked:'Staked', unlocked:'Unlocked', unknown:'Unknown', partial:'Partial', balance:'Balance', status:'Status',
        mintCount:'Mints', txCount:'Txs', recentTxs:'Recent Transactions', noTx:'No transactions',
@@ -164,7 +165,7 @@ var I18N = {
        title:'LEAF Holdings',
        addrCnt:'addrs',
        noTxModal:'No transactions',
-       unlockedAmt:'Unlocked', lockedAmt:'Locked', addr:'Address', change7d:'7d Change', totalMint:'Total Minted', retry:'Retry', conc:'Concentration', copyAddr:'Copy address', unlock:'Unlock', page:'Page', pageOf:', ', items:'items', poolTag:'Liquidity Pool', teamLeaf:'Team', teamKoala:'Koala Team'}
+       unlockedAmt:'Unlocked', lockedAmt:'Locked', addr:'Address', change7d:'7d Change', totalMint:'Total Minted', retry:'Retry', conc:'Concentration', copyAddr:'Copy address', unlock:'Unlock', page:'Page', pageOf:', ', items:'items', poolTag:'Liquidity Pool', teamLeaf:'Team', teamKoala:'Koala Team', teamBuyback:'Team Buyback'}
 };
 function T(k) { return I18N[LANG][k] || k; }
 function fmtTime(iso) {
@@ -212,6 +213,7 @@ function isPool(a) { return a === POOL_ID; }
 function poolTag() { return '<span class="pool-tag">' + T('poolTag') + '</span>'; }
 var TEAM_TAGS = {
   'bc1pkrns7ra9mwp3t4mq7ukwygkk5jptadtggftal9l5tt3r8j2ertjs5dv976': 'teamLeaf',
+  'bc1pa8vrkzs2wrrh6nsu862vj50vgmsajtju5yv52atlm6xdf0nmaesqrffjrs': 'teamBuyback',
   'bc1pd5nxm9rvd9hjs62sp5k5h20axqvyvglpfzkzh042k2ryummsfz4sgarden': 'teamKoala'
 };
 function teamTag(a) { var k = TEAM_TAGS[a]; return k ? '<span class="team-tag ' + k + '">' + T(k) + '</span>' : ''; }
