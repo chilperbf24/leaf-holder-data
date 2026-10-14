@@ -302,6 +302,8 @@ def main():
         )
 
     # Merge AXBT vault operations into activity feed (display only)
+    # and build detailed vault list for the vault tab
+    vaults_detail = []
     try:
         for it in fetch_axbt_vaults():
             t = it.get('type')
@@ -309,10 +311,12 @@ def main():
                 continue
             v = it.get('vault') or {}
             owner = v.get('owner') or it.get('from') or ''
+            collateral = atoms(v.get('collateral_sats')) / 100000000
+            debt = atoms(v.get('debt') or it.get('amount')) / 100000000
             if t == 'vault_open':
-                amt = atoms(v.get('collateral_sats')) / 100000000
+                amt = collateral
             elif t == 'vault_close':
-                amt = atoms(v.get('collateral_sats') or it.get('amount')) / 100000000
+                amt = collateral or atoms(it.get('amount')) / 100000000
             else:  # vault_repay
                 amt = atoms(it.get('amount')) / 100000000
             if amt <= 0:
@@ -321,8 +325,13 @@ def main():
                 [it.get('txid'), t, owner, round(amt, 8), it.get('block_height'),
                  0, it.get('block_time', ''), owner, '', 0]
             )
+            vaults_detail.append(
+                [it.get('txid'), t, owner, round(collateral, 8), round(debt, 8),
+                 v.get('status', ''), it.get('block_height'), it.get('block_time', '')]
+            )
         latest_compact.sort(key=lambda x: x[4] or 0, reverse=True)
-        print(f"Merged AXBT vault ops into activity")
+        vaults_detail.sort(key=lambda x: x[6] or 0, reverse=True)
+        print(f"Merged {len(vaults_detail)} AXBT vault ops into activity")
     except Exception as e:
         print(f"AXBT vault merge failed (non-fatal): {e}")
 
@@ -354,6 +363,7 @@ def main():
         'ts': round(total, 2),
         'h': holders,
         'la': latest_compact,
+        'vaults': vaults_detail,
         'txs': {addr: txs for addr, txs in addr_txs.items() if txs},
         'stats': {
             'moved_bal': round(moved_bal, 2),
