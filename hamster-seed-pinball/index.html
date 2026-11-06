@@ -94,7 +94,11 @@
   .uprow button.maxed { background:#e8d5ae; color:#9a6a30; }
   .mapbar { display:flex; gap:5px; margin-bottom:8px; flex-wrap:wrap; }
   .stageline { width:100%; text-align:center; font-size:13.5px; font-weight:700; color:#8a5410; padding:2px 0 3px; }
-  .s-chip { flex:1 1 17% !important; padding:5px 0 !important; font-size:13px !important; }
+  .stagenav { display:flex; align-items:center; gap:8px; width:100%; }
+  .navtri { width:42px; height:42px; flex:none; padding:0; font-size:15px; }
+  .navtri:disabled { opacity:.35; box-shadow:none; }
+  .stagecur { flex:1; text-align:center; font-weight:700; color:#8a5410; font-size:15.5px; line-height:1.25; }
+  .stagecur small { display:block; font-size:11.5px; color:#9a6a30; font-weight:400; margin-top:1px; }
   .lbtabs { display:flex; gap:6px; margin-bottom:7px; }
   .lbtabs button { flex:1; padding:5px 0; font-size:12.5px; }
   .lbtabs button.on { background:#a5712e; color:#fff; border-color:#7c5316; box-shadow:0 3px 0 #7c5316; }
@@ -514,13 +518,14 @@ renderLB();
 function renderMapBar(){
   $('targetVal').textContent = targetScore();
   const cleared = meta.cleared || 0;
-  let h = '<div class="stageline">🗺️ ' + MAPS[currentMap].name + ' · 目标 ' + MAPS[currentMap].target + ' 分 · 已通关 ' + cleared + '/20' + (PREVIEW ? ' · 👀 预览模式（全关开放）' : '') + '</div>';
-  /* 只显示已解锁的关：过一关多出一关，没解锁的不露面；预览模式才全显示 */
-  const visCount = PREVIEW ? MAPS.length : Math.min(MAPS.length, cleared + 1);
-  for(let i=0; i<visCount; i++){
-    h += '<button class="mapchip s-chip' + (i === currentMap ? ' active' : '') + '" data-map="' + i + '">' + (i+1) + (i < cleared ? ' ✓' : '') + '</button>';
-  }
-  $('mapBar').innerHTML = h;
+  const maxIdx = PREVIEW ? MAPS.length - 1 : Math.min(MAPS.length - 1, cleared);
+  $('mapBar').innerHTML =
+    '<div class="stagenav">' +
+    '<button class="navtri" data-nav="-1"' + (currentMap === 0 ? ' disabled' : '') + '>◀</button>' +
+    '<div class="stagecur">' + MAPS[currentMap].name + (currentMap < cleared ? ' ✓' : '') +
+      '<small>目标 ' + MAPS[currentMap].target + ' 分 · 已通关 ' + cleared + '/' + MAPS.length + (PREVIEW ? ' · 👀 预览模式' : '') + '</small></div>' +
+    '<button class="navtri" data-nav="1"' + (currentMap >= maxIdx ? ' disabled' : '') + '>▶</button>' +
+    '</div>';
 }
 function switchMap(i){
   if(i === currentMap) return;
@@ -534,8 +539,8 @@ function switchMap(i){
   showBanner('🗺️ ' + MAPS[i].name + ' · 目标 ' + MAPS[i].target + ' 分');
 }
 $('mapBar').addEventListener('click', e => {
-  const el = e.target.closest ? e.target.closest('[data-map]') : null;
-  if(el) switchMap(+el.dataset.map);
+  const el = e.target.closest ? e.target.closest('[data-nav]') : null;
+  if(el && !el.disabled) switchMap(currentMap + (+el.dataset.nav));
 });
 renderMapBar();
 
