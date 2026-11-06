@@ -283,6 +283,8 @@ for(let n=1; n<=20; n++){
 }
 let currentMap = +(localStorage.getItem('hsb_map') || 0);
 if(currentMap < 0 || currentMap >= MAPS.length) currentMap = 0;
+/* 预览模式：网址带 ?preview 时 20 关全开随便看，不影响正式通关进度 */
+const PREVIEW = (() => { try { return new URLSearchParams(location.search).has('preview'); } catch(e){ return false; } })();
 function targetScore(){ return MAPS[currentMap].target; }
 function addPeg(x, y){
   if(x < 26 || x > W-26 || y < 104 || y > 498) return;
@@ -464,17 +466,17 @@ renderLB();
 function renderMapBar(){
   $('targetVal').textContent = targetScore();
   const cleared = meta.cleared || 0;
-  let h = '<div class="stageline">🗺️ ' + MAPS[currentMap].name + ' · 目标 ' + MAPS[currentMap].target + ' 分 · 已通关 ' + cleared + '/20</div>';
-  h += MAPS.map((m, i) => {
-    const locked = i > cleared;
-    const mark = i < cleared ? ' ✓' : (locked ? ' 🔒' : '');
-    return '<button class="mapchip s-chip' + (i === currentMap ? ' active' : '') + (locked ? ' locked' : '') + '" data-map="' + i + '">' + (i+1) + mark + '</button>';
-  }).join('');
+  let h = '<div class="stageline">🗺️ ' + MAPS[currentMap].name + ' · 目标 ' + MAPS[currentMap].target + ' 分 · 已通关 ' + cleared + '/20' + (PREVIEW ? ' · 👀 预览模式（全关开放）' : '') + '</div>';
+  /* 只显示已解锁的关：过一关多出一关，没解锁的不露面；预览模式才全显示 */
+  const visCount = PREVIEW ? MAPS.length : Math.min(MAPS.length, cleared + 1);
+  for(let i=0; i<visCount; i++){
+    h += '<button class="mapchip s-chip' + (i === currentMap ? ' active' : '') + '" data-map="' + i + '">' + (i+1) + (i < cleared ? ' ✓' : '') + '</button>';
+  }
   $('mapBar').innerHTML = h;
 }
 function switchMap(i){
   if(i === currentMap) return;
-  if(i > (meta.cleared || 0)){ showBanner('🔒 第 ' + (i+1) + ' 关还没解锁 — 先过掉第 ' + ((meta.cleared || 0) + 1) + ' 关'); beep(180, 0.12, 'square', 0.04); return; }
+  if(!PREVIEW && i > (meta.cleared || 0)){ showBanner('🔒 第 ' + (i+1) + ' 关还没解锁 — 先过掉第 ' + ((meta.cleared || 0) + 1) + ' 关'); beep(180, 0.12, 'square', 0.04); return; }
   if(ball){ showBanner('等这颗种子落完再换关'); return; }
   currentMap = i;
   try{ localStorage.setItem('hsb_map', String(i)); }catch(e){}
@@ -783,7 +785,7 @@ function finishGame(){
   const oldLv = levelFromExp(meta.exp);
   const nutsEarned = Math.floor(score/2) + (win ? 50 : 0);
   const wasFrontier = win && currentMap === (meta.cleared || 0);
-  if(win) meta.cleared = Math.max(meta.cleared || 0, currentMap + 1);
+  if(win && !PREVIEW) meta.cleared = Math.max(meta.cleared || 0, currentMap + 1);
   meta.nuts += nutsEarned; meta.exp += score; saveMeta(); renderMeta(); renderMapBar();
   const newLv = levelFromExp(meta.exp);
   const rank = recordScore(win);
