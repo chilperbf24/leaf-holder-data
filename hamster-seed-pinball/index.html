@@ -131,6 +131,11 @@
     <h3>🏠 仓鼠小屋 · 升级（金瓜子在每局结算时按得分发放）</h3>
     <div id="upRows"></div>
   </div>
+
+<div class="uppanel" id="pingPanel">
+    <h3>⛓️ 链上打卡 · The Tester</h3>
+    <div id="pingBody"></div>
+  </div>
   </div>
   <div class="centerCol">
   <div class="metabar">
@@ -437,7 +442,7 @@ renderMapBar();
 /* ============ 钱包（Sepolia） ============ */
 const SQK_ADDR = '0x6872bfa5ccc3e9e440c6c16e5ffdabb8dba4cc76';
 const SEPOLIA_HEX = '0xaa36a7';
-const wallet = { address:null, signed:false, sqk:null, squeeks:null, power:null, claimable:null, pingHash:null, msg:'' };
+const wallet = { address:null, signed:false, sqk:null, squeeks:null, power:null, claimable:null, pingHash:null, msg:'', pingMsg:'' };
 function shortAddr(a){ return a ? (a.slice(0,6) + '…' + a.slice(-4)) : ''; }
 function fmtUnits(v, dec){
   try{
@@ -453,28 +458,44 @@ function renderWallet(){
       '<button id="connectBtn" style="margin-top:8px;width:100%">连接钱包</button>' +
       (wallet.msg ? '<div style="font-size:12px;color:#b03a2a;margin-top:6px">' + wallet.msg + '</div>' : '');
     $('connectBtn').addEventListener('click', connectWallet);
+    renderPing();
     return;
   }
-  const pinged = wallet.pingHash;
   box.innerHTML =
     '<div style="font-size:13.5px;line-height:1.85">' +
     '地址：<b>' + shortAddr(wallet.address) + '</b>' + (wallet.signed ? ' <span style="color:#3f9e2c">✓ 已签名验证</span>' : '') + '<br>' +
     'SQK 余额：<b>' + (wallet.sqk === null ? '读取中…' : wallet.sqk) + '</b><br>' +
     '我的 Squeeks：<b>' + (wallet.squeeks === null ? '读取中…' : wallet.squeeks + ' 只') + '</b> · 算力 <b>' + (wallet.power === null ? '…' : wallet.power) + '</b><br>' +
     '待领 SQK：<b>' + (wallet.claimable === null ? '…' : wallet.claimable) + '</b></div>' +
-    '<div style="display:flex;gap:8px;margin-top:8px">' +
-    '<button id="pingBtn" style="flex:1.4">' + (pinged ? '✓ 已链上打卡' : '⛓️ 链上打卡') + '</button>' +
-    '<button id="disconnectBtn" class="ghost" style="flex:.7">断开</button></div>' +
-    (pinged ? '<div style="font-size:12px;margin-top:6px">打卡交易：<a href="https://sepolia.etherscan.io/tx/' + pinged + '" target="_blank" rel="noopener">' + pinged.slice(0,14) + '…</a>（给 SQK 合约发 approve(自己, 0)，不转币）</div>' : '<div style="font-size:12px;color:#9a6a30;margin-top:6px">打卡 = 向 SQK 合约发一笔 approve(自己, 0)，不花币、只付 Sepolia 测试 gas，正好对应 Genesis 的 The Tester 徽章条件。</div>') +
+    '<button id="disconnectBtn" class="ghost" style="margin-top:8px;width:100%">断开钱包</button>' +
     (wallet.msg ? '<div style="font-size:12px;color:#b03a2a;margin-top:6px">' + wallet.msg + '</div>' : '');
-  $('pingBtn').addEventListener('click', pingOnChain);
   $('disconnectBtn').addEventListener('click', disconnectWallet);
+  renderPing();
+}
+function renderPing(){
+  const box = $('pingBody');
+  if(!box) return;
+  if(!wallet.address){
+    box.innerHTML = '<div style="font-size:13px;line-height:1.7;color:#7a5a28">向 Squeekchain 的 SQK 合约发一笔交易，正好对应 Genesis 的 <b>The Tester</b> 徽章条件。先连上右上角的钱包，这里就能打卡了。</div>' +
+      '<button disabled style="margin-top:8px;width:100%;opacity:.45">先连接钱包</button>';
+    return;
+  }
+  if(wallet.pingHash){
+    box.innerHTML = '<div style="font-size:13.5px;line-height:1.8">✓ <b>' + shortAddr(wallet.address) + '</b> 已打卡</div>' +
+      '<div style="font-size:12.5px;margin-top:4px">交易：<a href="https://sepolia.etherscan.io/tx/' + wallet.pingHash + '" target="_blank" rel="noopener">' + wallet.pingHash.slice(0,16) + '…</a></div>' +
+      '<div style="font-size:12px;color:#9a6a30;margin-top:4px">approve(自己, 0)，没转任何币。</div>';
+    return;
+  }
+  box.innerHTML = '<div style="font-size:13px;line-height:1.7;color:#7a5a28">给 SQK 合约发一笔 <b>approve(自己, 0)</b>：不转币、不授权额度，只付一点 Sepolia 测试 gas，就是 The Tester 要的那笔链上交易。</div>' +
+    '<button id="pingBtn" style="margin-top:8px;width:100%">⛓️ 打卡</button>' +
+    (wallet.pingMsg ? '<div style="font-size:12px;color:#b03a2a;margin-top:6px">' + wallet.pingMsg + '</div>' : '');
+  $('pingBtn').addEventListener('click', pingOnChain);
 }
 function switchIdentity(addr){
   saveMeta(); saveScores();
   idSuffix = addr ? '@' + addr.toLowerCase() : '';
   loadMeta(); loadScores(); lastEntryId = 0;
-  wallet.sqk = null; wallet.squeeks = null; wallet.power = null; wallet.claimable = null;
+  wallet.sqk = null; wallet.squeeks = null; wallet.power = null; wallet.claimable = null; wallet.pingMsg = '';
   wallet.pingHash = addr ? (localStorage.getItem('hsb_ping@' + addr.toLowerCase()) || null) : null;
   renderMeta(); renderLB(); renderMapBar();
   restart();
@@ -552,19 +573,19 @@ async function fetchWalletAssets(){
 }
 async function pingOnChain(){
   if(!wallet.address || wallet.pingHash) return;
-  wallet.msg = '';
+  wallet.pingMsg = '';
   try{
     await ensureSepolia();
     const data = '0x095ea7b3' + wallet.address.slice(2).toLowerCase().padStart(64, '0') + '0'.padStart(64, '0');
     const hash = await window.ethereum.request({ method:'eth_sendTransaction', params:[{ from: wallet.address, to: SQK_ADDR, data: data }] });
     wallet.pingHash = hash;
     try{ localStorage.setItem('hsb_ping@' + wallet.address.toLowerCase(), hash); }catch(e){}
-    renderWallet();
+    renderPing();
     showBanner('⛓️ 打卡交易已发出！');
     squeak();
   }catch(e){
-    wallet.msg = '打卡没发出去' + (e && e.message ? '：' + String(e.message).slice(0, 80) : '') + '（需要一点 Sepolia 测试 ETH 付 gas）';
-    renderWallet();
+    wallet.pingMsg = '打卡没发出去' + (e && e.message ? '：' + String(e.message).slice(0, 80) : '') + '（需要一点 Sepolia 测试 ETH 付 gas）';
+    renderPing();
   }
 }
 if(window.ethereum && window.ethereum.on){
