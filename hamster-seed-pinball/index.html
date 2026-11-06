@@ -94,6 +94,11 @@
   .panel.open { display:block; }
   .panel b { color:#8a5410; }
   .panel .disc { color:#8d795c; font-size:13px; }
+  .panel.open { position:fixed; inset:0; z-index:60; margin:0; border:none; border-radius:0; overflow-y:auto; padding:20px 14px 44px; }
+  .panel .pagewrap { max-width:880px; margin:0 auto; }
+  .panel h2.ptitle { text-align:center; color:#8a5410; font-size:25px; margin:2px 0 10px; }
+  .panel h4 { color:#8a5410; margin:20px 0 4px; font-size:17.5px; border-bottom:2px dashed #e5cf9e; padding-bottom:3px; }
+  #pageClose { display:block; margin:0 auto 14px; width:auto; padding:9px 22px; }
   .over { position:absolute; inset:0; background:rgba(43,28,16,.82); display:none; flex-direction:column;
           align-items:center; justify-content:center; color:#ffe9c4; z-index:6; text-align:center; padding:20px; }
   .over.show { display:flex; }
@@ -260,25 +265,57 @@
   
 
   <div class="panel" id="helpPanel">
+   <div class="pagewrap">
+   <h2 class="ptitle" id="pageTitle">🐹 仓鼠种子弹珠 · 玩法与详情</h2>
+   <button id="pageClose">✕ 关闭 · 返回游戏</button>
    <div id="helpZh">
     <b>怎么玩</b>：顶上的仓鼠抱着种子，左右移动瞄准，投下去。种子撞橡子钉 +1 分，落进底部的仓鼠小窝计分：食盆 20 · 向日葵罐 50 · 正中小木屋 100。一局投完达到本关目标分就算过关，解锁下一关。<br>
     <b>关卡与排行榜</b>：共 <b>50 关</b>闯关制 — 5 种盘面轮换（木屑原野 · 瓜子山谷 · 月夜粮仓 · 十字谷仓 · 之字麦田），越往后目标分越高、甲虫越快、钉子越密、风车越多；<b>过一关解锁下一关</b>，通关进度按钱包/游客身份存档。排行榜分三榜：<b>分数榜</b>（单局得分）· <b>等级榜</b>（仓鼠等级）· <b>过关榜</b>（打到第几关），一个地址在每个榜只显示最好的一条，每页 10 条可翻页；盘面上旋转的胡萝卜风车针是加长的，扫到的种子会被甩飞，离针尖越近甩得越狠。<br>
     <b>惩罚（有奖有罚）</b>：盘面两端是<b>臭臭角</b>（发霉木屑），落进去 <b>-20 分</b>；粮仓上方有一只<b>捣蛋甲虫</b>来回巡逻，种子撞上它会被抢走，<b>本颗作废还 -10 分</b>；落进臭臭角或被抢，连击清零、丰收灯熄灭。真仓鼠狂奔时跑轮甩力最狠，高收益伴随高风险。<br>
-    <b>升级</b>：每局结算按得分发<b>金瓜子</b>和经验，经验涨仓鼠等级（解锁围巾、墨镜、金铃铛、皇冠等装扮）；金瓜子在游戏左边的小屋里买升级：大颊囊（每局种子 +2/级）· 丰收仓（落格 +5%/级）· 金铃铛（金种子更频繁）· 防虫喷雾（甲虫变慢）。升级和等级都存在本机，关掉重开不丢。<br>
+    <b>升级</b>：每局结算发<b>金瓜子</b>（得分 ÷4 + 过关奖 25）和经验（得分 ÷2），经验涨仓鼠等级（解锁围巾、墨镜、金铃铛、皇冠等装扮）；金瓜子在游戏左边的小屋里买升级：大颊囊（每局种子 +2/级）· 丰收仓（落格 +5%/级）· 金铃铛（金种子更频繁）· 防虫喷雾（甲虫变慢）。升级和等级都存在本机，关掉重开不丢。<br>
     <b>仓鼠特征</b>：盘面正中的大转轮是仓鼠跑轮，里面的小仓鼠会跟着真仓鼠一起跑/睡；两侧粉色的是<b>颊囊口袋</b>，种子掉进去会被仓鼠塞进颊囊再吐出来重投，不消耗；金种子分值 ×2；连续落进同一个格，连击让下一颗 ×1.5；撞满 20 次钉子点亮丰收灯，下一颗 ×2。<br>
     <b>真仓鼠联动</b>：转速、跑/睡状态、距离、区块进度都来自 Squeekchain 公开 API 的真仓鼠 Squeektoshi。它跑起来时跑轮飞转、窝心格 100→200；它睡觉时是夜场，种子下落更慢更好瞄，落格 +10%。玩的时候赶上链上新一轮结算，白送一颗金种子。<br>
     <b>钱包</b>：右上角可连接 EVM 钱包（仅 Sepolia 测试网）：连接后存档与排行榜绑定钱包地址，并显示你的 SQK 余额、Squeeks 数量、算力和待领 SQK；“链上打卡”向 SQK 合约发一笔 approve(自己, 0)（不转币），对应 Genesis 的 The Tester 条件。不连钱包也能玩，成绩记为游客。<br>
+    <h4>💰 经济系统：金瓜子 · 矿力 · 体力</h4>
+    <b>金瓜子 🌰</b>（升级货币）：来源 — 每局结算（得分 ÷4 + 过关奖 25）、每日签到（15 起）；去处 — 小屋四系升级、20 🌰 补 3 点体力。新号开局送 50。<br>
+    <b>矿力 ⛏</b>（玩游戏挖出来的）：每局按得分产出（得分 ÷10 + 过关奖 20，矿场等级再加成）；去处一共 6 条 — 升<b>矿场</b>（5 级，每级 +10% 产出）· 开<b>补给箱</b>（100 矿力，随机出 🌰/体力/铃铛/大奖）· 买<b>幸运铃铛</b>（80，下一局金种子更密）· <b>换体力</b>（30 → +2）· <b>换金瓜子</b>（50 → 10）· 买<b>矿工头灯</b>（600，永久装扮）。矿力按地址记账，是将来主网奖励按比例分配的依据。<br>
+    <b>体力 ⚡</b>：上限 10 点，开一局耗 1 点；每 30 分钟自动回 1 点（满格 5 小时）；每日签到 +3，也能用金瓜子或矿力补。没体力就开不了新局 — 歇一会儿，或者去签到。<br>
+    <b>每日签到 📅</b>：连钱包后每天点一次，发一笔链上交易（approve 自己 0，不转币，只花一点 Sepolia 测试 gas），奖励金瓜子 15 起、连续签到每天 +3（封顶 39）再 +3 体力，断签连续天数清零。第一次签到同时满足 Genesis 的 <b>The Tester</b> 徽章条件。<br>
+    <h4>🎚️ 难度一览（随关数提升）</h4>
+    目标分：第 1 关 300 · 第 10 关 480 · 第 20 关 680 · 第 30 关 830 · 第 40 关 980 · 第 50 关 <b>1130</b>。甲虫速度 ×0.95 → ×2.80；散钉越来越多（最多 +26）；胡萝卜风车 2 个起，第 9/15/25/35/45 关各 +1，第 50 关共 7 个。网址加 <b>?preview</b> 可以预览全部 50 关（预览通关不计入正式进度）。<br>
+    <h4>🐹 关于 Squeekchain 与这个游戏</h4>
+    Squeekchain 是以太坊上的“仓鼠动力”玩具链：真仓鼠 Squeektoshi 在跑轮 WHEELY9000 上跑出的工作量结算上链，完成一个区块发行 6,900 SQK（总量封顶 21 亿，10% 预挖做协议自有流动性），由 9,999 张 Squeeks NFT 按算力比例分享。本游戏是提交到 <b>Genesis Code</b> 的社区小游戏：把真仓鼠的转速、跑/睡、轮次结算实时做进玩法里。游戏内的金瓜子和矿力都是游戏内记账，不是链上代币、不承诺兑换；本项目不碰白名单与 NFT 发售。<br>
+    <h4>❓ 常见问题</h4>
+    <b>不连钱包能玩吗？</b>能，成绩记为“游客”，存档在本机浏览器里。<br>
+    <b>换设备/清缓存了存档还在吗？</b>存档只存本机（按游客/钱包地址分开），清掉就没了，暂时没有云端同步。<br>
+    <b>体力用完了怎么办？</b>等恢复（30 分钟 +1）、每日签到 +3，或在小屋用 20 🌰 / 30 矿力补。<br>
+    <b>签到为什么要发链上交易？</b>那笔 approve(自己, 0) 不转币、不给额度，纯粹是 Genesis 的 The Tester 要的链上动作证明；需要钱包里有一点 Sepolia 测试 ETH 付 gas。<br>
     <span class="disc">社区小游戏原型 · 数据：api.squeekchain.com · 不下注、分数不兑换任何东西 · 不承诺徽章或白名单。</span>
    </div>
    <div id="helpEn" style="display:none">
     <b>How to play</b>: The hamster on top holds a seed — move left/right to aim and drop it. Hitting an acorn peg scores +1; landing in the dens at the bottom scores: Food Bowl 20 · Sunflower Jar 50 · Wooden House (center) 100. Reach the stage target by the end of the run to clear the stage and unlock the next.<br>
     <b>Stages & leaderboards</b>: A <b>50-stage</b> campaign — 5 board layouts rotate (Classic Meadow · Seed Valley · Moon Granary · Cross Barn · Zigzag Field); later stages raise the target, speed up the beetle, densify the pegs and add more spinners. <b>Clear a stage to unlock the next</b>; progress is saved per wallet/guest identity. Three local leaderboards: <b>Score</b> (best run) · <b>Level</b> (hamster level) · <b>Stage</b> (furthest stage), one row per address, 10 per page. The long carrot spinner needles fling seeds — the closer to the tip, the harder the fling.<br>
     <b>Penalties</b>: The two end bins are <b>Stink Corners</b> (moldy shavings): landing there is <b>-20</b>. A <b>Trouble Beetle</b> patrols above the bins; if it touches your seed, the seed is stolen: <b>void, plus -10</b>. Both reset your combo and the harvest light. When the real hamster sprints, the wheel flings hardest — high reward, high risk.<br>
-    <b>Upgrades</b>: Every run pays out <b>Golden Seeds</b> and XP from your score. XP levels up your hamster (unlocking a scarf, sunglasses, a golden bell, a crown). Spend Golden Seeds in the Hamster House (left): Big Cheeks (+2 seeds per run / level) · Harvest Barn (+5% bin score / level) · Golden Bell (golden seeds more often) · Bug Spray (slower beetle). Progress is stored on this device.<br>
+    <b>Upgrades</b>: Every run pays out <b>Golden Seeds</b> (score ÷4 + 25 clear bonus) and XP (score ÷2). XP levels up your hamster (unlocking a scarf, sunglasses, a golden bell, a crown). Spend Golden Seeds in the Hamster House (left): Big Cheeks (+2 seeds per run / level) · Harvest Barn (+5% bin score / level) · Golden Bell (golden seeds more often) · Bug Spray (slower beetle). Progress is stored on this device.<br>
     <b>Hamster features</b>: The big wheel in the middle is a real running wheel — the little hamster inside runs and sleeps with the real one. The pink pockets on the sides are <b>cheek pouches</b>: a seed landing there is stuffed into the cheeks and spat back for a free re-drop. Golden seeds score ×2; landing in the same bin twice in a row makes the next seed ×1.5; 20 peg hits light the harvest light, next seed ×2.<br>
     <b>Live link</b>: Wheel speed, run/sleep state, distance and block progress all come from Squeekchain's public API and the real hamster Squeektoshi. When it runs, the wheel spins fast and the house bin pays 100→200; when it sleeps it's night mode — seeds fall slower and bins pay +10%. A new on-chain settlement round while you play grants a bonus golden seed.<br>
     <b>Wallet</b>: Connect an EVM wallet (Sepolia testnet only) at the top right: your saves and leaderboard bind to your address, the asset panel (left) shows your SQK balance, Squeeks, power and claimable SQK, and the on-chain check-in sends an approve(self, 0) to the SQK contract (moves no tokens) — the Genesis <b>The Tester</b> condition. Guests can play without a wallet.<br>
+    <h4>💰 Economy: Golden Seeds · Mining Power · Energy</h4>
+    <b>Golden Seeds 🌰</b> (upgrade currency): Earned from run settlement (score ÷4 + 25 clear bonus) and the daily check-in (from 15); spent on the four House upgrades and on energy refills (20 🌰 → +3). New accounts start with 50.<br>
+    <b>Mining Power ⛏</b> (what playing mines): Each run pays score ÷10 + 20 on a clear, boosted by your Rig level. Six ways to spend it — <b>Mining Rig</b> upgrades (5 levels, +10% gain each) · <b>Supply Chest</b> (100, random 🌰/energy/bell/jackpot) · <b>Lucky Bell</b> (80, denser golden seeds next run) · <b>swap to energy</b> (30 → +2) · <b>swap to Golden Seeds</b> (50 → 10) · <b>Miner Lamp</b> (600, permanent cosmetic). Mining Power is kept as a per-address ledger — the basis for proportional mainnet rewards later.<br>
+    <b>Energy ⚡</b>: 10 max, 1 per run; regenerates +1 every 30 minutes (full in 5 hours); daily check-in grants +3, and you can refill with Golden Seeds or Mining Power. No energy, no new run — rest, or check in.<br>
+    <b>Daily check-in 📅</b>: With a wallet connected, one tap a day sends an on-chain tx (approve self, 0 — moves no tokens, just a little Sepolia test gas). Reward: 15 Golden Seeds +3 per streak day (cap 39) and +3 energy; missing a day resets the streak. Your first check-in also satisfies the Genesis <b>The Tester</b> badge condition.<br>
+    <h4>🎚️ Difficulty at a glance (scales with stage)</h4>
+    Targets: Stage 1 = 300 · 10 = 480 · 20 = 680 · 30 = 830 · 40 = 980 · Stage 50 = <b>1130</b>. Beetle speed ×0.95 → ×2.80; scatter pegs grow (up to +26); carrot spinners start at 2 and gain +1 at stages 9/15/25/35/45 — 7 on stage 50. Add <b>?preview</b> to the URL to preview all 50 stages (preview clears don't count).<br>
+    <h4>🐹 About Squeekchain and this game</h4>
+    Squeekchain is a hamster-powered toychain on Ethereum: the real hamster Squeektoshi runs the WHEELY9000 wheel, his settled work completes blocks that issue 6,900 SQK each (2.1B lifetime cap; 10% premine funds protocol-owned liquidity), shared by 9,999 Squeeks NFTs pro-rata by power. This game is a community submission to <b>Genesis Code</b>: it wires the hamster's live RPM, run/sleep state and settlement rounds directly into the gameplay. Golden Seeds and Mining Power are in-game ledger points, not on-chain tokens, and nothing here promises redemption; this project does not run whitelist or NFT sales.<br>
+    <h4>❓ FAQ</h4>
+    <b>Can I play without a wallet?</b> Yes — scores are recorded as Guest and saved in this browser.<br>
+    <b>New device or cleared cache?</b> Saves live only on this device (separate per guest/wallet), so clearing them deletes progress; no cloud sync yet.<br>
+    <b>Out of energy?</b> Wait for regen (+1 per 30 min), check in daily (+3), or refill in the House with 20 🌰 / 30 ⛏.<br>
+    <b>Why does check-in send an on-chain tx?</b> The approve(self, 0) moves no tokens and grants no allowance — it is simply the on-chain action proof Genesis asks for The Tester. You need a little Sepolia test ETH for gas.<br>
     <span class="disc">Community mini-game prototype · Data: api.squeekchain.com · No betting, scores redeem for nothing, no badge or whitelist is promised.</span>
+   </div>
    </div>
   </div>
   </div>
@@ -377,7 +414,7 @@ zh: {
   lbTitle:'🏆 本机排行榜 <span style="font-size:12.5px;color:#9a6a30;font-weight:400">（暂存这台设备；全球榜要等正式版接后端）</span>',
   tabScore:'🏆 分数榜', tabLevel:'🎖️ 等级榜', tabStage:'🚩 过关榜',
   labScore:'得分 / 目标', labStore:'过冬粮仓', labSeeds:'剩余种子', nutsLab:'🌰 金瓜子',
-  drop:'投种子 🌻', restart:'重开', help:'玩法', tip:'滑动 / 移动鼠标瞄准 · 点盘面或按空格投种子',
+  drop:'投种子 🌻', restart:'重开', help:'📖 介绍', pageTitle:'🐹 仓鼠种子弹珠 · 玩法与详情', pageClose:'✕ 关闭 · 返回游戏', tip:'滑动 / 移动鼠标瞄准 · 点盘面或按空格投种子',
   again:'再来一局', nextStage:'下一关 ▶', guest:'游客', best:'最高 ',
   soundOn:'声音：开', soundOff:'声音：关',
   liveConnecting:'正在连接 Squeektoshi…', liveDemo:'API 暂不可达 · 演示模式（仓鼠在梦里跑）',
@@ -402,18 +439,18 @@ zh: {
   stamLab:'⚡ 体力', stamNext:'下一点', stamFull:'已满',
   bNoStam:'⚡ 体力用完了，等恢复或用金瓜子补（小屋里买）— 每天签到也 +3 体力',
   rigName:'⛏ 矿场', rigDesc:'矿力获取 +10% / 级（花矿力升级）', rigBtn:'升级',
-  chestName:'🎁 种子补给箱', chestDesc:'随机开出：金瓜子 / 体力 / 幸运铃铛，小概率大奖 200 🌰', chestBtn:'开箱 100 ⛏',
+  chestName:'🎁 种子补给箱', chestDesc:'随机开出：金瓜子 / 体力 / 幸运铃铛，小概率大奖 100 🌰', chestBtn:'开箱 100 ⛏',
   bellName:'🔔 幸运铃铛', bellDesc:'下一局金种子更密（间隔 -2），一次性', bellBtn:'买 80 ⛏', bellReady:'已备好 · 下局生效',
   swapStamName:'⚡ 矿力换体力', swapStamDesc:'30 矿力 → +2 体力', swapStamBtn:'换 30 ⛏',
-  swapNutsName:'🌰 矿力换金瓜子', swapNutsDesc:'50 矿力 → 20 金瓜子', swapNutsBtn:'换 50 ⛏',
+  swapNutsName:'🌰 矿力换金瓜子', swapNutsDesc:'50 矿力 → 10 金瓜子', swapNutsBtn:'换 50 ⛏',
   lampName:'🔦 矿工头灯', lampDesc:'投放仓鼠戴上头灯（永久装扮）', lampBtn:'买 600 ⛏', lampOwned:'已拥有',
-  bChestNuts:g => '🎁 开箱：+' + g + ' 🌰', bChestStam:'🎁 开箱：+2 ⚡ 体力', bChestBell:'🎁 开箱：🔔 幸运铃铛（下局生效）', bChestJackpot:'🎁 大奖！+200 🌰',
-  bBellBought:'🔔 铃铛备好了，下一局金种子更密', bSwapStam:'⚡ +2 体力', bSwapNuts:'🌰 +20 金瓜子', bLampBought:'🔦 头灯戴上了！',
+  bChestNuts:g => '🎁 开箱：+' + g + ' 🌰', bChestStam:'🎁 开箱：+2 ⚡ 体力', bChestBell:'🎁 开箱：🔔 幸运铃铛（下局生效）', bChestJackpot:'🎁 大奖！+100 🌰',
+  bBellBought:'🔔 铃铛备好了，下一局金种子更密', bSwapStam:'⚡ +2 体力', bSwapNuts:'🌰 +10 金瓜子', bLampBought:'🔦 头灯戴上了！',
   bMinePoor:'⛏ 矿力不够，多打几局攒矿力',
   stamBuyName:'⚡ 补体力', stamBuyDesc:'+3 点体力，马上能玩', stamBuyBtn:'买 20 🌰',
   bRigUp:lv => '⛏ 矿场升到 ' + lv + ' 级！矿力获取提升', bStamBought:'⚡ 体力 +3',
   ciBtn:'📅 今日签到', ciDone:'今日已签到 ✓', ciStreak:'连续签到 ', ciTotal:'累计 ', ciDays:' 天',
-  ciNote:'每天签到发一笔链上交易（approve 自己 0，不转币），奖励金瓜子：30 起，连续签到每天 +5，封顶 80。第一次签到同时满足 The Tester 徽章条件。',
+  ciNote:'每天签到发一笔链上交易（approve 自己 0，不转币），奖励金瓜子 15 起、连续每天 +3（封顶 39），另送 +3 体力。第一次签到同时满足 The Tester 徽章条件。',
   ciTomorrow:'明天再来，连续签到别断。', mineWord:'矿力',
   bCheckedIn:(r, st) => '📅 签到成功！+ ' + r + ' 🌰（连续 ' + st + ' 天）',
   fMine:(g, tot) => '<br>⛏ 矿力 +' + g + '（累计 ' + tot + '）— 玩游戏攒矿力，主网奖励按矿力分',
@@ -441,7 +478,7 @@ en: {
   lbTitle:'🏆 Local Leaderboard <span style="font-size:12.5px;color:#9a6a30;font-weight:400">(stored on this device; the global board comes with the backend)</span>',
   tabScore:'🏆 Score', tabLevel:'🎖️ Level', tabStage:'🚩 Stage',
   labScore:'Score / Target', labStore:'Winter Granary', labSeeds:'Seeds Left', nutsLab:'🌰 Golden Seeds',
-  drop:'Drop Seed 🌻', restart:'Restart', help:'How to Play', tip:'Swipe / move mouse to aim · tap the board or press Space to drop',
+  drop:'Drop Seed 🌻', restart:'Restart', help:'📖 Guide', pageTitle:'🐹 Hamster Seed Pinball · Guide & Details', pageClose:'✕ Close · Back to Game', tip:'Swipe / move mouse to aim · tap the board or press Space to drop',
   again:'Play Again', nextStage:'Next Stage ▶', guest:'Guest', best:'Best ',
   soundOn:'Sound: On', soundOff:'Sound: Off',
   liveConnecting:'Connecting to Squeektoshi…', liveDemo:'API unreachable · Demo mode (dream runs)',
@@ -466,18 +503,18 @@ en: {
   stamLab:'⚡ Energy', stamNext:'next in', stamFull:'full',
   bNoStam:'⚡ Out of energy — wait for regen or refill with Golden Seeds (Hamster House); daily check-in also gives +3',
   rigName:'⛏ Mining Rig', rigDesc:'+10% mining power gain / level (costs mining power)', rigBtn:'Upgrade',
-  chestName:'🎁 Seed Supply Chest', chestDesc:'Random: Golden Seeds / Energy / Lucky Bell, small chance of a 200 🌰 jackpot', chestBtn:'Open 100 ⛏',
+  chestName:'🎁 Seed Supply Chest', chestDesc:'Random: Golden Seeds / Energy / Lucky Bell, small chance of a 100 🌰 jackpot', chestBtn:'Open 100 ⛏',
   bellName:'🔔 Lucky Bell', bellDesc:'Next run: golden seeds come faster (interval -2), one-time', bellBtn:'Buy 80 ⛏', bellReady:'Ready · applies next run',
   swapStamName:'⚡ Power → Energy', swapStamDesc:'30 power → +2 energy', swapStamBtn:'Swap 30 ⛏',
-  swapNutsName:'🌰 Power → Seeds', swapNutsDesc:'50 power → 20 Golden Seeds', swapNutsBtn:'Swap 50 ⛏',
+  swapNutsName:'🌰 Power → Seeds', swapNutsDesc:'50 power → 10 Golden Seeds', swapNutsBtn:'Swap 50 ⛏',
   lampName:'🔦 Miner Lamp', lampDesc:'Your dropper hamster wears a head lamp (permanent)', lampBtn:'Buy 600 ⛏', lampOwned:'Owned',
-  bChestNuts:g => '🎁 Chest: +' + g + ' 🌰', bChestStam:'🎁 Chest: +2 ⚡ energy', bChestBell:'🎁 Chest: 🔔 Lucky Bell (next run)', bChestJackpot:'🎁 JACKPOT! +200 🌰',
-  bBellBought:'🔔 Bell ready — golden seeds come faster next run', bSwapStam:'⚡ +2 energy', bSwapNuts:'🌰 +20 Golden Seeds', bLampBought:'🔦 Lamp on!',
+  bChestNuts:g => '🎁 Chest: +' + g + ' 🌰', bChestStam:'🎁 Chest: +2 ⚡ energy', bChestBell:'🎁 Chest: 🔔 Lucky Bell (next run)', bChestJackpot:'🎁 JACKPOT! +100 🌰',
+  bBellBought:'🔔 Bell ready — golden seeds come faster next run', bSwapStam:'⚡ +2 energy', bSwapNuts:'🌰 +10 Golden Seeds', bLampBought:'🔦 Lamp on!',
   bMinePoor:'⛏ Not enough mining power — play more runs',
   stamBuyName:'⚡ Refill Energy', stamBuyDesc:'+3 energy, play right away', stamBuyBtn:'Buy 20 🌰',
   bRigUp:lv => '⛏ Rig upgraded to Lv.' + lv + '! Mining gain up', bStamBought:'⚡ Energy +3',
   ciBtn:'📅 Check In Today', ciDone:'Checked in today ✓', ciStreak:'Streak ', ciTotal:'Total ', ciDays:'d',
-  ciNote:'One on-chain tx per day (approve self, 0 — moves no tokens). Reward in Golden Seeds: 30, +5 per streak day, capped at 80. Your first check-in also satisfies The Tester badge.',
+  ciNote:'One on-chain tx per day (approve self, 0 — moves no tokens). Reward: 15 Golden Seeds, +3 per streak day (cap 39), plus +3 energy. Your first check-in also satisfies The Tester badge.',
   ciTomorrow:'Come back tomorrow to keep the streak.', mineWord:'Mining',
   bCheckedIn:(r, st) => '📅 Checked in! + ' + r + ' 🌰 (streak ' + st + 'd)',
   fMine:(g, tot) => '<br>⛏ Mining Power +' + g + ' (total ' + tot + ') — earned by playing; mainnet rewards will follow mining power',
@@ -506,6 +543,8 @@ function modeName(m){ return (m === 'run' || m === '狂奔') ? t('modeRun') : t(
 function applyLang(){
   if(document.documentElement) document.documentElement.lang = LANG === 'en' ? 'en' : 'zh-CN';
   $('walletTitle').textContent = t('walletTitle');
+  if($('pageTitle')) $('pageTitle').textContent = t('pageTitle');
+  if($('pageClose')) $('pageClose').textContent = t('pageClose');
   $('houseTitle').textContent = t('houseTitle');
   $('pingTitle').textContent = t('pingTitle');
   $('assetTitle').textContent = t('assetTitle');
@@ -599,8 +638,8 @@ bestEl.textContent = best ? (t('best')+best) : '';
 
 /* ============ 升级 / 等级（本地存档） ============ */
 const LEVELS = [
-  {exp:0, title:'见习鼠', titleEn:'Rookie'}, {exp:300, title:'囤粮鼠', titleEn:'Hoarder'}, {exp:900, title:'弹珠鼠', titleEn:'Pinball Pro'},
-  {exp:2000, title:'瓜子骑士', titleEn:'Seed Knight'}, {exp:3600, title:'囤粮大师', titleEn:'Hoard Master'}, {exp:5500, title:'传说仓鼠', titleEn:'Legendary Hamster'}
+  {exp:0, title:'见习鼠', titleEn:'Rookie'}, {exp:900, title:'囤粮鼠', titleEn:'Hoarder'}, {exp:2700, title:'弹珠鼠', titleEn:'Pinball Pro'},
+  {exp:6000, title:'瓜子骑士', titleEn:'Seed Knight'}, {exp:10800, title:'囤粮大师', titleEn:'Hoard Master'}, {exp:16500, title:'传说仓鼠', titleEn:'Legendary Hamster'}
 ];
 const UPGRADES = [
   {key:'seeds',   name:'大颊囊',   nameEn:'Big Cheeks',   desc:'每局种子 +2 颗/级',       descEn:'+2 seeds per run / level',       costs:[100,260,600]},
@@ -619,7 +658,8 @@ function loadMeta(){
     const saved = JSON.parse(localStorage.getItem(metaKey()) || 'null');
     if(saved && saved.up){ meta = Object.assign(meta, saved); hadSave = true; }
   }catch(e){}
-  if(!hadSave){ meta.nuts = 50; saveMeta(); }
+  if(!hadSave){ meta.nuts = 50; meta.v2 = 1; saveMeta(); }
+  else if(!meta.v2){ meta.exp = Math.round((meta.exp || 0) * 3); meta.v2 = 1; saveMeta(); }
 }
 loadMeta();
 let curLevel = 1;
@@ -692,10 +732,10 @@ $('ecoRows').addEventListener('click', e => {
     if((meta.mine || 0) < 100){ showBanner(t('bMinePoor')); return; }
     meta.mine -= 100;
     const r = Math.random(); let msg;
-    if(r < 0.45){ const g = 30 + Math.floor(Math.random() * 61); meta.nuts += g; msg = t('bChestNuts')(g); }
+    if(r < 0.45){ const g = 15 + Math.floor(Math.random() * 31); meta.nuts += g; msg = t('bChestNuts')(g); }
     else if(r < 0.70){ stamNow(); meta.stam.v = Math.min(STAM_MAX, meta.stam.v + 2); msg = t('bChestStam'); }
     else if(r < 0.90){ meta.bell = true; msg = t('bChestBell'); }
-    else { meta.nuts += 200; msg = t('bChestJackpot'); }
+    else { meta.nuts += 100; msg = t('bChestJackpot'); }
     saveMeta(); renderMeta(); showBanner(msg); squeak();
   } else if(k === 'bell'){
     if(meta.bell) return;
@@ -709,7 +749,7 @@ $('ecoRows').addEventListener('click', e => {
     saveMeta(); renderMeta(); showBanner(t('bSwapStam')); squeak();
   } else if(k === 'swapnuts'){
     if((meta.mine || 0) < 50){ showBanner(t('bMinePoor')); return; }
-    meta.mine -= 50; meta.nuts += 20;
+    meta.mine -= 50; meta.nuts += 10;
     saveMeta(); renderMeta(); showBanner(t('bSwapNuts')); squeak();
   } else if(k === 'lamp'){
     if(meta.lamp) return;
@@ -1023,7 +1063,7 @@ async function pingOnChain(){
     try{ localStorage.setItem('hsb_checkin@' + wallet.address.toLowerCase(), JSON.stringify(ci)); }catch(e){}
     wallet.pingHash = hash;
     try{ localStorage.setItem('hsb_ping@' + wallet.address.toLowerCase(), hash); }catch(e){}
-    const reward = 30 + Math.min(50, (ci.streak - 1) * 5);
+    const reward = 15 + Math.min(24, (ci.streak - 1) * 3);
     meta.nuts += reward;
     stamNow(); if(meta.stam) meta.stam.v = Math.min(STAM_MAX, meta.stam.v + 3);
     saveMeta(); renderMeta(); renderStam();
@@ -1178,19 +1218,20 @@ function finishGame(){
   gameOver = true; runBell = false;
   const win = score >= targetScore();
   const oldLv = levelFromExp(meta.exp);
-  const nutsEarned = Math.floor(score/2) + (win ? 50 : 0);
+  const nutsEarned = Math.floor(score/4) + (win ? 25 : 0);
+  const expGain = Math.round(score/2);
   const wasFrontier = win && currentMap === (meta.cleared || 0);
   if(win && !PREVIEW) meta.cleared = Math.max(meta.cleared || 0, currentMap + 1);
   const mineGain = Math.round((Math.max(1, Math.round(score/10)) + (win ? 20 : 0)) * (1 + 0.1 * (meta.rig || 0)));
   meta.mine = (meta.mine || 0) + mineGain;
-  meta.nuts += nutsEarned; meta.exp += score; saveMeta(); renderMeta(); renderMapBar();
+  meta.nuts += nutsEarned; meta.exp += expGain; saveMeta(); renderMeta(); renderMapBar();
   const newLv = levelFromExp(meta.exp);
   const rank = recordScore(win);
   $('overTitle').textContent = win ? (currentMap === MAPS.length - 1 ? t('fWinAll') : t('fWin')) : t('fLose');
   $('overText').innerHTML = t('fScore')(score) + (win ? t('fCheeks') : t('fShort')(targetScore()-score, targetScore()))
     + (wasFrontier && currentMap < MAPS.length - 1 ? t('fUnlock')(currentMap+2) : '')
     + (rank > 0 ? t('fRank')(rank) : '')
-    + t('fSettle')(nutsEarned, score) + t('fMine')(mineGain, meta.mine)
+    + t('fSettle')(nutsEarned, expGain) + t('fMine')(mineGain, meta.mine)
     + (newLv > oldLv ? t('fLevelUp')(newLv, LANG === 'en' ? LEVELS[newLv-1].titleEn : LEVELS[newLv-1].title) : '');
   $('nextBtn').style.display = (win && currentMap < MAPS.length - 1) ? '' : 'none';
   overEl.classList.add('show');
@@ -1738,6 +1779,7 @@ $('nextBtn').addEventListener('click', () => { if(currentMap < MAPS.length - 1) 
 $('soundBtn').addEventListener('click', function(){ soundOn = !soundOn; this.textContent = soundOn ? t('soundOn') : t('soundOff'); });
 $('langBtn').addEventListener('click', () => { LANG = LANG === 'en' ? 'zh' : 'en'; try{ localStorage.setItem('hsb_lang', LANG); }catch(e){} applyLang(); });
 $('helpBtn').addEventListener('click', () => $('helpPanel').classList.toggle('open'));
+$('pageClose').addEventListener('click', () => $('helpPanel').classList.remove('open'));
 
 /* ============ 主循环 ============ */
 let lastT = performance.now();
