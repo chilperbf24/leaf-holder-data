@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>仓鼠种子弹珠 · Hamster Seed Pinball</title>
+<title>仓鼠弹珠 · Hamster Pinball</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   body { font-size:15.5px; font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; background:#2b1c10;
@@ -168,7 +168,7 @@
 <div class="wrap">
   <div class="topbar">
     <header>
-      <h1>🐹 仓鼠种子弹珠<span class="en">HAMSTER SEED PINBALL</span></h1>
+      <h1>🐹 仓鼠弹珠<span class="en">HAMSTER PINBALL</span></h1>
     </header>
     <div class="uppanel" id="walletPanel">
       <h3 id="walletTitle">👛 钱包 · Sepolia 测试网</h3>
@@ -266,7 +266,7 @@
 
   <div class="panel" id="helpPanel">
    <div class="pagewrap">
-   <h2 class="ptitle" id="pageTitle">🐹 仓鼠种子弹珠 · 玩法与详情</h2>
+   <h2 class="ptitle" id="pageTitle">🐹 仓鼠弹珠 · 玩法与详情</h2>
    <button id="pageClose">✕ 关闭 · 返回游戏</button>
    <div id="helpZh">
     <b>怎么玩</b>：顶上的仓鼠抱着种子，左右移动瞄准，投下去。种子撞橡子钉 +1 分，落进底部的仓鼠小窝计分：食盆 20 · 向日葵罐 50 · 正中小木屋 100。一局投完达到本关目标分就算过关，解锁下一关。<br>
@@ -414,7 +414,7 @@ zh: {
   lbTitle:'🏆 本机排行榜 <span style="font-size:12.5px;color:#9a6a30;font-weight:400">（暂存这台设备；全球榜要等正式版接后端）</span>',
   tabScore:'🏆 分数榜', tabLevel:'🎖️ 等级榜', tabStage:'🚩 过关榜',
   labScore:'得分 / 目标', labStore:'过冬粮仓', labSeeds:'剩余种子', nutsLab:'🌰 金瓜子',
-  drop:'投种子 🌻', restart:'重开', help:'📖 介绍', pageTitle:'🐹 仓鼠种子弹珠 · 玩法与详情', pageClose:'✕ 关闭 · 返回游戏', tip:'滑动 / 移动鼠标瞄准 · 点盘面或按空格投种子',
+  drop:'投种子 🌻', restart:'重开', help:'📖 介绍', pageTitle:'🐹 仓鼠弹珠 · 玩法与详情', pageClose:'✕ 关闭 · 返回游戏', tip:'滑动 / 移动鼠标瞄准 · 点盘面或按空格投种子',
   again:'再来一局', nextStage:'下一关 ▶', guest:'游客', best:'最高 ',
   soundOn:'声音：开', soundOff:'声音：关',
   liveConnecting:'正在连接 Squeektoshi…', liveDemo:'API 暂不可达 · 演示模式（仓鼠在梦里跑）',
@@ -478,7 +478,7 @@ en: {
   lbTitle:'🏆 Local Leaderboard <span style="font-size:12.5px;color:#9a6a30;font-weight:400">(stored on this device; the global board comes with the backend)</span>',
   tabScore:'🏆 Score', tabLevel:'🎖️ Level', tabStage:'🚩 Stage',
   labScore:'Score / Target', labStore:'Winter Granary', labSeeds:'Seeds Left', nutsLab:'🌰 Golden Seeds',
-  drop:'Drop Seed 🌻', restart:'Restart', help:'📖 Guide', pageTitle:'🐹 Hamster Seed Pinball · Guide & Details', pageClose:'✕ Close · Back to Game', tip:'Swipe / move mouse to aim · tap the board or press Space to drop',
+  drop:'Drop Seed 🌻', restart:'Restart', help:'📖 Guide', pageTitle:'🐹 Hamster Pinball · Guide & Details', pageClose:'✕ Close · Back to Game', tip:'Swipe / move mouse to aim · tap the board or press Space to drop',
   again:'Play Again', nextStage:'Next Stage ▶', guest:'Guest', best:'Best ',
   soundOn:'Sound: On', soundOff:'Sound: Off',
   liveConnecting:'Connecting to Squeektoshi…', liveDemo:'API unreachable · Demo mode (dream runs)',
@@ -1007,7 +1007,7 @@ async function connectWallet(){
     if(!accs || !accs.length) throw new Error('no account');
     await ensureSepolia();
     const addr = accs[0];
-    const msg = '仓鼠种子弹珠 · 登录签名\n地址：' + addr + '\n时间：' + new Date().toISOString();
+    const msg = '仓鼠弹珠 · 登录签名\n地址：' + addr + '\n时间：' + new Date().toISOString();
     await window.ethereum.request({ method:'personal_sign', params:[msg, addr] });
     wallet.address = addr; wallet.signed = true;
     switchIdentity(addr);
