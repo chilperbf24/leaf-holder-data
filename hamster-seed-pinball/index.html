@@ -6,7 +6,7 @@
 <title>仓鼠种子弹珠 · Hamster Seed Pinball</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  body { font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; background:#2b1c10;
+  body { font-size:15.5px; font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; background:#2b1c10;
          color:#3a2410; display:flex; flex-direction:column; align-items:center; min-height:100vh;
          background-image:radial-gradient(ellipse at 50% -10%, #4a3018 0%, #2b1c10 60%); }
   .wrap { width:min(97vw, 1140px); padding:10px 0 22px; }
@@ -29,11 +29,11 @@
     .side { max-width:460px; width:100%; }
   }
   header { text-align:center; color:#ffe9c4; padding:6px 0 8px; }
-  header h1 { font-size:24px; letter-spacing:2px; }
-  header h1 .en { display:block; font-size:11px; letter-spacing:3px; color:#d9a960; margin-top:2px; font-weight:400; }
+  header h1 { font-size:27px; letter-spacing:2px; }
+  header h1 .en { display:block; font-size:12px; letter-spacing:3px; color:#d9a960; margin-top:2px; font-weight:400; }
   .livebar { display:flex; align-items:center; gap:6px; justify-content:center; flex-wrap:wrap;
              background:#3d2812; border:1px solid #6b4a22; border-radius:999px; padding:5px 12px;
-             font-size:12px; color:#ffd9a0; margin:4px auto 8px; width:fit-content; max-width:100%; }
+             font-size:13.5px; color:#ffd9a0; margin:4px auto 8px; width:fit-content; max-width:100%; }
   .dot { width:9px; height:9px; border-radius:50%; background:#888; flex:none; }
   .dot.run { background:#7ddc5a; box-shadow:0 0 8px #7ddc5a; animation:pulse 1s infinite; }
   .dot.sleep { background:#7a86e8; }
@@ -42,16 +42,27 @@
   .hud { display:flex; gap:8px; align-items:stretch; margin-bottom:8px; }
   .card { background:#fff6e3; border:2px solid #a5712e; border-radius:14px; padding:6px 10px; flex:1;
           box-shadow:0 3px 0 #a5712e; }
-  .card .lab { font-size:11px; color:#9a6a30; }
-  .card .val { font-size:20px; font-weight:700; line-height:1.15; }
+  .card .lab { font-size:12.5px; color:#9a6a30; }
+  .card .val { font-size:24px; font-weight:700; line-height:1.15; }
   .mascot { flex:none; width:86px; display:flex; flex-direction:column; align-items:center; justify-content:center;
             background:#fff6e3; border:2px solid #a5712e; border-radius:14px; box-shadow:0 3px 0 #a5712e; padding:4px 2px; }
-  .mascot .cap { font-size:10px; color:#9a6a30; margin-top:1px; }
+  .mascot .cap { font-size:11.5px; color:#9a6a30; margin-top:1px; }
   .storebar { height:10px; background:#e8d5ae; border-radius:99px; overflow:hidden; margin-top:4px; border:1px solid #c9a45c; }
   .storebar > div { height:100%; width:0%; background:linear-gradient(90deg,#e8a33d,#c97b1e); transition:width .4s; }
   .boardbox { position:relative; border-radius:18px; overflow:hidden; border:3px solid #a5712e;
               box-shadow:0 10px 28px rgba(0,0,0,.5); background:#f3dfba; }
-  canvas { display:block; width:100%; touch-action:none; }
+  canvas { display:block; width:100%; height:auto; touch-action:none; }
+  @media (max-width:520px) {
+    .wrap { padding:6px 0 16px; }
+    header h1 { font-size:23px; }
+    .hud { gap:6px; }
+    .card { padding:5px 7px; }
+    .mascot { width:72px; }
+    .btns { gap:6px; }
+    button { font-size:15px; padding:11px 2px; }
+    .side .uppanel, .uppanel { padding:10px; }
+    .banner { font-size:16px; white-space:normal; text-align:center; max-width:92%; }
+  }
   .banner { position:absolute; left:50%; top:38%; transform:translate(-50%,-50%) scale(.8); background:#ffdf7e;
             border:3px solid #a5712e; color:#6b3d07; font-weight:800; font-size:19px; padding:10px 18px;
             border-radius:16px; opacity:0; pointer-events:none; transition:all .25s; white-space:nowrap;
@@ -62,18 +73,18 @@
            background:#ffb63d; color:#5b3405; box-shadow:0 4px 0 #a5712e; cursor:pointer; font-family:inherit; }
   button:active { transform:translateY(3px); box-shadow:0 1px 0 #a5712e; }
   button:disabled { filter:grayscale(.6); opacity:.55; }
-  button.ghost { background:#fff6e3; font-weight:600; font-size:14px; flex:.62; }
-  .tip { text-align:center; color:#c9a45c; font-size:12px; margin-top:8px; }
+  button.ghost { background:#fff6e3; font-weight:600; font-size:15px; flex:.62; }
+  .tip { text-align:center; color:#c9a45c; font-size:13px; margin-top:8px; }
   .panel { background:#fff6e3; border:2px solid #a5712e; border-radius:14px; padding:12px 14px; margin-top:10px;
-           font-size:13.5px; line-height:1.75; display:none; }
+           font-size:15px; line-height:1.75; display:none; }
   .panel.open { display:block; }
   .panel b { color:#8a5410; }
-  .panel .disc { color:#8d795c; font-size:12px; }
+  .panel .disc { color:#8d795c; font-size:13px; }
   .over { position:absolute; inset:0; background:rgba(43,28,16,.82); display:none; flex-direction:column;
           align-items:center; justify-content:center; color:#ffe9c4; z-index:6; text-align:center; padding:20px; }
   .over.show { display:flex; }
   .over h2 { font-size:26px; margin-bottom:6px; }
-  .over p { font-size:15px; line-height:1.8; color:#ffd9a0; }
+  .over p { font-size:16.5px; line-height:1.8; color:#ffd9a0; }
   .over button { flex:none; width:70%; margin-top:14px; }
   .metabar { background:#3d2812; border:1px solid #6b4a22; border-radius:12px; padding:7px 12px;
              color:#ffd9a0; font-size:12.5px; margin-bottom:8px; }
@@ -83,27 +94,27 @@
   .expbar > div { height:100%; width:0%; background:linear-gradient(90deg,#7ddc5a,#3f9e2c); transition:width .4s; }
   .uppanel { background:#fff6e3; border:2px solid #a5712e; border-radius:14px; padding:10px 12px; margin-top:10px;
              box-shadow:0 3px 0 #a5712e; }
-  .uppanel h3 { font-size:15px; color:#8a5410; margin-bottom:6px; }
+  .uppanel h3 { font-size:17px; color:#8a5410; margin-bottom:6px; }
   .uprow { display:flex; align-items:center; gap:8px; padding:7px 0; border-top:1px dashed #d9ba7d; }
   .uprow:first-of-type { border-top:none; }
   .uprow .info { flex:1; }
-  .uprow .nm { font-size:14px; font-weight:700; }
-  .uprow .ds { font-size:11.5px; color:#9a6a30; }
-  .uprow .pips { font-size:12px; color:#c97b1e; letter-spacing:2px; white-space:nowrap; }
-  .uprow button { flex:none; font-size:13px; padding:8px 10px; border-radius:10px; }
+  .uprow .nm { font-size:15.5px; font-weight:700; }
+  .uprow .ds { font-size:13px; color:#9a6a30; }
+  .uprow .pips { font-size:13px; color:#c97b1e; letter-spacing:2px; white-space:nowrap; }
+  .uprow button { flex:none; font-size:14px; padding:8px 10px; border-radius:10px; }
   .uprow button.maxed { background:#e8d5ae; color:#9a6a30; }
   .mapbar { display:flex; gap:5px; margin-bottom:8px; flex-wrap:wrap; }
   .stageline { width:100%; text-align:center; font-size:13.5px; font-weight:700; color:#8a5410; padding:2px 0 3px; }
   .stagenav { display:flex; align-items:center; gap:8px; width:100%; }
-  .navtri { width:42px; height:42px; flex:none; padding:0; font-size:15px; }
+  .navtri { width:46px; height:46px; flex:none; padding:0; font-size:17px; }
   .navtri:disabled { opacity:.35; box-shadow:none; }
-  .stagecur { flex:1; text-align:center; font-weight:700; color:#8a5410; font-size:15.5px; line-height:1.25; }
-  .stagecur small { display:block; font-size:11.5px; color:#9a6a30; font-weight:400; margin-top:1px; }
+  .stagecur { flex:1; text-align:center; font-weight:700; color:#8a5410; font-size:17.5px; line-height:1.25; }
+  .stagecur small { display:block; font-size:13px; color:#9a6a30; font-weight:400; margin-top:1px; }
   .lbtabs { display:flex; gap:6px; margin-bottom:7px; }
-  .lbtabs button { flex:1; padding:5px 0; font-size:12.5px; }
+  .lbtabs button { flex:1; padding:6px 0; font-size:14px; }
   .lbtabs button.on { background:#a5712e; color:#fff; border-color:#7c5316; box-shadow:0 3px 0 #7c5316; }
-  .lbpager { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:7px; font-size:12px; color:#9a6a30; }
-  .lbpager button { padding:4px 10px; font-size:12px; }
+  .lbpager { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:7px; font-size:13.5px; color:#9a6a30; }
+  .lbpager button { padding:5px 11px; font-size:13.5px; }
   .lbpager button:disabled { opacity:.4; box-shadow:none; }
   .lbpager span { flex:1; text-align:center; }
   .mapchip { flex:1; background:#3d2812; border:2px solid #6b4a22; color:#ffd9a0; border-radius:12px;
@@ -112,13 +123,13 @@
   .mapchip.active { background:#ffb63d; color:#5b3405; border-color:#a5712e; box-shadow:0 3px 0 #a5712e; }
   .mapchip.active small { color:#8a5410; }
   .mapchip.locked { opacity:.55; }
-  .lbrow { display:flex; align-items:center; gap:8px; padding:6px 0; border-top:1px dashed #d9ba7d; font-size:13.5px; }
+  .lbrow { display:flex; align-items:center; gap:8px; padding:7px 0; border-top:1px dashed #d9ba7d; font-size:15px; }
   .lbrow:first-of-type { border-top:none; }
   .lbrow .rk { width:30px; text-align:center; font-weight:800; }
-  .lbrow .sc { font-weight:800; font-size:15px; min-width:52px; }
-  .lbrow .dt { flex:1; color:#9a6a30; font-size:12px; }
+  .lbrow .sc { font-weight:800; font-size:17px; min-width:52px; }
+  .lbrow .dt { flex:1; color:#9a6a30; font-size:13.5px; }
   .lbrow.fresh { background:#ffedb8; border-radius:8px; }
-  .lbempty { color:#9a6a30; font-size:13px; padding:8px 0; }
+  .lbempty { color:#9a6a30; font-size:14.5px; padding:8px 0; }
 </style>
 </head>
 <body>
@@ -128,7 +139,7 @@
       <h1>🐹 仓鼠种子弹珠<span class="en">HAMSTER SEED PINBALL</span></h1>
     </header>
     <div class="uppanel" id="walletPanel">
-      <h3>👛 钱包 · Sepolia 测试网</h3>
+      <h3 id="walletTitle">👛 钱包 · Sepolia 测试网</h3>
       <div id="walletBody"></div>
     </div>
   </div>
@@ -141,20 +152,25 @@
   <div class="layout">
   <div class="side sideL">
 <div class="uppanel">
-    <h3>🏠 仓鼠小屋 · 升级（金瓜子在每局结算时按得分发放）</h3>
+    <h3 id="houseTitle">🏠 仓鼠小屋 · 升级（金瓜子在每局结算时按得分发放）</h3>
     <div id="upRows"></div>
   </div>
 
 <div class="uppanel" id="pingPanel">
-    <h3>⛓️ 链上打卡 · The Tester</h3>
+    <h3 id="pingTitle">⛓️ 链上打卡 · The Tester</h3>
     <div id="pingBody"></div>
+  </div>
+
+<div class="uppanel" id="assetPanel">
+    <h3 id="assetTitle">🐹 我的 Squeekchain 资产</h3>
+    <div id="assetBody"></div>
   </div>
   </div>
   <div class="centerCol">
   <div class="metabar">
     <div class="row1">
       <span id="metaText">Lv.1 见习鼠</span>
-      <span class="nuts">🌰 金瓜子 <span id="nutsVal">0</span></span>
+      <span class="nuts"><span id="nutsLab">🌰 金瓜子</span> <span id="nutsVal">0</span></span>
     </div>
     <div class="expbar"><div id="expFill"></div></div>
   </div>
@@ -163,13 +179,13 @@
 
   <div class="hud">
     <div class="card">
-      <div class="lab">得分 / 目标 <span id="targetVal">300</span></div>
-      <div class="val"><span id="score">0</span> <span style="font-size:12px;color:#9a6a30" id="best"></span></div>
+      <div class="lab"><span id="labScore">得分 / 目标</span> <span id="targetVal">300</span></div>
+      <div class="val"><span id="score">0</span> <span style="font-size:13px;color:#9a6a30" id="best"></span></div>
       <div class="storebar"><div id="storefill"></div></div>
-      <div class="lab" style="margin-top:3px">过冬粮仓</div>
+      <div class="lab" style="margin-top:3px" id="labStore">过冬粮仓</div>
     </div>
     <div class="card" style="flex:.72">
-      <div class="lab">剩余种子</div>
+      <div class="lab" id="labSeeds">剩余种子</div>
       <div class="val">🌻 <span id="seeds">12</span></div>
       <div class="lab" id="nextinfo">下一颗：普通种子</div>
     </div>
@@ -208,25 +224,38 @@
     <button class="ghost" id="restartBtn">重开</button>
     <button class="ghost" id="soundBtn">声音：开</button>
     <button class="ghost" id="helpBtn">玩法</button>
+    <button class="ghost" id="langBtn">🌐 EN</button>
   </div>
-  <div class="tip">滑动 / 移动鼠标瞄准 · 点盘面或按空格投种子</div>
+  <div class="tip" id="tipLine">滑动 / 移动鼠标瞄准 · 点盘面或按空格投种子</div>
 
   
 
   <div class="panel" id="helpPanel">
+   <div id="helpZh">
     <b>怎么玩</b>：顶上的仓鼠抱着种子，左右移动瞄准，投下去。种子撞橡子钉 +1 分，落进底部的仓鼠小窝计分：食盆 20 · 向日葵罐 50 · 正中小木屋 100。一局投完达到本关目标分就算过关，解锁下一关。<br>
-    <b>关卡与排行榜</b>：共 <b>20 关</b>闯关制 — 5 种盘面轮换（木屑原野 · 瓜子山谷 · 月夜粮仓 · 十字谷仓 · 之字麦田），越往后目标分越高、甲虫越快、钉子越密、风车越多；<b>过一关解锁下一关</b>，通关进度按钱包/游客身份存档。排行榜分三榜：<b>分数榜</b>（单局得分）· <b>等级榜</b>（仓鼠等级）· <b>过关榜</b>（打到第几关），每天有一张“今日”推荐图；盘面上旋转的胡萝卜风车针是加长的，扫到的种子会被甩飞，离针尖越近甩得越狠。每局成绩进<b>本机排行榜</b>（存这台设备，正式版再接全球榜）。<br>
+    <b>关卡与排行榜</b>：共 <b>20 关</b>闯关制 — 5 种盘面轮换（木屑原野 · 瓜子山谷 · 月夜粮仓 · 十字谷仓 · 之字麦田），越往后目标分越高、甲虫越快、钉子越密、风车越多；<b>过一关解锁下一关</b>，通关进度按钱包/游客身份存档。排行榜分三榜：<b>分数榜</b>（单局得分）· <b>等级榜</b>（仓鼠等级）· <b>过关榜</b>（打到第几关），一个地址在每个榜只显示最好的一条，每页 10 条可翻页；盘面上旋转的胡萝卜风车针是加长的，扫到的种子会被甩飞，离针尖越近甩得越狠。<br>
     <b>惩罚（有奖有罚）</b>：盘面两端是<b>臭臭角</b>（发霉木屑），落进去 <b>-20 分</b>；粮仓上方有一只<b>捣蛋甲虫</b>来回巡逻，种子撞上它会被抢走，<b>本颗作废还 -10 分</b>；落进臭臭角或被抢，连击清零、丰收灯熄灭。真仓鼠狂奔时跑轮甩力最狠，高收益伴随高风险。<br>
     <b>升级</b>：每局结算按得分发<b>金瓜子</b>和经验，经验涨仓鼠等级（解锁围巾、墨镜、金铃铛、皇冠等装扮）；金瓜子在游戏左边的小屋里买升级：大颊囊（每局种子 +2/级）· 丰收仓（落格 +5%/级）· 金铃铛（金种子更频繁）· 防虫喷雾（甲虫变慢）。升级和等级都存在本机，关掉重开不丢。<br>
     <b>仓鼠特征</b>：盘面正中的大转轮是仓鼠跑轮，里面的小仓鼠会跟着真仓鼠一起跑/睡；两侧粉色的是<b>颊囊口袋</b>，种子掉进去会被仓鼠塞进颊囊再吐出来重投，不消耗；金种子分值 ×2；连续落进同一个格，连击让下一颗 ×1.5；撞满 20 次钉子点亮丰收灯，下一颗 ×2。<br>
     <b>真仓鼠联动</b>：转速、跑/睡状态、距离、区块进度都来自 Squeekchain 公开 API 的真仓鼠 Squeektoshi。它跑起来时跑轮飞转、窝心格 100→200；它睡觉时是夜场，种子下落更慢更好瞄，落格 +10%。玩的时候赶上链上新一轮结算，白送一颗金种子。<br>
     <b>钱包</b>：右上角可连接 EVM 钱包（仅 Sepolia 测试网）：连接后存档与排行榜绑定钱包地址，并显示你的 SQK 余额、Squeeks 数量、算力和待领 SQK；“链上打卡”向 SQK 合约发一笔 approve(自己, 0)（不转币），对应 Genesis 的 The Tester 条件。不连钱包也能玩，成绩记为游客。<br>
     <span class="disc">社区小游戏原型 · 数据：api.squeekchain.com · 不下注、分数不兑换任何东西 · 不承诺徽章或白名单。</span>
+   </div>
+   <div id="helpEn" style="display:none">
+    <b>How to play</b>: The hamster on top holds a seed — move left/right to aim and drop it. Hitting an acorn peg scores +1; landing in the dens at the bottom scores: Food Bowl 20 · Sunflower Jar 50 · Wooden House (center) 100. Reach the stage target by the end of the run to clear the stage and unlock the next.<br>
+    <b>Stages & leaderboards</b>: A <b>20-stage</b> campaign — 5 board layouts rotate (Classic Meadow · Seed Valley · Moon Granary · Cross Barn · Zigzag Field); later stages raise the target, speed up the beetle, densify the pegs and add more spinners. <b>Clear a stage to unlock the next</b>; progress is saved per wallet/guest identity. Three local leaderboards: <b>Score</b> (best run) · <b>Level</b> (hamster level) · <b>Stage</b> (furthest stage), one row per address, 10 per page. The long carrot spinner needles fling seeds — the closer to the tip, the harder the fling.<br>
+    <b>Penalties</b>: The two end bins are <b>Stink Corners</b> (moldy shavings): landing there is <b>-20</b>. A <b>Trouble Beetle</b> patrols above the bins; if it touches your seed, the seed is stolen: <b>void, plus -10</b>. Both reset your combo and the harvest light. When the real hamster sprints, the wheel flings hardest — high reward, high risk.<br>
+    <b>Upgrades</b>: Every run pays out <b>Golden Seeds</b> and XP from your score. XP levels up your hamster (unlocking a scarf, sunglasses, a golden bell, a crown). Spend Golden Seeds in the Hamster House (left): Big Cheeks (+2 seeds per run / level) · Harvest Barn (+5% bin score / level) · Golden Bell (golden seeds more often) · Bug Spray (slower beetle). Progress is stored on this device.<br>
+    <b>Hamster features</b>: The big wheel in the middle is a real running wheel — the little hamster inside runs and sleeps with the real one. The pink pockets on the sides are <b>cheek pouches</b>: a seed landing there is stuffed into the cheeks and spat back for a free re-drop. Golden seeds score ×2; landing in the same bin twice in a row makes the next seed ×1.5; 20 peg hits light the harvest light, next seed ×2.<br>
+    <b>Live link</b>: Wheel speed, run/sleep state, distance and block progress all come from Squeekchain's public API and the real hamster Squeektoshi. When it runs, the wheel spins fast and the house bin pays 100→200; when it sleeps it's night mode — seeds fall slower and bins pay +10%. A new on-chain settlement round while you play grants a bonus golden seed.<br>
+    <b>Wallet</b>: Connect an EVM wallet (Sepolia testnet only) at the top right: your saves and leaderboard bind to your address, the asset panel (left) shows your SQK balance, Squeeks, power and claimable SQK, and the on-chain check-in sends an approve(self, 0) to the SQK contract (moves no tokens) — the Genesis <b>The Tester</b> condition. Guests can play without a wallet.<br>
+    <span class="disc">Community mini-game prototype · Data: api.squeekchain.com · No betting, scores redeem for nothing, no badge or whitelist is promised.</span>
+   </div>
   </div>
   </div>
   <div class="side sideR">
 <div class="uppanel">
-    <h3>🏆 本机排行榜 <span style="font-size:11.5px;color:#9a6a30;font-weight:400">（暂存这台设备；全球榜要等正式版接后端）</span></h3>
+    <h3 id="lbTitle">🏆 本机排行榜 <span style="font-size:12.5px;color:#9a6a30;font-weight:400">（暂存这台设备；全球榜要等正式版接后端）</span></h3>
     <div class="lbtabs" id="lbTabs">
       <button data-ltab="score" class="on">🏆 分数榜</button>
       <button data-ltab="level">🎖️ 等级榜</button>
@@ -264,20 +293,20 @@ let rng = mulberry32(boardSeed);
 const WHEEL = { x:210, y:252, r:64 };
 const POCKETS = [ {x:26,y:472}, {x:394,y:472} ];
 const BINS = [
-  {v:-20, name:'臭臭角', icon:'bad'}, {v:20, name:'食盆', icon:'bowl'},
-  {v:50, name:'向日葵罐', icon:'jar'}, {v:100, name:'小木屋', icon:'house'},
-  {v:50, name:'向日葵罐', icon:'jar'}, {v:20, name:'食盆', icon:'bowl'},
-  {v:-20, name:'臭臭角', icon:'bad'}
+  {v:-20, name:'臭臭角', nameEn:'Stink Corner', icon:'bad'}, {v:20, name:'食盆', nameEn:'Food Bowl', icon:'bowl'},
+  {v:50, name:'向日葵罐', nameEn:'Sunflower Jar', icon:'jar'}, {v:100, name:'小木屋', nameEn:'Wooden House', icon:'house'},
+  {v:50, name:'向日葵罐', nameEn:'Sunflower Jar', icon:'jar'}, {v:20, name:'食盆', nameEn:'Food Bowl', icon:'bowl'},
+  {v:-20, name:'臭臭角', nameEn:'Stink Corner', icon:'bad'}
 ];
 const BIN_W = W / BINS.length, BIN_TOP = 548;
 let pegs = [], spinners = [];
 /* ============ 关卡（20 关闯关制：难度递增，过关解锁下一关） ============ */
 const PATTERNS = [
-  { gen:'grid',   name:'木屑原野', spinners:[{x:104,y:356},{x:316,y:356}] },
-  { gen:'valley', name:'瓜子山谷', spinners:[{x:70,y:262},{x:350,y:262}] },
-  { gen:'rings',  name:'月夜粮仓', spinners:[{x:86,y:180},{x:334,y:180},{x:210,y:428}] },
-  { gen:'cross',  name:'十字谷仓', spinners:[{x:86,y:300},{x:334,y:300}] },
-  { gen:'zigzag', name:'之字麦田', spinners:[{x:120,y:230},{x:300,y:392}] }
+  { gen:'grid',   name:'木屑原野', en:'Classic Meadow', spinners:[{x:104,y:356},{x:316,y:356}] },
+  { gen:'valley', name:'瓜子山谷', en:'Seed Valley', spinners:[{x:70,y:262},{x:350,y:262}] },
+  { gen:'rings',  name:'月夜粮仓', en:'Moon Granary', spinners:[{x:86,y:180},{x:334,y:180},{x:210,y:428}] },
+  { gen:'cross',  name:'十字谷仓', en:'Cross Barn', spinners:[{x:86,y:300},{x:334,y:300}] },
+  { gen:'zigzag', name:'之字麦田', en:'Zigzag Field', spinners:[{x:120,y:230},{x:300,y:392}] }
 ];
 const THEMES = [ ['#f7e3bc','#eed3a0'], ['#eef0cd','#dde0a4'], ['#dde4f7','#b7c3e6'], ['#fbe3ae','#f5cd7e'] ];
 const MAPS = [];
@@ -286,7 +315,7 @@ for(let n=1; n<=20; n++){
   const spins = p.spinners.map(s => ({ x:s.x, y:s.y }));
   if(n >= 9)  spins.push({ x:210, y:478 });
   if(n >= 15) spins.push({ x:210, y:150 });
-  MAPS.push({ id:'stage'+n, stage:n, name:'第' + n + '关 · ' + p.name, en:'Stage ' + n, gen:p.gen,
+  MAPS.push({ id:'stage'+n, stage:n, name:'第' + n + '关 · ' + p.name, nameEn:'Stage ' + n + ' · ' + p.en, en:'Stage ' + n, gen:p.gen,
               target: 280 + n*20, beetleMult: 0.9 + n*0.05,
               theme: THEMES[(n-1) % THEMES.length], spinners: spins });
 }
@@ -295,6 +324,134 @@ if(currentMap < 0 || currentMap >= MAPS.length) currentMap = 0;
 /* 预览模式：网址带 ?preview 时 20 关全开随便看，不影响正式通关进度 */
 const PREVIEW = (() => { try { return new URLSearchParams(location.search).has('preview'); } catch(e){ return false; } })();
 function targetScore(){ return MAPS[currentMap].target; }
+
+/* ============ 中英文切换 ============ */
+let LANG = 'zh';
+try{ LANG = localStorage.getItem('hsb_lang') === 'en' ? 'en' : 'zh'; }catch(e){}
+const T = {
+zh: {
+  walletTitle:'👛 钱包 · Sepolia 测试网', houseTitle:'🏠 仓鼠小屋 · 升级（金瓜子在每局结算时按得分发放）',
+  pingTitle:'⛓️ 链上打卡 · The Tester', assetTitle:'🐹 我的 Squeekchain 资产',
+  lbTitle:'🏆 本机排行榜 <span style="font-size:12.5px;color:#9a6a30;font-weight:400">（暂存这台设备；全球榜要等正式版接后端）</span>',
+  tabScore:'🏆 分数榜', tabLevel:'🎖️ 等级榜', tabStage:'🚩 过关榜',
+  labScore:'得分 / 目标', labStore:'过冬粮仓', labSeeds:'剩余种子', nutsLab:'🌰 金瓜子',
+  drop:'投种子 🌻', restart:'重开', help:'玩法', tip:'滑动 / 移动鼠标瞄准 · 点盘面或按空格投种子',
+  again:'再来一局', nextStage:'下一关 ▶', guest:'游客', best:'最高 ',
+  soundOn:'声音：开', soundOff:'声音：关',
+  liveConnecting:'正在连接 Squeektoshi…', liveDemo:'API 暂不可达 · 演示模式（仓鼠在梦里跑）',
+  liveRun:'狂奔中', liveSleep:'睡着了', liveDist:'已跑', liveStale:' · 数据过期',
+  cheek0:'颊囊空空', cheek1:'颊囊装了一点', cheek2:'颊囊鼓起来了', cheek3:'颊囊塞满啦！',
+  nextDone:'投完了', nextPfx:'下一颗：', nextGolden:'⭐ 金种子 ×2', nextNormal:'普通种子',
+  nextHarvest:' · 丰收灯亮 ×2', nextCombo:' · 连击 ×1.5',
+  exp:'经验', upBtn:'升级', maxed:'已满级',
+  stageTarget:'目标', stageTargetUnit:' 分', stageCleared:'已通关', previewTag:' · 👀 预览模式',
+  lbEmpty:'还没有记录，先打一局上榜', prevPage:'‹ 上一页', nextPage:'下一页 ›',
+  stageTag:n => '第' + n + '关', clearedTag:' · 🎉过关', pts:' 分',
+  pageInfo:(p, ps, n) => '第 ' + p + ' / ' + ps + ' 页 · 共 ' + n + ' 条', totalInfo:n => '共 ' + n + ' 条',
+  modeRun:'狂奔', modeNight:'夜场',
+  walletOff:'没连钱包也能玩，但成绩只记为“游客”。连接后：存档和排行榜绑定你的地址，还能链上打卡拿 The Tester 徽章进度。你的 SQK 与 Squeeks 显示在左边的资产面板。',
+  connect:'连接钱包', addr:'地址：', signed:' <span style="color:#3f9e2c">✓ 已签名验证</span>', disconnect:'断开钱包',
+  assetHint:'连接右上角的钱包后，这里显示你持有的 SQK 余额、Squeeks 数量、算力和待领 SQK。',
+  sqkBal:'SQK 余额：', mySqueeks:'我的 Squeeks：', squeeksUnit:' 只', power:'算力 ', claimable:'待领 SQK：', loading:'读取中…',
+  pingOff:'向 Squeekchain 的 SQK 合约发一笔交易，正好对应 Genesis 的 <b>The Tester</b> 徽章条件。先连上右上角的钱包，这里就能打卡了。',
+  pingFirst:'先连接钱包', pingDone:' 已打卡', pingTx:'交易：', pingNote:'approve(自己, 0)，没转任何币。',
+  pingIntro:'给 SQK 合约发一笔 <b>approve(自己, 0)</b>：不转币、不授权额度，只付一点 Sepolia 测试 gas，就是 The Tester 要的那笔链上交易。',
+  pingBtn:'⛓️ 打卡',
+  bNuts:n => '🌰 金瓜子不够，还差 ' + n, bUpgraded:(nm, lv) => '⬆️ ' + nm + ' 升到 ' + lv + ' 级！',
+  bLocked:(s, c) => '🔒 第 ' + s + ' 关还没解锁 — 先过掉第 ' + c + ' 关',
+  bWaitBall:'等这颗种子落完再换关', bStageGo:(nm, tg) => '🗺️ ' + nm + ' · 目标 ' + tg + ' 分',
+  bWalletOn:a => '👛 钱包已连接：' + a, bWalletOff:'已断开钱包，回到游客存档', bPingSent:'⛓️ 打卡交易已发出！',
+  bRound:'⛓️ 新一轮结算上链！送一颗金种子',
+  bStink:v => '🤢 落进臭臭角！发霉木屑 ' + v + ' 分，丰收灯熄了',
+  bBin:(golden, nm, pts) => (golden ? '⭐ 金种子 ' : '🌻 ') + nm + ' +' + pts,
+  bBeetle:'🪲 种子被捣蛋甲虫抢走啦！-10 分', bPocket:'🐹 颊囊塞住啦！吐出来重投（不消耗）',
+  bShavings:'掉进木屑堆啦… 0 分', bHarvest:'🌟 丰收灯亮了！下一颗 ×2',
+  fWin:'🎉 过关！囤粮成功', fWinAll:'👑 全部通关！仓鼠之王！', fLose:'🌙 这关还没过去',
+  fScore:s => '本局得分 <b>' + s + '</b> 分', fCheeks:'<br>Squeektoshi 的颊囊都塞满了 🐹',
+  fShort:(d, tg) => '<br>差 ' + d + ' 分就到 ' + tg + '，再来一局试试手气',
+  fUnlock:n => '<br>🔓 第 ' + n + ' 关解锁了！', fRank:r => '<br>🏆 本机排行榜第 <b>' + r + '</b> 名',
+  fSettle:(a, b) => '<br>结算：🌰 金瓜子 +' + a + ' · 经验 +' + b,
+  fLevelUp:(lv, title) => '<br>⬆️ 升级！Lv.' + lv + ' ' + title + '，新装扮解锁了，去盘面看看仓鼠头',
+  cBeetle:'捣蛋甲虫', cPouch:'颊囊', cWheelRun:'真仓鼠同款跑轮 · 转速同步中', cWheelSleep:'真仓鼠同款跑轮 · 它睡了，轮子慢转',
+  eNoWallet:'没检测到钱包插件 — 请用装了 MetaMask（或支持 EVM 钱包）的浏览器打开；手机可用钱包自带浏览器。'
+},
+en: {
+  walletTitle:'👛 Wallet · Sepolia Testnet', houseTitle:'🏠 Hamster House · Upgrades (Golden Seeds are paid from your score after each run)',
+  pingTitle:'⛓️ On-chain Check-in · The Tester', assetTitle:'🐹 My Squeekchain Assets',
+  lbTitle:'🏆 Local Leaderboard <span style="font-size:12.5px;color:#9a6a30;font-weight:400">(stored on this device; the global board comes with the backend)</span>',
+  tabScore:'🏆 Score', tabLevel:'🎖️ Level', tabStage:'🚩 Stage',
+  labScore:'Score / Target', labStore:'Winter Store', labSeeds:'Seeds Left', nutsLab:'🌰 Golden Seeds',
+  drop:'Drop Seed 🌻', restart:'Restart', help:'How to Play', tip:'Swipe / move mouse to aim · tap the board or press Space to drop',
+  again:'Play Again', nextStage:'Next Stage ▶', guest:'Guest', best:'Best ',
+  soundOn:'Sound: On', soundOff:'Sound: Off',
+  liveConnecting:'Connecting to Squeektoshi…', liveDemo:'API unreachable · Demo mode (dream runs)',
+  liveRun:'RUNNING', liveSleep:'SLEEPING', liveDist:'ran', liveStale:' · stale',
+  cheek0:'Cheeks empty', cheek1:'A little stored', cheek2:'Cheeks bulging', cheek3:'Cheeks stuffed!',
+  nextDone:'All dropped', nextPfx:'Next: ', nextGolden:'⭐ Golden seed ×2', nextNormal:'Regular seed',
+  nextHarvest:' · Harvest light ×2', nextCombo:' · Combo ×1.5',
+  exp:'XP', upBtn:'Upgrade', maxed:'MAXED',
+  stageTarget:'Target', stageTargetUnit:' pts', stageCleared:'Cleared', previewTag:' · 👀 Preview',
+  lbEmpty:'No records yet — play a run to get on the board', prevPage:'‹ Prev', nextPage:'Next ›',
+  stageTag:n => 'Stage ' + n, clearedTag:' · 🎉 Cleared', pts:' pts',
+  pageInfo:(p, ps, n) => 'Page ' + p + ' / ' + ps + ' · ' + n + ' entries', totalInfo:n => n + ' entries',
+  modeRun:'Running', modeNight:'Night',
+  walletOff:'You can play without a wallet, but scores are recorded as “Guest”. Connect to bind saves and the leaderboard to your address and to check in on-chain for The Tester progress. Your SQK and Squeeks show in the asset panel on the left.',
+  connect:'Connect Wallet', addr:'Address: ', signed:' <span style="color:#3f9e2c">✓ Signature verified</span>', disconnect:'Disconnect',
+  assetHint:'Connect the wallet at the top right and your SQK balance, Squeeks, power and claimable SQK will show here.',
+  sqkBal:'SQK Balance: ', mySqueeks:'My Squeeks: ', squeeksUnit:'', power:'Power ', claimable:'Claimable SQK: ', loading:'Loading…',
+  pingOff:'Send one transaction to Squeekchain\'s SQK contract — exactly the Genesis <b>The Tester</b> badge condition. Connect the wallet at the top right first.',
+  pingFirst:'Connect wallet first', pingDone:' checked in', pingTx:'Tx: ', pingNote:'approve(self, 0) — no tokens moved.',
+  pingIntro:'Send an <b>approve(self, 0)</b> to the SQK contract: moves no tokens, grants no allowance, just a little Sepolia test gas — that is the on-chain transaction The Tester asks for.',
+  pingBtn:'⛓️ Check In',
+  bNuts:n => '🌰 Not enough Golden Seeds — need ' + n + ' more', bUpgraded:(nm, lv) => '⬆️ ' + nm + ' upgraded to Lv.' + lv + '!',
+  bLocked:(s, c) => '🔒 Stage ' + s + ' is locked — clear Stage ' + c + ' first',
+  bWaitBall:'Wait for this seed to land', bStageGo:(nm, tg) => '🗺️ ' + nm + ' · Target ' + tg + ' pts',
+  bWalletOn:a => '👛 Wallet connected: ' + a, bWalletOff:'Wallet disconnected — back to the guest save', bPingSent:'⛓️ Check-in transaction sent!',
+  bRound:'⛓️ New settlement round on-chain! Bonus golden seed',
+  bStink:v => '🤢 Stink corner! Moldy shavings ' + v + ' pts, harvest light out',
+  bBin:(golden, nm, pts) => (golden ? '⭐ Golden seed ' : '🌻 ') + nm + ' +' + pts,
+  bBeetle:'🪲 The Trouble Beetle stole your seed! -10', bPocket:'🐹 Into the cheek pouch! Spit back for a free re-drop',
+  bShavings:'Into the shavings… 0 pts', bHarvest:'🌟 Harvest light on! Next seed ×2',
+  fWin:'🎉 Stage cleared!', fWinAll:'👑 All stages cleared! Hamster King!', fLose:'🌙 Not cleared yet',
+  fScore:s => 'You scored <b>' + s + '</b> pts', fCheeks:'<br>Squeektoshi\'s cheeks are stuffed 🐹',
+  fShort:(d, tg) => '<br>' + d + ' pts short of ' + tg + ' — one more run!',
+  fUnlock:n => '<br>🔓 Stage ' + n + ' unlocked!', fRank:r => '<br>🏆 Local leaderboard rank <b>#' + r + '</b>',
+  fSettle:(a, b) => '<br>Rewards: 🌰 Golden Seeds +' + a + ' · XP +' + b,
+  fLevelUp:(lv, title) => '<br>⬆️ Level up! Lv.' + lv + ' ' + title + ' — new look unlocked, check the dropper hamster',
+  cBeetle:'TROUBLE BEETLE', cPouch:'POUCH', cWheelRun:'The real hamster wheel · RPM in sync', cWheelSleep:'The real hamster wheel · asleep, slow spin',
+  eNoWallet:'No wallet extension detected — open this page in a browser with MetaMask (or another EVM wallet); on mobile, use your wallet\'s built-in browser.'
+}};
+function t(k){ return (T[LANG] && T[LANG][k]) || T.zh[k] || k; }
+function stageName(i){ return LANG === 'en' ? MAPS[i].nameEn : MAPS[i].name; }
+function binName(b){ return LANG === 'en' ? b.nameEn : b.name; }
+function modeName(m){ return (m === 'run' || m === '狂奔') ? t('modeRun') : t('modeNight'); }
+function applyLang(){
+  if(document.documentElement) document.documentElement.lang = LANG === 'en' ? 'en' : 'zh-CN';
+  $('walletTitle').textContent = t('walletTitle');
+  $('houseTitle').textContent = t('houseTitle');
+  $('pingTitle').textContent = t('pingTitle');
+  $('assetTitle').textContent = t('assetTitle');
+  $('lbTitle').innerHTML = t('lbTitle');
+  document.querySelectorAll('#lbTabs button').forEach(b => {
+    b.textContent = b.dataset.ltab === 'score' ? t('tabScore') : (b.dataset.ltab === 'level' ? t('tabLevel') : t('tabStage'));
+  });
+  $('labScore').textContent = t('labScore');
+  $('labStore').textContent = t('labStore');
+  $('labSeeds').textContent = t('labSeeds');
+  $('nutsLab').textContent = t('nutsLab');
+  $('dropBtn').textContent = t('drop');
+  $('restartBtn').textContent = t('restart');
+  $('helpBtn').textContent = t('help');
+  $('tipLine').textContent = t('tip');
+  $('againBtn').textContent = t('again');
+  $('nextBtn').textContent = t('nextStage');
+  $('langBtn').textContent = LANG === 'en' ? '🌐 中文' : '🌐 EN';
+  $('soundBtn').textContent = soundOn ? t('soundOn') : t('soundOff');
+  $('helpZh').style.display = LANG === 'en' ? 'none' : '';
+  $('helpEn').style.display = LANG === 'en' ? '' : 'none';
+  bestEl.textContent = best ? (t('best') + best) : '';
+  renderMeta(); renderMapBar(); renderLB(); renderWallet(); refreshHUD();
+}
 function addPeg(x, y){
   if(x < 26 || x > W-26 || y < 104 || y > 498) return;
   if(Math.hypot(x-WHEEL.x, y-WHEEL.y) < WHEEL.r + 24) return;
@@ -360,18 +517,18 @@ let score=0, ballsLeft=12, ballNo=0, ball=null, lastBin=-1, comboMult=1;
 let pegHits=0, harvestReady=false, bonusGolden=false, gameOver=false;
 let aimX = W/2, shake = 0, bannerTimer = 0;
 let best = +(localStorage.getItem('hsb_best')||0);
-bestEl.textContent = best ? ('最高 '+best) : '';
+bestEl.textContent = best ? (t('best')+best) : '';
 
 /* ============ 升级 / 等级（本地存档） ============ */
 const LEVELS = [
-  {exp:0, title:'见习鼠'}, {exp:300, title:'囤粮鼠'}, {exp:900, title:'弹珠鼠'},
-  {exp:2000, title:'瓜子骑士'}, {exp:3600, title:'囤粮大师'}, {exp:5500, title:'传说仓鼠'}
+  {exp:0, title:'见习鼠', titleEn:'Rookie'}, {exp:300, title:'囤粮鼠', titleEn:'Hoarder'}, {exp:900, title:'弹珠鼠', titleEn:'Pinball Pro'},
+  {exp:2000, title:'瓜子骑士', titleEn:'Seed Knight'}, {exp:3600, title:'囤粮大师', titleEn:'Hoard Master'}, {exp:5500, title:'传说仓鼠', titleEn:'Legendary Hamster'}
 ];
 const UPGRADES = [
-  {key:'seeds',   name:'大颊囊',   desc:'每局种子 +2 颗/级',       costs:[100,260,600]},
-  {key:'harvest', name:'丰收仓',   desc:'落格得分 +5%/级',         costs:[100,260,600]},
-  {key:'luck',    name:'金铃铛',   desc:'金种子：每 5→4→3 颗一颗', costs:[120,300,700]},
-  {key:'spray',   name:'防虫喷雾', desc:'捣蛋甲虫速度 -25%/级',    costs:[80,200,450]}
+  {key:'seeds',   name:'大颊囊',   nameEn:'Big Cheeks',   desc:'每局种子 +2 颗/级',       descEn:'+2 seeds per run / level',       costs:[100,260,600]},
+  {key:'harvest', name:'丰收仓',   nameEn:'Harvest Barn', desc:'落格得分 +5%/级',         descEn:'+5% bin score / level',         costs:[100,260,600]},
+  {key:'luck',    name:'金铃铛',   nameEn:'Golden Bell',  desc:'金种子：每 5→4→3 颗一颗', descEn:'Golden seed every 5→4→3 drops', costs:[120,300,700]},
+  {key:'spray',   name:'防虫喷雾', nameEn:'Bug Spray',    desc:'捣蛋甲虫速度 -25%/级',    descEn:'Beetle speed -25% / level',     costs:[80,200,450]}
 ];
 let meta = { nuts:0, exp:0, cleared:0, up:{seeds:0, harvest:0, luck:0, spray:0} };
 let idSuffix = '';
@@ -396,25 +553,25 @@ function runBalls(){ return 12 + meta.up.seeds*2; }
 function goldenEvery(){ return Math.max(3, 5 - meta.up.luck); }
 function renderMeta(){
   curLevel = levelFromExp(meta.exp);
-  $('metaText').textContent = 'Lv.' + curLevel + ' ' + LEVELS[curLevel-1].title + ' · 经验 ' + meta.exp;
+  $('metaText').textContent = 'Lv.' + curLevel + ' ' + (LANG === 'en' ? LEVELS[curLevel-1].titleEn : LEVELS[curLevel-1].title) + ' · ' + t('exp') + ' ' + meta.exp;
   $('nutsVal').textContent = meta.nuts;
   const cur = LEVELS[curLevel-1].exp, nxt = (LEVELS[curLevel] ? LEVELS[curLevel].exp : cur);
   $('expFill').style.width = (curLevel >= LEVELS.length ? 100 : Math.min(100, (meta.exp-cur)/(nxt-cur)*100)) + '%';
   $('upRows').innerHTML = UPGRADES.map(u => {
     const lv = meta.up[u.key], maxed = lv >= 3;
     const pips = '●'.repeat(lv) + '○'.repeat(3-lv);
-    const btn = maxed ? '<button class="maxed" disabled>已满级</button>'
-      : '<button data-up="' + u.key + '">升级 ' + u.costs[lv] + ' 🌰</button>';
-    return '<div class="uprow"><div class="info"><div class="nm">' + u.name + '</div><div class="ds">' + u.desc + '</div></div><div class="pips">' + pips + '</div>' + btn + '</div>';
+    const btn = maxed ? '<button class="maxed" disabled>' + t('maxed') + '</button>'
+      : '<button data-up="' + u.key + '">' + t('upBtn') + ' ' + u.costs[lv] + ' 🌰</button>';
+    return '<div class="uprow"><div class="info"><div class="nm">' + (LANG === 'en' ? u.nameEn : u.name) + '</div><div class="ds">' + (LANG === 'en' ? u.descEn : u.desc) + '</div></div><div class="pips">' + pips + '</div>' + btn + '</div>';
   }).join('');
 }
 function buyUpgrade(key){
   const u = UPGRADES.find(x => x.key === key); if(!u) return;
   const lv = meta.up[key]; if(lv >= 3) return;
   const cost = u.costs[lv];
-  if(meta.nuts < cost){ showBanner('🌰 金瓜子不够，还差 ' + (cost - meta.nuts)); beep(180, 0.12, 'square', 0.04); return; }
+  if(meta.nuts < cost){ showBanner(t('bNuts')(cost - meta.nuts)); beep(180, 0.12, 'square', 0.04); return; }
   meta.nuts -= cost; meta.up[key] = lv + 1; saveMeta(); renderMeta();
-  showBanner('⬆️ ' + u.name + ' 升到 ' + (lv+1) + ' 级！'); squeak();
+  showBanner(t('bUpgraded')(LANG === 'en' ? u.nameEn : u.name, lv+1)); squeak();
   if(key === 'seeds' && !ball && !gameOver){ ballsLeft += 2; refreshHUD(); }
 }
 $('upRows').addEventListener('click', e => {
@@ -436,8 +593,9 @@ let lastEntryId = 0;
 function recordScore(win){
   const entry = { id: Date.now(), s: score, w: win ? 1 : 0, m: MAPS[currentMap].name,
                   stg: currentMap + 1, lv: levelFromExp(meta.exp),
+                  wk: wallet.address ? shortAddr(wallet.address) : 'guest',
                   who: wallet.address ? shortAddr(wallet.address) : '游客',
-                  mode: ham.running ? '狂奔' : '夜场',
+                  mode: ham.running ? 'run' : 'night',
                   t: new Date().toLocaleString('zh-CN', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'}) };
   scoreRows.push(entry);
   scoreRows.sort((a,b) => b.s - a.s);
@@ -468,7 +626,8 @@ function lbView(tab){
   };
   const byWho = new Map();
   for(const r of scoreRows){
-    const k = r.who || '游客';
+    let k = r.wk || r.who || 'guest';
+    if(k === '游客') k = 'guest';
     byWho.set(k, byWho.has(k) ? better(byWho.get(k), r) : r);
   }
   const rows = [...byWho.values()];
@@ -481,7 +640,7 @@ function renderLB(){
   const box = $('lbRows');
   const pager = $('lbPager');
   document.querySelectorAll('#lbTabs button').forEach(b => b.classList.toggle('on', b.dataset.ltab === lbTab));
-  if(!scoreRows.length){ box.innerHTML = '<div class="lbempty">还没有记录，先打一局上榜</div>'; pager.innerHTML = ''; return; }
+  if(!scoreRows.length){ box.innerHTML = '<div class="lbempty">' + t('lbEmpty') + '</div>'; pager.innerHTML = ''; return; }
   let rows = lbView(lbTab);
   const pages = Math.max(1, Math.ceil(rows.length / LB_PER_PAGE));
   if(lbPage >= pages) lbPage = pages - 1;
@@ -490,17 +649,19 @@ function renderLB(){
   const medals = ['🥇','🥈','🥉'];
   box.innerHTML = rows.slice(start, start + LB_PER_PAGE).map((r, j) => {
     const i = start + j;
-    const big = lbTab === 'level' ? ('Lv.' + (r.lv||1)) : (lbTab === 'stage' ? ('第' + (r.stg||1) + '关') : r.s);
-    const extra = lbTab === 'score' ? '' : (' · ' + r.s + ' 分');
+    const big = lbTab === 'level' ? ('Lv.' + (r.lv||1)) : (lbTab === 'stage' ? t('stageTag')(r.stg||1) : r.s);
+    const extra = lbTab === 'score' ? '' : (' · ' + r.s + t('pts'));
+    const whoDisp = (r.wk === 'guest' || r.who === '游客') ? t('guest') : r.who;
+    const stageDisp = r.stg ? (LANG === 'en' ? MAPS[r.stg-1].nameEn : r.m) : r.m;
     return '<div class="lbrow' + (r.id === lastEntryId ? ' fresh' : '') + '"><div class="rk">' + (medals[i] || (i+1)) + '</div>' +
-    '<div class="sc">' + big + '</div><div class="dt">' + (r.who ? r.who + ' · ' : '') + r.m + ' · ' + r.mode + (r.w ? ' · 🎉过关' : '') + extra + '</div>' +
+    '<div class="sc">' + big + '</div><div class="dt">' + (whoDisp ? whoDisp + ' · ' : '') + stageDisp + ' · ' + modeName(r.mode) + (r.w ? t('clearedTag') : '') + extra + '</div>' +
     '<div class="dt" style="flex:none">' + r.t + '</div></div>';
   }).join('');
   pager.innerHTML = pages > 1
-    ? '<button data-lpage="prev"' + (lbPage === 0 ? ' disabled' : '') + '>‹ 上一页</button>' +
-      '<span>第 ' + (lbPage+1) + ' / ' + pages + ' 页 · 共 ' + rows.length + ' 条</span>' +
-      '<button data-lpage="next"' + (lbPage >= pages-1 ? ' disabled' : '') + '>下一页 ›</button>'
-    : '<span>共 ' + rows.length + ' 条</span>';
+    ? '<button data-lpage="prev"' + (lbPage === 0 ? ' disabled' : '') + '>' + t('prevPage') + '</button>' +
+      '<span>' + t('pageInfo')(lbPage+1, pages, rows.length) + '</span>' +
+      '<button data-lpage="next"' + (lbPage >= pages-1 ? ' disabled' : '') + '>' + t('nextPage') + '</button>'
+    : '<span>' + t('totalInfo')(rows.length) + '</span>';
 }
 $('lbTabs').addEventListener('click', e => {
   const b = e.target.closest ? e.target.closest('[data-ltab]') : null;
@@ -522,21 +683,21 @@ function renderMapBar(){
   $('mapBar').innerHTML =
     '<div class="stagenav">' +
     '<button class="navtri" data-nav="-1"' + (currentMap === 0 ? ' disabled' : '') + '>◀</button>' +
-    '<div class="stagecur">' + MAPS[currentMap].name + (currentMap < cleared ? ' ✓' : '') +
-      '<small>目标 ' + MAPS[currentMap].target + ' 分 · 已通关 ' + cleared + '/' + MAPS.length + (PREVIEW ? ' · 👀 预览模式' : '') + '</small></div>' +
+    '<div class="stagecur">' + stageName(currentMap) + (currentMap < cleared ? ' ✓' : '') +
+      '<small>' + t('stageTarget') + ' ' + MAPS[currentMap].target + t('stageTargetUnit') + ' · ' + t('stageCleared') + ' ' + cleared + '/' + MAPS.length + (PREVIEW ? t('previewTag') : '') + '</small></div>' +
     '<button class="navtri" data-nav="1"' + (currentMap >= maxIdx ? ' disabled' : '') + '>▶</button>' +
     '</div>';
 }
 function switchMap(i){
   if(i === currentMap) return;
-  if(!PREVIEW && i > (meta.cleared || 0)){ showBanner('🔒 第 ' + (i+1) + ' 关还没解锁 — 先过掉第 ' + ((meta.cleared || 0) + 1) + ' 关'); beep(180, 0.12, 'square', 0.04); return; }
-  if(ball){ showBanner('等这颗种子落完再换关'); return; }
+  if(!PREVIEW && i > (meta.cleared || 0)){ showBanner(t('bLocked')(i+1, (meta.cleared || 0) + 1)); beep(180, 0.12, 'square', 0.04); return; }
+  if(ball){ showBanner(t('bWaitBall')); return; }
   currentMap = i;
   try{ localStorage.setItem('hsb_map', String(i)); }catch(e){}
   boardSeed = hashStr('seedpinball-' + todayStr + '-' + i);
   restart();
   renderMapBar();
-  showBanner('🗺️ ' + MAPS[i].name + ' · 目标 ' + MAPS[i].target + ' 分');
+  showBanner(t('bStageGo')(stageName(i), MAPS[i].target));
 }
 $('mapBar').addEventListener('click', e => {
   const el = e.target.closest ? e.target.closest('[data-nav]') : null;
@@ -559,41 +720,51 @@ function fmtUnits(v, dec){
 function renderWallet(){
   const box = $('walletBody');
   if(!wallet.address){
-    box.innerHTML = '<div style="font-size:13px;line-height:1.7;color:#7a5a28">没连钱包也能玩，但成绩只记为“游客”。连接后：存档和排行榜绑定你的地址、显示你持有的 Squeeks 和 SQK、还能链上打卡拿 The Tester 徽章进度。</div>' +
-      '<button id="connectBtn" style="margin-top:8px;width:100%">连接钱包</button>' +
-      (wallet.msg ? '<div style="font-size:12px;color:#b03a2a;margin-top:6px">' + wallet.msg + '</div>' : '');
+    box.innerHTML = '<div style="font-size:14.5px;line-height:1.7;color:#7a5a28">' + t('walletOff') + '</div>' +
+      '<button id="connectBtn" style="margin-top:8px;width:100%">' + t('connect') + '</button>' +
+      (wallet.msg ? '<div style="font-size:13px;color:#b03a2a;margin-top:6px">' + wallet.msg + '</div>' : '');
     $('connectBtn').addEventListener('click', connectWallet);
-    renderPing();
+    renderPing(); renderAssets();
     return;
   }
   box.innerHTML =
-    '<div style="font-size:13.5px;line-height:1.85">' +
-    '地址：<b>' + shortAddr(wallet.address) + '</b>' + (wallet.signed ? ' <span style="color:#3f9e2c">✓ 已签名验证</span>' : '') + '<br>' +
-    'SQK 余额：<b>' + (wallet.sqk === null ? '读取中…' : wallet.sqk) + '</b><br>' +
-    '我的 Squeeks：<b>' + (wallet.squeeks === null ? '读取中…' : wallet.squeeks + ' 只') + '</b> · 算力 <b>' + (wallet.power === null ? '…' : wallet.power) + '</b><br>' +
-    '待领 SQK：<b>' + (wallet.claimable === null ? '…' : wallet.claimable) + '</b></div>' +
-    '<button id="disconnectBtn" class="ghost" style="margin-top:8px;width:100%">断开钱包</button>' +
-    (wallet.msg ? '<div style="font-size:12px;color:#b03a2a;margin-top:6px">' + wallet.msg + '</div>' : '');
+    '<div style="font-size:15px;line-height:1.85">' +
+    t('addr') + '<b>' + shortAddr(wallet.address) + '</b>' + (wallet.signed ? t('signed') : '') + '</div>' +
+    '<button id="disconnectBtn" class="ghost" style="margin-top:8px;width:100%">' + t('disconnect') + '</button>' +
+    (wallet.msg ? '<div style="font-size:13px;color:#b03a2a;margin-top:6px">' + wallet.msg + '</div>' : '');
   $('disconnectBtn').addEventListener('click', disconnectWallet);
-  renderPing();
+  renderPing(); renderAssets();
+}
+function renderAssets(){
+  const box = $('assetBody');
+  if(!box) return;
+  if(!wallet.address){
+    box.innerHTML = '<div style="font-size:14.5px;line-height:1.7;color:#7a5a28">' + t('assetHint') + '</div>';
+    return;
+  }
+  box.innerHTML =
+    '<div style="font-size:15px;line-height:1.9">' +
+    t('sqkBal') + '<b>' + (wallet.sqk === null ? t('loading') : wallet.sqk) + '</b><br>' +
+    t('mySqueeks') + '<b>' + (wallet.squeeks === null ? t('loading') : wallet.squeeks + t('squeeksUnit')) + '</b> · ' + t('power') + '<b>' + (wallet.power === null ? '…' : wallet.power) + '</b><br>' +
+    t('claimable') + '<b>' + (wallet.claimable === null ? '…' : wallet.claimable) + '</b></div>';
 }
 function renderPing(){
   const box = $('pingBody');
   if(!box) return;
   if(!wallet.address){
-    box.innerHTML = '<div style="font-size:13px;line-height:1.7;color:#7a5a28">向 Squeekchain 的 SQK 合约发一笔交易，正好对应 Genesis 的 <b>The Tester</b> 徽章条件。先连上右上角的钱包，这里就能打卡了。</div>' +
-      '<button disabled style="margin-top:8px;width:100%;opacity:.45">先连接钱包</button>';
+    box.innerHTML = '<div style="font-size:14.5px;line-height:1.7;color:#7a5a28">' + t('pingOff') + '</div>' +
+      '<button disabled style="margin-top:8px;width:100%;opacity:.45">' + t('pingFirst') + '</button>';
     return;
   }
   if(wallet.pingHash){
-    box.innerHTML = '<div style="font-size:13.5px;line-height:1.8">✓ <b>' + shortAddr(wallet.address) + '</b> 已打卡</div>' +
-      '<div style="font-size:12.5px;margin-top:4px">交易：<a href="https://sepolia.etherscan.io/tx/' + wallet.pingHash + '" target="_blank" rel="noopener">' + wallet.pingHash.slice(0,16) + '…</a></div>' +
-      '<div style="font-size:12px;color:#9a6a30;margin-top:4px">approve(自己, 0)，没转任何币。</div>';
+    box.innerHTML = '<div style="font-size:15px;line-height:1.8">✓ <b>' + shortAddr(wallet.address) + '</b>' + t('pingDone') + '</div>' +
+      '<div style="font-size:14px;margin-top:4px">' + t('pingTx') + '<a href="https://sepolia.etherscan.io/tx/' + wallet.pingHash + '" target="_blank" rel="noopener">' + wallet.pingHash.slice(0,16) + '…</a></div>' +
+      '<div style="font-size:13px;color:#9a6a30;margin-top:4px">' + t('pingNote') + '</div>';
     return;
   }
-  box.innerHTML = '<div style="font-size:13px;line-height:1.7;color:#7a5a28">给 SQK 合约发一笔 <b>approve(自己, 0)</b>：不转币、不授权额度，只付一点 Sepolia 测试 gas，就是 The Tester 要的那笔链上交易。</div>' +
-    '<button id="pingBtn" style="margin-top:8px;width:100%">⛓️ 打卡</button>' +
-    (wallet.pingMsg ? '<div style="font-size:12px;color:#b03a2a;margin-top:6px">' + wallet.pingMsg + '</div>' : '');
+  box.innerHTML = '<div style="font-size:14.5px;line-height:1.7;color:#7a5a28">' + t('pingIntro') + '</div>' +
+    '<button id="pingBtn" style="margin-top:8px;width:100%">' + t('pingBtn') + '</button>' +
+    (wallet.pingMsg ? '<div style="font-size:13px;color:#b03a2a;margin-top:6px">' + wallet.pingMsg + '</div>' : '');
   $('pingBtn').addEventListener('click', pingOnChain);
 }
 function switchIdentity(addr){
@@ -627,7 +798,7 @@ async function ensureSepolia(){
 async function connectWallet(){
   wallet.msg = '';
   if(!window.ethereum){
-    wallet.msg = '没检测到钱包插件 — 请用装了 MetaMask（或支持 EVM 钱包）的浏览器打开；手机可用钱包自带浏览器。';
+    wallet.msg = t('eNoWallet');
     renderWallet(); return;
   }
   try{
@@ -641,10 +812,10 @@ async function connectWallet(){
     switchIdentity(addr);
     renderWallet();
     fetchWalletAssets();
-    showBanner('👛 钱包已连接：' + shortAddr(addr));
+    showBanner(t('bWalletOn')(shortAddr(addr)));
     squeak();
   }catch(e){
-    wallet.msg = '连接被取消或失败' + (e && e.message ? '：' + String(e.message).slice(0, 80) : '');
+    wallet.msg = (LANG === 'en' ? 'Connection cancelled or failed' : '连接被取消或失败') + (e && e.message ? '：' + String(e.message).slice(0, 80) : '');
     renderWallet();
   }
 }
@@ -652,7 +823,7 @@ function disconnectWallet(){
   wallet.address = null; wallet.signed = false; wallet.msg = '';
   switchIdentity(null);
   renderWallet();
-  showBanner('已断开钱包，回到游客存档');
+  showBanner(t('bWalletOff'));
 }
 async function fetchWalletAssets(){
   if(!wallet.address) return;
@@ -686,10 +857,10 @@ async function pingOnChain(){
     wallet.pingHash = hash;
     try{ localStorage.setItem('hsb_ping@' + wallet.address.toLowerCase(), hash); }catch(e){}
     renderPing();
-    showBanner('⛓️ 打卡交易已发出！');
+    showBanner(t('bPingSent'));
     squeak();
   }catch(e){
-    wallet.pingMsg = '打卡没发出去' + (e && e.message ? '：' + String(e.message).slice(0, 80) : '') + '（需要一点 Sepolia 测试 ETH 付 gas）';
+    wallet.pingMsg = (LANG === 'en' ? 'Check-in failed' : '打卡没发出去') + (e && e.message ? '：' + String(e.message).slice(0, 80) : '') + (LANG === 'en' ? ' (needs a little Sepolia test ETH for gas)' : '（需要一点 Sepolia 测试 ETH 付 gas）');
     renderPing();
   }
 }
@@ -727,7 +898,7 @@ async function pollAPI(){
     const rd = anc.settledThroughRound;
     if(rd !== undefined && rd !== null){
       if(lastRound !== null && +rd > lastRound && !gameOver){
-        bonusGolden = true; showBanner('⛓️ 新一轮结算上链！送一颗金种子');
+        bonusGolden = true; showBanner(t('bRound'));
         squeak();
       }
       lastRound = +rd;
@@ -741,12 +912,12 @@ async function pollAPI(){
 function updateLiveBar(){
   if(ham.demo){
     liveDot.className = 'dot stale';
-    liveText.textContent = 'API 暂不可达 · 演示模式（仓鼠在梦里跑）';
+    liveText.textContent = t('liveDemo');
     return;
   }
   liveDot.className = 'dot ' + (ham.stale ? 'stale' : (ham.running ? 'run' : 'sleep'));
-  const st = ham.running ? ('🏃 奔跑中 ' + ham.rpm.toFixed(0) + ' RPM') : '💤 睡觉中';
-  liveText.textContent = 'Squeektoshi ' + st + ' · 已跑 ' + ham.distKm.toFixed(2) + ' km · 区块 #' + ham.height + (ham.stale ? ' · 数据过期' : '');
+  const st = ham.running ? ('🏃 ' + t('liveRun') + ' ' + ham.rpm.toFixed(0) + ' RPM') : ('💤 ' + t('liveSleep'));
+  liveText.textContent = 'Squeektoshi ' + st + ' · ' + t('liveDist') + ' ' + ham.distKm.toFixed(2) + ' km · #' + ham.height + (ham.stale ? t('liveStale') : '');
 }
 pollAPI(); setInterval(pollAPI, 5000);
 
@@ -776,8 +947,8 @@ function refreshHUD(){
   fillEl.style.width = pct + '%';
   const s = 1 + Math.min(0.55, score/tgt*0.55);
   cheeksEl.setAttribute('transform', 'translate(31 33) scale(' + s + ') translate(-31 -33)');
-  cheekCap.textContent = score>=tgt ? '颊囊塞满啦！' : (score>=tgt/2 ? '颊囊鼓起来了' : (score>0 ? '颊囊装了一点' : '颊囊空空'));
-  nextEl.textContent = ballsLeft<=0 ? '投完了' : ('下一颗：' + (nextIsGolden() ? '⭐ 金种子 ×2' : '普通种子') + (harvestReady ? ' · 丰收灯亮 ×2' : '') + (comboMult>1 ? ' · 连击 ×1.5' : ''));
+  cheekCap.textContent = score>=tgt ? t('cheek3') : (score>=tgt/2 ? t('cheek2') : (score>0 ? t('cheek1') : t('cheek0')));
+  nextEl.textContent = ballsLeft<=0 ? t('nextDone') : (t('nextPfx') + (nextIsGolden() ? t('nextGolden') : t('nextNormal')) + (harvestReady ? t('nextHarvest') : '') + (comboMult>1 ? t('nextCombo') : ''));
   dropBtn.disabled = !!ball || gameOver || ballsLeft<=0;
 }
 function drop(){
@@ -802,7 +973,7 @@ function endBall(kind, binIdx){
     if(b.v < 0){
       score = Math.max(0, score + b.v);
       lastBin = -1; comboMult = 1; harvestReady = false;
-      showBanner('🤢 落进臭臭角！发霉木屑 ' + b.v + ' 分，丰收灯熄了');
+      showBanner(t('bStink')(b.v));
       beep(150, 0.16, 'square', 0.05);
     } else {
       let v = b.v;
@@ -810,7 +981,7 @@ function endBall(kind, binIdx){
       if(!ham.running && ham.ok) v = Math.round(v * 1.1);
       const pts = Math.round(v * ball.mult * (1 + 0.05 * meta.up.harvest));
       score += pts;
-      showBanner((ball.golden?'⭐ 金种子 ':'🌻 ') + b.name + ' +' + pts);
+      showBanner(t('bBin')(ball.golden, binName(b), pts));
       if(binIdx === lastBin){ comboMult = 1.5; } else { comboMult = 1; }
       lastBin = binIdx;
       squeak();
@@ -819,15 +990,15 @@ function endBall(kind, binIdx){
     score = Math.max(0, score - 10);
     lastBin = -1; comboMult = 1; harvestReady = false;
     beetle.stun = 50;
-    showBanner('🪲 种子被捣蛋甲虫抢走啦！-10 分');
+    showBanner(t('bBeetle'));
     beep(420, 0.1, 'sawtooth', 0.04); setTimeout(()=>beep(240, 0.14, 'sawtooth', 0.04), 90);
   } else if(kind === 'pocket'){
-    ballsLeft++; showBanner('🐹 颊囊塞住啦！吐出来重投（不消耗）'); squeak();
+    ballsLeft++; showBanner(t('bPocket')); squeak();
   } else {
-    lastBin = -1; comboMult = 1; showBanner('掉进木屑堆啦… 0 分');
+    lastBin = -1; comboMult = 1; showBanner(t('bShavings'));
   }
   ball = null;
-  if(score > best){ best = score; localStorage.setItem('hsb_best', best); bestEl.textContent = '最高 '+best; }
+  if(score > best){ best = score; localStorage.setItem('hsb_best', best); bestEl.textContent = t('best')+best; }
   if(ballsLeft <= 0){ finishGame(); }
   refreshHUD();
 }
@@ -842,12 +1013,12 @@ function finishGame(){
   meta.nuts += nutsEarned; meta.exp += score; saveMeta(); renderMeta(); renderMapBar();
   const newLv = levelFromExp(meta.exp);
   const rank = recordScore(win);
-  $('overTitle').textContent = win ? (currentMap === 19 ? '👑 全部通关！仓鼠之王！' : '🎉 过关！囤粮成功') : '🌙 这关还没过去';
-  $('overText').innerHTML = '本局得分 <b>' + score + '</b> 分' + (win ? '<br>Squeektoshi 的颊囊都塞满了 🐹' : '<br>差 ' + (targetScore()-score) + ' 分就到 ' + targetScore() + '，再来一局试试手气')
-    + (wasFrontier && currentMap < 19 ? '<br>🔓 第 ' + (currentMap+2) + ' 关解锁了！' : '')
-    + (rank > 0 ? '<br>🏆 本机排行榜第 <b>' + rank + '</b> 名' : '')
-    + '<br>结算：🌰 金瓜子 +' + nutsEarned + ' · 经验 +' + score
-    + (newLv > oldLv ? '<br>⬆️ 升级！Lv.' + newLv + ' ' + LEVELS[newLv-1].title + '，新装扮解锁了，去盘面看看仓鼠头' : '');
+  $('overTitle').textContent = win ? (currentMap === 19 ? t('fWinAll') : t('fWin')) : t('fLose');
+  $('overText').innerHTML = t('fScore')(score) + (win ? t('fCheeks') : t('fShort')(targetScore()-score, targetScore()))
+    + (wasFrontier && currentMap < 19 ? t('fUnlock')(currentMap+2) : '')
+    + (rank > 0 ? t('fRank')(rank) : '')
+    + t('fSettle')(nutsEarned, score)
+    + (newLv > oldLv ? t('fLevelUp')(newLv, LANG === 'en' ? LEVELS[newLv-1].titleEn : LEVELS[newLv-1].title) : '');
   $('nextBtn').style.display = (win && currentMap < 19) ? '' : 'none';
   overEl.classList.add('show');
 }
@@ -913,7 +1084,7 @@ function physStep(dtF){
         beep(880 + Math.random()*320, 0.045, 'sine', 0.028);
         if(pegHits >= pegThreshold){
           pegThreshold += 20; harvestReady = true;
-          showBanner('🌟 丰收灯亮了！下一颗 ×2'); squeak();
+          showBanner(t('bHarvest')); squeak();
         }
       }
     }
@@ -1106,7 +1277,7 @@ function drawBeetle(){
   ctx.beginPath(); ctx.moveTo(13,1); ctx.lineTo(16,-1); ctx.stroke();
   ctx.restore();
   ctx.fillStyle = '#7a4636'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText('捣蛋甲虫', b.x, b.y + 26);
+  ctx.fillText(t('cBeetle'), b.x, b.y + 26);
 }
 function draw(){
   ctx.save();
@@ -1161,7 +1332,7 @@ function draw(){
     ctx.beginPath(); ctx.arc(p.x,p.y,19,0,Math.PI*2); ctx.fillStyle = '#f2a49b'; ctx.fill();
     ctx.beginPath(); ctx.arc(p.x,p.y,12.5,0,Math.PI*2); ctx.fillStyle = '#f9c6bd'; ctx.fill();
     ctx.fillStyle = '#a34a3e'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText('颊囊', p.x, p.y+30);
+    ctx.fillText(t('cPouch'), p.x, p.y+30);
   }
   /* 橡子钉 */
   for(const pg of pegs){
@@ -1199,7 +1370,7 @@ function draw(){
   drawWheelHamster();
   /* 跑轮标签 */
   ctx.fillStyle = '#8a5a28'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText(ham.running ? '真仓鼠同款跑轮 · 转速同步中' : '真仓鼠同款跑轮 · 它睡了，轮子慢转', WHEEL.x, WHEEL.y + WHEEL.r + 30);
+  ctx.fillText(ham.running ? t('cWheelRun') : t('cWheelSleep'), WHEEL.x, WHEEL.y + WHEEL.r + 30);
 
   drawBeetle();
 
@@ -1214,7 +1385,7 @@ function draw(){
     ctx.fillStyle = BINS[i].v < 0 ? '#b03a2a' : '#6b3d07'; ctx.font = 'bold 17px sans-serif'; ctx.textAlign = 'center';
     ctx.fillText(String(dispV), x+BIN_W/2, BIN_TOP+58);
     ctx.font = '10.5px sans-serif'; ctx.fillStyle = '#9a6a30';
-    ctx.fillText(BINS[i].name, x+BIN_W/2, BIN_TOP+76);
+    ctx.fillText(binName(BINS[i]), x+BIN_W/2, BIN_TOP+76);
   }
   ctx.strokeStyle = '#a5712e'; ctx.lineWidth = 3.4;
   for(let i=0;i<=BINS.length;i++){ ctx.beginPath(); ctx.moveTo(i*BIN_W, BIN_TOP); ctx.lineTo(i*BIN_W, H); ctx.stroke(); }
@@ -1292,7 +1463,8 @@ dropBtn.addEventListener('click', drop);
 $('restartBtn').addEventListener('click', restart);
 $('againBtn').addEventListener('click', restart);
 $('nextBtn').addEventListener('click', () => { if(currentMap < 19) switchMap(currentMap + 1); });
-$('soundBtn').addEventListener('click', function(){ soundOn = !soundOn; this.textContent = '声音：' + (soundOn?'开':'关'); });
+$('soundBtn').addEventListener('click', function(){ soundOn = !soundOn; this.textContent = soundOn ? t('soundOn') : t('soundOff'); });
+$('langBtn').addEventListener('click', () => { LANG = LANG === 'en' ? 'zh' : 'en'; try{ localStorage.setItem('hsb_lang', LANG); }catch(e){} applyLang(); });
 $('helpBtn').addEventListener('click', () => $('helpPanel').classList.toggle('open'));
 
 /* ============ 主循环 ============ */
@@ -1304,6 +1476,7 @@ function loop(t){
   requestAnimationFrame(loop);
 }
 refreshHUD();
+if(LANG === 'en') applyLang();
 requestAnimationFrame(loop);
 </script>
 </body>
