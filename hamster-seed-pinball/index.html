@@ -305,9 +305,9 @@ function fitCanvas(){
   try{
     const r = cv.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    const k = Math.max(1, Math.min(3, Math.round(r.width * dpr / W)));
-    if(cv.width !== W * k){ cv.width = W * k; cv.height = H * k; }
-    ctx.setTransform(k, 0, 0, k, 0, 0);
+    const bw = Math.max(W, Math.min(1680, Math.floor(r.width * dpr)));
+    if(cv.width !== bw){ cv.width = bw; cv.height = Math.round(H * bw / W); }
+    ctx.setTransform(bw / W, 0, 0, bw / W, 0, 0);
   }catch(e){}
 }
 fitCanvas();
@@ -1314,7 +1314,7 @@ function drawBeetle(){
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.3;
   ctx.beginPath(); ctx.moveTo(13,1); ctx.lineTo(16,-1); ctx.stroke();
   ctx.restore();
-  ctx.fillStyle = '#7a4636'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = '#7a4636'; ctx.font = 'bold 10.5px sans-serif'; ctx.textAlign = 'center';
   ctx.fillText(t('cBeetle'), b.x, b.y + 26);
 }
 function draw(){
@@ -1369,7 +1369,7 @@ function draw(){
   for(const p of POCKETS){
     ctx.beginPath(); ctx.arc(p.x,p.y,19,0,Math.PI*2); ctx.fillStyle = '#f2a49b'; ctx.fill();
     ctx.beginPath(); ctx.arc(p.x,p.y,12.5,0,Math.PI*2); ctx.fillStyle = '#f9c6bd'; ctx.fill();
-    ctx.fillStyle = '#a34a3e'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#a34a3e'; ctx.font = 'bold 10.5px sans-serif'; ctx.textAlign = 'center';
     ctx.fillText(t('cPouch'), p.x, p.y+30);
   }
   /* 橡子钉 */
@@ -1406,9 +1406,6 @@ function draw(){
   ctx.beginPath(); ctx.arc(0,0,7,0,Math.PI*2); ctx.fillStyle = '#8a5a28'; ctx.fill();
   ctx.restore();
   drawWheelHamster();
-  /* 跑轮标签 */
-  ctx.fillStyle = '#8a5a28'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText(ham.running ? t('cWheelRun') : t('cWheelSleep'), WHEEL.x, WHEEL.y + WHEEL.r + 30);
 
   drawBeetle();
 
@@ -1420,10 +1417,15 @@ function draw(){
     if(i===3 && ham.running){ ctx.fillStyle = 'rgba(255,205,60,.4)'; ctx.fillRect(x, BIN_TOP, BIN_W, H-BIN_TOP); }
     drawBinIcon(BINS[i].icon, x+BIN_W/2, BIN_TOP+26);
     const dispV = BINS[i].v < 0 ? BINS[i].v : (i===3 && ham.running ? 200 : (ham.ok && !ham.running ? Math.round(BINS[i].v*1.1) : BINS[i].v));
-    ctx.fillStyle = BINS[i].v < 0 ? '#b03a2a' : '#6b3d07'; ctx.font = 'bold 17px sans-serif'; ctx.textAlign = 'center';
+    ctx.textAlign = 'center'; ctx.lineJoin = 'round';
+    ctx.font = 'bold 17px sans-serif'; ctx.strokeStyle = 'rgba(255,248,225,.92)'; ctx.lineWidth = 4;
+    ctx.strokeText(String(dispV), x+BIN_W/2, BIN_TOP+58);
+    ctx.fillStyle = BINS[i].v < 0 ? '#b03a2a' : '#6b3d07';
     ctx.fillText(String(dispV), x+BIN_W/2, BIN_TOP+58);
-    ctx.font = '10.5px sans-serif'; ctx.fillStyle = '#9a6a30';
-    ctx.fillText(binName(BINS[i]), x+BIN_W/2, BIN_TOP+76);
+    ctx.font = 'bold 12px sans-serif'; ctx.lineWidth = 3.5;
+    ctx.strokeText(binName(BINS[i]), x+BIN_W/2, BIN_TOP+77);
+    ctx.fillStyle = '#7a4d16';
+    ctx.fillText(binName(BINS[i]), x+BIN_W/2, BIN_TOP+77);
   }
   ctx.strokeStyle = '#a5712e'; ctx.lineWidth = 3.4;
   for(let i=0;i<=BINS.length;i++){ ctx.beginPath(); ctx.moveTo(i*BIN_W, BIN_TOP); ctx.lineTo(i*BIN_W, H); ctx.stroke(); }
