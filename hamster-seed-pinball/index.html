@@ -440,22 +440,45 @@ function recordScore(win){
   scoreRows = scoreRows.slice(0, 50);
   lastEntryId = entry.id;
   saveScores();
-  if(lbTab === 'score') lbPage = Math.floor(scoreRows.findIndex(r => r.id === entry.id) / 10);
+  const viewIdx = lbView('score').findIndex(r => r.id === entry.id);
+  if(viewIdx >= 0 && lbTab === 'score') lbPage = Math.floor(viewIdx / 10);
   renderLB();
-  return scoreRows.findIndex(r => r.id === entry.id) + 1;
+  return viewIdx + 1;
 }
 let lbTab = 'score';
 let lbPage = 0;
 const LB_PER_PAGE = 10;
+/* 一个地址只显示一条：每个榜取该地址在这个榜上最好的一条 */
+function lbView(tab){
+  const better = (a, b) => {
+    if(tab === 'level'){
+      if((b.lv||1) !== (a.lv||1)) return (b.lv||1) > (a.lv||1) ? b : a;
+      return b.s > a.s ? b : a;
+    }
+    if(tab === 'stage'){
+      if((b.stg||1) !== (a.stg||1)) return (b.stg||1) > (a.stg||1) ? b : a;
+      if((b.w||0) !== (a.w||0)) return (b.w||0) > (a.w||0) ? b : a;
+      return b.s > a.s ? b : a;
+    }
+    return b.s > a.s ? b : a;
+  };
+  const byWho = new Map();
+  for(const r of scoreRows){
+    const k = r.who || '游客';
+    byWho.set(k, byWho.has(k) ? better(byWho.get(k), r) : r);
+  }
+  const rows = [...byWho.values()];
+  if(tab === 'level') rows.sort((a,b) => (b.lv||1)-(a.lv||1) || b.s-a.s);
+  else if(tab === 'stage') rows.sort((a,b) => (b.stg||1)-(a.stg||1) || (b.w||0)-(a.w||0) || b.s-a.s);
+  else rows.sort((a,b) => b.s-a.s);
+  return rows;
+}
 function renderLB(){
   const box = $('lbRows');
   const pager = $('lbPager');
   document.querySelectorAll('#lbTabs button').forEach(b => b.classList.toggle('on', b.dataset.ltab === lbTab));
   if(!scoreRows.length){ box.innerHTML = '<div class="lbempty">还没有记录，先打一局上榜</div>'; pager.innerHTML = ''; return; }
-  let rows = scoreRows.slice();
-  if(lbTab === 'level') rows.sort((a,b) => (b.lv||1)-(a.lv||1) || b.s-a.s);
-  else if(lbTab === 'stage') rows.sort((a,b) => (b.stg||1)-(a.stg||1) || (b.w||0)-(a.w||0) || b.s-a.s);
-  else rows.sort((a,b) => b.s-a.s);
+  let rows = lbView(lbTab);
   const pages = Math.max(1, Math.ceil(rows.length / LB_PER_PAGE));
   if(lbPage >= pages) lbPage = pages - 1;
   if(lbPage < 0) lbPage = 0;
