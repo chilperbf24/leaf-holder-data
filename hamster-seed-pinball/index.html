@@ -98,6 +98,10 @@
   .lbtabs { display:flex; gap:6px; margin-bottom:7px; }
   .lbtabs button { flex:1; padding:5px 0; font-size:12.5px; }
   .lbtabs button.on { background:#a5712e; color:#fff; border-color:#7c5316; box-shadow:0 3px 0 #7c5316; }
+  .lbpager { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:7px; font-size:12px; color:#9a6a30; }
+  .lbpager button { padding:4px 10px; font-size:12px; }
+  .lbpager button:disabled { opacity:.4; box-shadow:none; }
+  .lbpager span { flex:1; text-align:center; }
   .mapchip { flex:1; background:#3d2812; border:2px solid #6b4a22; color:#ffd9a0; border-radius:12px;
              padding:8px 4px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; box-shadow:none; }
   .mapchip small { display:block; font-size:10.5px; font-weight:400; color:#c9a45c; margin-top:2px; }
@@ -225,6 +229,7 @@
       <button data-ltab="stage">🚩 过关榜</button>
     </div>
     <div id="lbRows"><div class="lbempty">还没有记录，先打一局上榜</div></div>
+    <div class="lbpager" id="lbPager"></div>
   </div>
   </div>
   </div>
@@ -432,33 +437,53 @@ function recordScore(win){
                   t: new Date().toLocaleString('zh-CN', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'}) };
   scoreRows.push(entry);
   scoreRows.sort((a,b) => b.s - a.s);
-  scoreRows = scoreRows.slice(0, 20);
+  scoreRows = scoreRows.slice(0, 50);
   lastEntryId = entry.id;
   saveScores();
+  if(lbTab === 'score') lbPage = Math.floor(scoreRows.findIndex(r => r.id === entry.id) / 10);
   renderLB();
   return scoreRows.findIndex(r => r.id === entry.id) + 1;
 }
 let lbTab = 'score';
+let lbPage = 0;
+const LB_PER_PAGE = 10;
 function renderLB(){
   const box = $('lbRows');
+  const pager = $('lbPager');
   document.querySelectorAll('#lbTabs button').forEach(b => b.classList.toggle('on', b.dataset.ltab === lbTab));
-  if(!scoreRows.length){ box.innerHTML = '<div class="lbempty">还没有记录，先打一局上榜</div>'; return; }
+  if(!scoreRows.length){ box.innerHTML = '<div class="lbempty">还没有记录，先打一局上榜</div>'; pager.innerHTML = ''; return; }
   let rows = scoreRows.slice();
   if(lbTab === 'level') rows.sort((a,b) => (b.lv||1)-(a.lv||1) || b.s-a.s);
   else if(lbTab === 'stage') rows.sort((a,b) => (b.stg||1)-(a.stg||1) || (b.w||0)-(a.w||0) || b.s-a.s);
   else rows.sort((a,b) => b.s-a.s);
+  const pages = Math.max(1, Math.ceil(rows.length / LB_PER_PAGE));
+  if(lbPage >= pages) lbPage = pages - 1;
+  if(lbPage < 0) lbPage = 0;
+  const start = lbPage * LB_PER_PAGE;
   const medals = ['🥇','🥈','🥉'];
-  box.innerHTML = rows.slice(0, 10).map((r, i) => {
+  box.innerHTML = rows.slice(start, start + LB_PER_PAGE).map((r, j) => {
+    const i = start + j;
     const big = lbTab === 'level' ? ('Lv.' + (r.lv||1)) : (lbTab === 'stage' ? ('第' + (r.stg||1) + '关') : r.s);
     const extra = lbTab === 'score' ? '' : (' · ' + r.s + ' 分');
     return '<div class="lbrow' + (r.id === lastEntryId ? ' fresh' : '') + '"><div class="rk">' + (medals[i] || (i+1)) + '</div>' +
     '<div class="sc">' + big + '</div><div class="dt">' + (r.who ? r.who + ' · ' : '') + r.m + ' · ' + r.mode + (r.w ? ' · 🎉过关' : '') + extra + '</div>' +
     '<div class="dt" style="flex:none">' + r.t + '</div></div>';
   }).join('');
+  pager.innerHTML = pages > 1
+    ? '<button data-lpage="prev"' + (lbPage === 0 ? ' disabled' : '') + '>‹ 上一页</button>' +
+      '<span>第 ' + (lbPage+1) + ' / ' + pages + ' 页 · 共 ' + rows.length + ' 条</span>' +
+      '<button data-lpage="next"' + (lbPage >= pages-1 ? ' disabled' : '') + '>下一页 ›</button>'
+    : '<span>共 ' + rows.length + ' 条</span>';
 }
 $('lbTabs').addEventListener('click', e => {
   const b = e.target.closest ? e.target.closest('[data-ltab]') : null;
-  if(b){ lbTab = b.dataset.ltab; renderLB(); }
+  if(b){ lbTab = b.dataset.ltab; lbPage = 0; renderLB(); }
+});
+$('lbPager').addEventListener('click', e => {
+  const b = e.target.closest ? e.target.closest('[data-lpage]') : null;
+  if(!b || b.disabled) return;
+  lbPage += (b.dataset.lpage === 'next' ? 1 : -1);
+  renderLB();
 });
 renderLB();
 
