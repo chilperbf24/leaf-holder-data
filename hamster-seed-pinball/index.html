@@ -52,10 +52,6 @@
   .boardbox { position:relative; border-radius:18px; overflow:hidden; border:3px solid #a5712e;
               box-shadow:0 10px 28px rgba(0,0,0,.5); background:#f3dfba; }
   canvas { display:block; width:100%; height:auto; touch-action:none; }
-  @media (min-width:1081px) {
-    /* 高度也参与自适应：盘面再高也不能把底部格子挤出屏幕 */
-    .centerCol { width:min(820px, 94vw, calc((100vh - 350px) * 0.65625)); width:min(820px, 94vw, calc((100dvh - 350px) * 0.65625)); }
-  }
   @media (min-width:2000px) {
     .wrap { width:min(96vw, 2240px); }
     .centerCol { width:min(820px, 94vw); }
@@ -148,6 +144,10 @@
   .lbrow .dt { flex:1; color:#9a6a30; font-size:13.5px; }
   .lbrow.fresh { background:#ffedb8; border-radius:8px; }
   .lbempty { color:#9a6a30; font-size:14.5px; padding:8px 0; }
+  /* 高度适配（放最后，确保盖过前面的大屏规则）：盘面宽度同时受屏幕高度限制，整盘必须完整可见 */
+  @media (min-width:1081px) {
+    .centerCol { width:min(820px, 94vw, calc((100vh - 480px) * 0.65625)); width:min(820px, 94vw, calc((100dvh - 480px) * 0.65625)); }
+  }
 </style>
 </head>
 <body>
