@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>仓鼠种子弹珠 · Hamster Seed Pinball</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; background:#2b1c10;
+         color:#3a2410; display:flex; flex-direction:column; align-items:center; min-height:100vh;
+         background-image:radial-gradient(ellipse at 50% -10%, #4a3018 0%, #2b1c10 60%); }
+  .wrap { width:min(97vw, 1140px); padding:10px 0 22px; }
+  .topbar { display:flex; gap:14px; align-items:flex-start; justify-content:space-between; }
+  .topbar header { flex:1; min-width:0; padding-top:6px; }
+  #walletPanel { width:324px; flex:none; margin-top:0; }
+  @media (max-width:720px) {
+    .topbar { flex-direction:column; }
+    #walletPanel { width:100%; }
+  }
+  .layout { display:flex; gap:14px; align-items:flex-start; justify-content:center; }
+  .centerCol { width:min(460px, 100%); flex:none; }
+  .side { flex:1; min-width:230px; max-width:330px; }
+  .side .uppanel { margin-top:0; }
+  @media (max-width:1080px) {
+    .layout { flex-direction:column; align-items:center; }
+    .centerCol { order:1; }
+    .sideL { order:2; }
+    .sideR { order:3; }
+    .side { max-width:460px; width:100%; }
+  }
+  header { text-align:center; color:#ffe9c4; padding:6px 0 8px; }
+  header h1 { font-size:24px; letter-spacing:2px; }
+  header h1 .en { display:block; font-size:11px; letter-spacing:3px; color:#d9a960; margin-top:2px; font-weight:400; }
+  .livebar { display:flex; align-items:center; gap:6px; justify-content:center; flex-wrap:wrap;
+             background:#3d2812; border:1px solid #6b4a22; border-radius:999px; padding:5px 12px;
+             font-size:12px; color:#ffd9a0; margin:4px auto 8px; width:fit-content; max-width:100%; }
+  .dot { width:9px; height:9px; border-radius:50%; background:#888; flex:none; }
+  .dot.run { background:#7ddc5a; box-shadow:0 0 8px #7ddc5a; animation:pulse 1s infinite; }
+  .dot.sleep { background:#7a86e8; }
+  .dot.stale { background:#e0a53a; }
+  @keyframes pulse { 50% { opacity:.45; } }
+  .hud { display:flex; gap:8px; align-items:stretch; margin-bottom:8px; }
+  .card { background:#fff6e3; border:2px solid #a5712e; border-radius:14px; padding:6px 10px; flex:1;
+          box-shadow:0 3px 0 #a5712e; }
+  .card .lab { font-size:11px; color:#9a6a30; }
+  .card .val { font-size:20px; font-weight:700; line-height:1.15; }
+  .mascot { flex:none; width:86px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+            background:#fff6e3; border:2px solid #a5712e; border-radius:14px; box-shadow:0 3px 0 #a5712e; padding:4px 2px; }
+  .mascot .cap { font-size:10px; color:#9a6a30; margin-top:1px; }
+  .storebar { height:10px; background:#e8d5ae; border-radius:99px; overflow:hidden; margin-top:4px; border:1px solid #c9a45c; }
+  .storebar > div { height:100%; width:0%; background:linear-gradient(90deg,#e8a33d,#c97b1e); transition:width .4s; }
+  .boardbox { position:relative; border-radius:18px; overflow:hidden; border:3px solid #a5712e;
+              box-shadow:0 10px 28px rgba(0,0,0,.5); background:#f3dfba; }
+  canvas { display:block; width:100%; touch-action:none; }
+  .banner { position:absolute; left:50%; top:38%; transform:translate(-50%,-50%) scale(.8); background:#ffdf7e;
+            border:3px solid #a5712e; color:#6b3d07; font-weight:800; font-size:19px; padding:10px 18px;
+            border-radius:16px; opacity:0; pointer-events:none; transition:all .25s; white-space:nowrap;
+            box-shadow:0 8px 22px rgba(0,0,0,.35); z-index:5; }
+  .banner.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  .btns { display:flex; gap:8px; margin-top:10px; }
+  button { flex:1; font-size:16px; font-weight:700; padding:12px 4px; border-radius:14px; border:2px solid #a5712e;
+           background:#ffb63d; color:#5b3405; box-shadow:0 4px 0 #a5712e; cursor:pointer; font-family:inherit; }
+  button:active { transform:translateY(3px); box-shadow:0 1px 0 #a5712e; }
+  button:disabled { filter:grayscale(.6); opacity:.55; }
+  button.ghost { background:#fff6e3; font-weight:600; font-size:14px; flex:.62; }
+  .tip { text-align:center; color:#c9a45c; font-size:12px; margin-top:8px; }
+  .panel { background:#fff6e3; border:2px solid #a5712e; border-radius:14px; padding:12px 14px; margin-top:10px;
+           font-size:13.5px; line-height:1.75; display:none; }
+  .panel.open { display:block; }
+  .panel b { color:#8a5410; }
+  .panel .disc { color:#8d795c; font-size:12px; }
+  .over { position:absolute; inset:0; background:rgba(43,28,16,.82); display:none; flex-direction:column;
+          align-items:center; justify-content:center; color:#ffe9c4; z-index:6; text-align:center; padding:20px; }
+  .over.show { display:flex; }
+  .over h2 { font-size:26px; margin-bottom:6px; }
+  .over p { font-size:15px; line-height:1.8; color:#ffd9a0; }
+  .over button { flex:none; width:70%; margin-top:14px; }
+  .metabar { background:#3d2812; border:1px solid #6b4a22; border-radius:12px; padding:7px 12px;
+             color:#ffd9a0; font-size:12.5px; margin-bottom:8px; }
+  .metabar .row1 { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .metabar .nuts { color:#ffcf3f; font-weight:800; }
+  .expbar { height:7px; background:#241708; border-radius:99px; overflow:hidden; margin-top:5px; }
+  .expbar > div { height:100%; width:0%; background:linear-gradient(90deg,#7ddc5a,#3f9e2c); transition:width .4s; }
+  .uppanel { background:#fff6e3; border:2px solid #a5712e; border-radius:14px; padding:10px 12px; margin-top:10px;
+             box-shadow:0 3px 0 #a5712e; }
+  .uppanel h3 { font-size:15px; color:#8a5410; margin-bottom:6px; }
+  .uprow { display:flex; align-items:center; gap:8px; padding:7px 0; border-top:1px dashed #d9ba7d; }
+  .uprow:first-of-type { border-top:none; }
+  .uprow .info { flex:1; }
+  .uprow .nm { font-size:14px; font-weight:700; }
+  .uprow .ds { font-size:11.5px; color:#9a6a30; }
+  .uprow .pips { font-size:12px; color:#c97b1e; letter-spacing:2px; white-space:nowrap; }
+  .uprow button { flex:none; font-size:13px; padding:8px 10px; border-radius:10px; }
+  .uprow button.maxed { background:#e8d5ae; color:#9a6a30; }
+  .mapbar { display:flex; gap:8px; margin-bottom:8px; }
+  .mapchip { flex:1; background:#3d2812; border:2px solid #6b4a22; color:#ffd9a0; border-radius:12px;
+             padding:8px 4px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit; box-shadow:none; }
+  .mapchip small { display:block; font-size:10.5px; font-weight:400; color:#c9a45c; margin-top:2px; }
+  .mapchip.active { background:#ffb63d; color:#5b3405; border-color:#a5712e; box-shadow:0 3px 0 #a5712e; }
+  .mapchip.active small { color:#8a5410; }
+  .mapchip.locked { opacity:.55; }
+  .lbrow { display:flex; align-items:center; gap:8px; padding:6px 0; border-top:1px dashed #d9ba7d; font-size:13.5px; }
+  .lbrow:first-of-type { border-top:none; }
+  .lbrow .rk { width:30px; text-align:center; font-weight:800; }
+  .lbrow .sc { font-weight:800; font-size:15px; min-width:52px; }
+  .lbrow .dt { flex:1; color:#9a6a30; font-size:12px; }
+  .lbrow.fresh { background:#ffedb8; border-radius:8px; }
+  .lbempty { color:#9a6a30; font-size:13px; padding:8px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <header>
+      <h1>🐹 仓鼠种子弹珠<span class="en">HAMSTER SEED PINBALL</span></h1>
+    </header>
+    <div class="uppanel" id="walletPanel">
+      <h3>👛 钱包 · Sepolia 测试网</h3>
+      <div id="walletBody"></div>
+    </div>
+  </div>
+
+  <div class="livebar" id="livebar">
+    <span class="dot" id="livedot"></span>
+    <span id="livetext">正在连接 Squeektoshi…</span>
+  </div>
+
+  <div class="layout">
+  <div class="side sideL">
+<div class="uppanel">
+    <h3>🏠 仓鼠小屋 · 升级（金瓜子在每局结算时按得分发放）</h3>
+    <div id="upRows"></div>
+  </div>
+  </div>
+  <div class="centerCol">
+  <div class="metabar">
+    <div class="row1">
+      <span id="metaText">Lv.1 见习鼠</span>
+      <span class="nuts">🌰 金瓜子 <span id="nutsVal">0</span></span>
+    </div>
+    <div class="expbar"><div id="expFill"></div></div>
+  </div>
+
+  <div class="mapbar" id="mapBar"></div>
+
+  <div class="hud">
+    <div class="card">
+      <div class="lab">得分 / 目标 <span id="targetVal">300</span></div>
+      <div class="val"><span id="score">0</span> <span style="font-size:12px;color:#9a6a30" id="best"></span></div>
+      <div class="storebar"><div id="storefill"></div></div>
+      <div class="lab" style="margin-top:3px">过冬粮仓</div>
+    </div>
+    <div class="card" style="flex:.72">
+      <div class="lab">剩余种子</div>
+      <div class="val">🌻 <span id="seeds">12</span></div>
+      <div class="lab" id="nextinfo">下一颗：普通种子</div>
+    </div>
+    <div class="mascot">
+      <svg width="62" height="50" viewBox="0 0 62 50">
+        <circle cx="14" cy="10" r="8" fill="#d9a05f"/><circle cx="14" cy="10" r="4" fill="#f6c9c0"/>
+        <circle cx="48" cy="10" r="8" fill="#d9a05f"/><circle cx="48" cy="10" r="4" fill="#f6c9c0"/>
+        <ellipse cx="31" cy="27" rx="24" ry="20" fill="#eec27f"/>
+        <g id="cheeks">
+          <ellipse cx="14" cy="33" rx="9" ry="7.5" fill="#f9dcae"/>
+          <ellipse cx="48" cy="33" rx="9" ry="7.5" fill="#f9dcae"/>
+        </g>
+        <ellipse cx="31" cy="34" rx="11" ry="8" fill="#fdf3dd"/>
+        <circle cx="23" cy="24" r="2.6" fill="#33231a"/><circle cx="39" cy="24" r="2.6" fill="#33231a"/>
+        <ellipse cx="31" cy="31" rx="3.2" ry="2.3" fill="#e88a7d"/>
+        <path d="M31 33 q0 3 -4 3 M31 33 q0 3 4 3" stroke="#b0714f" fill="none" stroke-width="1.4" stroke-linecap="round"/>
+        <path d="M4 30 h9 M5 36 l8 -1 M58 30 h-9 M57 36 l-8 -1" stroke="#c9a45c" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <div class="cap" id="cheekcap">颊囊空空</div>
+    </div>
+  </div>
+
+  <div class="boardbox">
+    <canvas id="cv" width="420" height="640"></canvas>
+    <div class="banner" id="banner"></div>
+    <div class="over" id="over">
+      <h2 id="overTitle">🎉 囤粮成功！</h2>
+      <p id="overText"></p>
+      <button id="againBtn">再来一局</button>
+    </div>
+  </div>
+
+  <div class="btns">
+    <button id="dropBtn">投种子 🌻</button>
+    <button class="ghost" id="restartBtn">重开</button>
+    <button class="ghost" id="soundBtn">声音：开</button>
+    <button class="ghost" id="helpBtn">玩法</button>
+  </div>
+  <div class="tip">滑动 / 移动鼠标瞄准 · 点盘面或按空格投种子</div>
+
+  
+
+  <div class="panel" id="helpPanel">
+    <b>怎么玩</b>：顶上的仓鼠抱着种子，左右移动瞄准，投下去。种子撞橡子钉 +1 分，落进底部的仓鼠小窝计分：食盆 20 · 向日葵罐 50 · 正中小木屋 100。一局投完达到本图目标分过冬成功。<br>
+    <b>地图与排行榜</b>：共 3 张图 — 木屑原野（目标 300）· 瓜子山谷（Lv.2 解锁，目标 350，V 型斜坡钉阵）· 月夜粮仓（Lv.3 解锁，目标 400，跑轮双环钉阵 + 3 个风车），每天有一张“今日”推荐图；盘面上旋转的胡萝卜风车针是加长的，扫到的种子会被甩飞，离针尖越近甩得越狠。每局成绩进<b>本机排行榜</b>（存这台设备，正式版再接全球榜）。<br>
+    <b>惩罚（有奖有罚）</b>：盘面两端是<b>臭臭角</b>（发霉木屑），落进去 <b>-20 分</b>；粮仓上方有一只<b>捣蛋甲虫</b>来回巡逻，种子撞上它会被抢走，<b>本颗作废还 -10 分</b>；落进臭臭角或被抢，连击清零、丰收灯熄灭。真仓鼠狂奔时跑轮甩力最狠，高收益伴随高风险。<br>
+    <b>升级</b>：每局结算按得分发<b>金瓜子</b>和经验，经验涨仓鼠等级（解锁围巾、墨镜、金铃铛、皇冠等装扮）；金瓜子在游戏左边的小屋里买升级：大颊囊（每局种子 +2/级）· 丰收仓（落格 +5%/级）· 金铃铛（金种子更频繁）· 防虫喷雾（甲虫变慢）。升级和等级都存在本机，关掉重开不丢。<br>
+    <b>仓鼠特征</b>：盘面正中的大转轮是仓鼠跑轮，里面的小仓鼠会跟着真仓鼠一起跑/睡；两侧粉色的是<b>颊囊口袋</b>，种子掉进去会被仓鼠塞进颊囊再吐出来重投，不消耗；金种子分值 ×2；连续落进同一个格，连击让下一颗 ×1.5；撞满 20 次钉子点亮丰收灯，下一颗 ×2。<br>
+    <b>真仓鼠联动</b>：转速、跑/睡状态、距离、区块进度都来自 Squeekchain 公开 API 的真仓鼠 Squeektoshi。它跑起来时跑轮飞转、窝心格 100→200；它睡觉时是夜场，种子下落更慢更好瞄，落格 +10%。玩的时候赶上链上新一轮结算，白送一颗金种子。<br>
+    <b>钱包</b>：右上角可连接 EVM 钱包（仅 Sepolia 测试网）：连接后存档与排行榜绑定钱包地址，并显示你的 SQK 余额、Squeeks 数量、算力和待领 SQK；“链上打卡”向 SQK 合约发一笔 approve(自己, 0)（不转币），对应 Genesis 的 The Tester 条件。不连钱包也能玩，成绩记为游客。<br>
+    <span class="disc">社区小游戏原型 · 数据：api.squeekchain.com · 不下注、分数不兑换任何东西 · 不承诺徽章或白名单。</span>
+  </div>
+  </div>
+  <div class="side sideR">
+<div class="uppanel">
+    <h3>🏆 本机排行榜 <span style="font-size:11.5px;color:#9a6a30;font-weight:400">（暂存这台设备；全球榜要等正式版接后端）</span></h3>
+    <div id="lbRows"><div class="lbempty">还没有记录，先打一局上榜</div></div>
+  </div>
+  </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============ 基础 ============ */
+const W = 420, H = 640;
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+cv.width = W * DPR; cv.height = H * DPR; ctx.scale(DPR, DPR);
+
+const $ = id => document.getElementById(id);
+const scoreEl=$('score'), seedsEl=$('seeds'), bestEl=$('best'), fillEl=$('storefill'),
+      nextEl=$('nextinfo'), liveDot=$('livedot'), liveText=$('livetext'),
+      bannerEl=$('banner'), cheeksEl=$('cheeks'), cheekCap=$('cheekcap'),
+      dropBtn=$('dropBtn'), overEl=$('over');
+
+/* ============ 随机（每日盘面） ============ */
+function hashStr(s){ let h=2166136261; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const todayStr = new Date().toISOString().slice(0,10);
+let boardSeed = hashStr('seedpinball-' + todayStr);
+let rng = mulberry32(boardSeed);
+
+/* ============ 盘面布局 ============ */
+const WHEEL = { x:210, y:252, r:64 };
+const POCKETS = [ {x:26,y:472}, {x:394,y:472} ];
+const BINS = [
+  {v:-20, name:'臭臭角', icon:'bad'}, {v:20, name:'食盆', icon:'bowl'},
+  {v:50, name:'向日葵罐', icon:'jar'}, {v:100, name:'小木屋', icon:'house'},
+  {v:50, name:'向日葵罐', icon:'jar'}, {v:20, name:'食盆', icon:'bowl'},
+  {v:-20, name:'臭臭角', icon:'bad'}
+];
+const BIN_W = W / BINS.length, BIN_TOP = 548;
+let pegs = [], spinners = [];
+/* ============ 地图（3 张盘） ============ */
+const MAPS = [
+  { id:'meadow', name:'木屑原野', en:'Classic', gen:'grid', target:300, unlock:1, beetleMult:1.0,
+    theme:['#f7e3bc','#eed3a0'], spinners:[{x:104,y:356},{x:316,y:356}] },
+  { id:'valley', name:'瓜子山谷', en:'Valley', gen:'valley', target:350, unlock:2, beetleMult:1.1,
+    theme:['#eef0cd','#dde0a4'], spinners:[{x:70,y:262},{x:350,y:262}] },
+  { id:'granary', name:'月夜粮仓', en:'Granary', gen:'rings', target:400, unlock:3, beetleMult:0.9,
+    theme:['#dde4f7','#b7c3e6'], spinners:[{x:86,y:180},{x:334,y:180},{x:210,y:428}] }
+];
+let currentMap = +(localStorage.getItem('hsb_map') || 0);
+if(currentMap < 0 || currentMap >= MAPS.length) currentMap = 0;
+const dailyMapIdx = hashStr('daily-' + todayStr) % MAPS.length;
+function targetScore(){ return MAPS[currentMap].target; }
+function addPeg(x, y){
+  if(x < 26 || x > W-26 || y < 104 || y > 498) return;
+  if(Math.hypot(x-WHEEL.x, y-WHEEL.y) < WHEEL.r + 24) return;
+  for(const s of MAPS[currentMap].spinners) if(Math.hypot(x-s.x, y-s.y) < 40) return;
+  for(const p of POCKETS) if(Math.hypot(x-p.x, y-p.y) < 34) return;
+  for(const pg of pegs) if(Math.hypot(x-pg.x, y-pg.y) < 19) return;
+  pegs.push({x:x, y:y, r:7, hit:0});
+}
+function buildBoard(){
+  pegs = []; rng = mulberry32(boardSeed);
+  const gen = MAPS[currentMap].gen;
+  if(gen === 'grid'){
+    for(let row=0; row<7; row++){
+      const y = 128 + row*46, n = (row%2===0)? 6 : 5;
+      for(let i=0;i<n;i++){
+        addPeg(42 + i*((W-84)/(n-1)) + (rng()-0.5)*14, y + (rng()-0.5)*8);
+      }
+    }
+  } else if(gen === 'valley'){
+    for(let t=0; t<7; t++){
+      const y = 138 + t*36;
+      addPeg(50 + t*21 + (rng()-0.5)*7, y);
+      addPeg(W-50 - t*21 + (rng()-0.5)*7, y);
+    }
+    for(let i=0;i<6;i++) addPeg(52 + i*63 + (rng()-0.5)*8, 448 + (rng()-0.5)*6);
+    for(let i=0;i<5;i++) addPeg(84 + i*63 + (rng()-0.5)*8, 484 + (rng()-0.5)*6);
+    addPeg(210, 118); addPeg(150, 128); addPeg(270, 128);
+  } else if(gen === 'rings'){
+    for(let i=0;i<10;i++){
+      const a = i*(Math.PI*2/10) + 0.3;
+      addPeg(WHEEL.x + Math.cos(a)*106, WHEEL.y + Math.sin(a)*106);
+    }
+    for(let i=0;i<13;i++){
+      const a = i*(Math.PI*2/13) + 0.05;
+      addPeg(WHEEL.x + Math.cos(a)*148, WHEEL.y + Math.sin(a)*148);
+    }
+    for(let i=0;i<5;i++) addPeg(66 + i*72 + (rng()-0.5)*8, 452 + (rng()-0.5)*6);
+    addPeg(120, 130); addPeg(300, 130);
+  }
+  spinners = MAPS[currentMap].spinners.map((s,i) => ({x:s.x, y:s.y, a:i*2.1}));
+}
+buildBoard();
+/* 木屑（底部装饰，固定随机） */
+const shavings = []; { const r2 = mulberry32(42); for(let i=0;i<70;i++) shavings.push({x:r2()*W, y:600+r2()*34, a:r2()*Math.PI, l:6+r2()*9}); }
+
+/* ============ 游戏状态 ============ */
+let score=0, ballsLeft=12, ballNo=0, ball=null, lastBin=-1, comboMult=1;
+let pegHits=0, harvestReady=false, bonusGolden=false, gameOver=false;
+let aimX = W/2, shake = 0, bannerTimer = 0;
+let best = +(localStorage.getItem('hsb_best')||0);
+bestEl.textContent = best ? ('最高 '+best) : '';
+
+/* ============ 升级 / 等级（本地存档） ============ */
+const LEVELS = [
+  {exp:0, title:'见习鼠'}, {exp:300, title:'囤粮鼠'}, {exp:900, title:'弹珠鼠'},
+  {exp:2000, title:'瓜子骑士'}, {exp:3600, title:'囤粮大师'}, {exp:5500, title:'传说仓鼠'}
+];
+const UPGRADES = [
+  {key:'seeds',   name:'大颊囊',   desc:'每局种子 +2 颗/级',       costs:[100,260,600]},
+  {key:'harvest', name:'丰收仓',   desc:'落格得分 +5%/级',         costs:[100,260,600]},
+  {key:'luck',    name:'金铃铛',   desc:'金种子：每 5→4→3 颗一颗', costs:[120,300,700]},
+  {key:'spray',   name:'防虫喷雾', desc:'捣蛋甲虫速度 -25%/级',    costs:[80,200,450]}
+];
+let meta = { nuts:0, exp:0, up:{seeds:0, harvest:0, luck:0, spray:0} };
+let idSuffix = '';
+function metaKey(){ return 'hsb_meta_v1' + idSuffix; }
+function scoresKey(){ return 'hsb_scores_v1' + idSuffix; }
+function loadMeta(){
+  meta = { nuts:0, exp:0, up:{seeds:0, harvest:0, luck:0, spray:0} };
+  try{
+    const saved = JSON.parse(localStorage.getItem(metaKey()) || 'null');
+    if(saved && saved.up) meta = Object.assign(meta, saved);
+  }catch(e){}
+}
+loadMeta();
+let curLevel = 1;
+function saveMeta(){ try{ localStorage.setItem(metaKey(), JSON.stringify(meta)); }catch(e){} }
+function levelFromExp(exp){
+  let lv = 1;
+  for(let i=0;i<LEVELS.length;i++) if(exp >= LEVELS[i].exp) lv = i+1;
+  return lv;
+}
+function runBalls(){ return 12 + meta.up.seeds*2; }
+function goldenEvery(){ return Math.max(3, 5 - meta.up.luck); }
+function renderMeta(){
+  curLevel = levelFromExp(meta.exp);
+  $('metaText').textContent = 'Lv.' + curLevel + ' ' + LEVELS[curLevel-1].title + ' · 经验 ' + meta.exp;
+  $('nutsVal').textContent = meta.nuts;
+  const cur = LEVELS[curLevel-1].exp, nxt = (LEVELS[curLevel] ? LEVELS[curLevel].exp : cur);
+  $('expFill').style.width = (curLevel >= LEVELS.length ? 100 : Math.min(100, (meta.exp-cur)/(nxt-cur)*100)) + '%';
+  $('upRows').innerHTML = UPGRADES.map(u => {
+    const lv = meta.up[u.key], maxed = lv >= 3;
+    const pips = '●'.repeat(lv) + '○'.repeat(3-lv);
+    const btn = maxed ? '<button class="maxed" disabled>已满级</button>'
+      : '<button data-up="' + u.key + '">升级 ' + u.costs[lv] + ' 🌰</button>';
+    return '<div class="uprow"><div class="info"><div class="nm">' + u.name + '</div><div class="ds">' + u.desc + '</div></div><div class="pips">' + pips + '</div>' + btn + '</div>';
+  }).join('');
+}
+function buyUpgrade(key){
+  const u = UPGRADES.find(x => x.key === key); if(!u) return;
+  const lv = meta.up[key]; if(lv >= 3) return;
+  const cost = u.costs[lv];
+  if(meta.nuts < cost){ showBanner('🌰 金瓜子不够，还差 ' + (cost - meta.nuts)); beep(180, 0.12, 'square', 0.04); return; }
+  meta.nuts -= cost; meta.up[key] = lv + 1; saveMeta(); renderMeta();
+  showBanner('⬆️ ' + u.name + ' 升到 ' + (lv+1) + ' 级！'); squeak();
+  if(key === 'seeds' && !ball && !gameOver){ ballsLeft += 2; refreshHUD(); }
+}
+$('upRows').addEventListener('click', e => {
+  const k = e.target && e.target.dataset ? e.target.dataset.up : null;
+  if(k) buyUpgrade(k);
+});
+ballsLeft = runBalls();
+renderMeta();
+
+/* ============ 本机排行榜 ============ */
+let scoreRows = [];
+function loadScores(){
+  scoreRows = [];
+  try{ const v = JSON.parse(localStorage.getItem(scoresKey()) || '[]'); if(Array.isArray(v)) scoreRows = v; }catch(e){ scoreRows = []; }
+}
+function saveScores(){ try{ localStorage.setItem(scoresKey(), JSON.stringify(scoreRows)); }catch(e){} }
+loadScores();
+let lastEntryId = 0;
+function recordScore(win){
+  const entry = { id: Date.now(), s: score, w: win ? 1 : 0, m: MAPS[currentMap].name,
+                  who: wallet.address ? shortAddr(wallet.address) : '游客',
+                  mode: ham.running ? '狂奔' : '夜场',
+                  t: new Date().toLocaleString('zh-CN', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'}) };
+  scoreRows.push(entry);
+  scoreRows.sort((a,b) => b.s - a.s);
+  scoreRows = scoreRows.slice(0, 20);
+  lastEntryId = entry.id;
+  saveScores();
+  renderLB();
+  return scoreRows.findIndex(r => r.id === entry.id) + 1;
+}
+function renderLB(){
+  const box = $('lbRows');
+  if(!scoreRows.length){ box.innerHTML = '<div class="lbempty">还没有记录，先打一局上榜</div>'; return; }
+  const medals = ['🥇','🥈','🥉'];
+  box.innerHTML = scoreRows.slice(0, 10).map((r, i) =>
+    '<div class="lbrow' + (r.id === lastEntryId ? ' fresh' : '') + '"><div class="rk">' + (medals[i] || (i+1)) + '</div>' +
+    '<div class="sc">' + r.s + '</div><div class="dt">' + (r.who ? r.who + ' · ' : '') + r.m + ' · ' + r.mode + (r.w ? ' · 🎉过冬' : '') + '</div>' +
+    '<div class="dt" style="flex:none">' + r.t + '</div></div>'
+  ).join('');
+}
+renderLB();
+
+/* ============ 地图切换 ============ */
+function renderMapBar(){
+  $('targetVal').textContent = targetScore();
+  $('mapBar').innerHTML = MAPS.map((m, i) => {
+    const locked = curLevel < m.unlock;
+    return '<button class="mapchip' + (i === currentMap ? ' active' : '') + (locked ? ' locked' : '') + '" data-map="' + i + '">' +
+      (locked ? '🔒 ' : '') + m.name + (i === dailyMapIdx ? ' ·今日' : '') +
+      '<small>' + m.en + ' · 目标 ' + m.target + (locked ? ' · Lv.' + m.unlock + ' 解锁' : '') + '</small></button>';
+  }).join('');
+}
+function switchMap(i){
+  if(i === currentMap) return;
+  if(curLevel < MAPS[i].unlock){ showBanner('🔒 Lv.' + MAPS[i].unlock + ' 解锁「' + MAPS[i].name + '」，先升级仓鼠'); beep(180, 0.12, 'square', 0.04); return; }
+  if(ball){ showBanner('等这颗种子落完再换图'); return; }
+  currentMap = i;
+  try{ localStorage.setItem('hsb_map', String(i)); }catch(e){}
+  boardSeed = hashStr('seedpinball-' + todayStr + '-' + i);
+  restart();
+  renderMapBar();
+  showBanner('🗺️ ' + MAPS[i].name + ' · 目标 ' + MAPS[i].target + ' 分');
+}
+$('mapBar').addEventListener('click', e => {
+  const el = e.target.closest ? e.target.closest('[data-map]') : null;
+  if(el) switchMap(+el.dataset.map);
+});
+renderMapBar();
+
+/* ============ 钱包（Sepolia） ============ */
+const SQK_ADDR = '0x6872bfa5ccc3e9e440c6c16e5ffdabb8dba4cc76';
+const SEPOLIA_HEX = '0xaa36a7';
+const wallet = { address:null, signed:false, sqk:null, squeeks:null, power:null, claimable:null, pingHash:null, msg:'' };
+function shortAddr(a){ return a ? (a.slice(0,6) + '…' + a.slice(-4)) : ''; }
+function fmtUnits(v, dec){
+  try{
+    const b = BigInt(v); const base = 10n ** BigInt(dec || 18);
+    const whole = b / base, frac = (b % base).toString().padStart(dec || 18, '0').slice(0, 4).replace(/0+$/, '');
+    return whole.toString() + (frac ? '.' + frac : '');
+  }catch(e){ return String(v); }
+}
+function renderWallet(){
+  const box = $('walletBody');
+  if(!wallet.address){
+    box.innerHTML = '<div style="font-size:13px;line-height:1.7;color:#7a5a28">没连钱包也能玩，但成绩只记为“游客”。连接后：存档和排行榜绑定你的地址、显示你持有的 Squeeks 和 SQK、还能链上打卡拿 The Tester 徽章进度。</div>' +
+      '<button id="connectBtn" style="margin-top:8px;width:100%">连接钱包</button>' +
+      (wallet.msg ? '<div style="font-size:12px;color:#b03a2a;margin-top:6px">' + wallet.msg + '</div>' : '');
+    $('connectBtn').addEventListener('click', connectWallet);
+    return;
+  }
+  const pinged = wallet.pingHash;
+  box.innerHTML =
+    '<div style="font-size:13.5px;line-height:1.85">' +
+    '地址：<b>' + shortAddr(wallet.address) + '</b>' + (wallet.signed ? ' <span style="color:#3f9e2c">✓ 已签名验证</span>' : '') + '<br>' +
+    'SQK 余额：<b>' + (wallet.sqk === null ? '读取中…' : wallet.sqk) + '</b><br>' +
+    '我的 Squeeks：<b>' + (wallet.squeeks === null ? '读取中…' : wallet.squeeks + ' 只') + '</b> · 算力 <b>' + (wallet.power === null ? '…' : wallet.power) + '</b><br>' +
+    '待领 SQK：<b>' + (wallet.claimable === null ? '…' : wallet.claimable) + '</b></div>' +
+    '<div style="display:flex;gap:8px;margin-top:8px">' +
+    '<button id="pingBtn" style="flex:1.4">' + (pinged ? '✓ 已链上打卡' : '⛓️ 链上打卡') + '</button>' +
+    '<button id="disconnectBtn" class="ghost" style="flex:.7">断开</button></div>' +
+    (pinged ? '<div style="font-size:12px;margin-top:6px">打卡交易：<a href="https://sepolia.etherscan.io/tx/' + pinged + '" target="_blank" rel="noopener">' + pinged.slice(0,14) + '…</a>（给 SQK 合约发 approve(自己, 0)，不转币）</div>' : '<div style="font-size:12px;color:#9a6a30;margin-top:6px">打卡 = 向 SQK 合约发一笔 approve(自己, 0)，不花币、只付 Sepolia 测试 gas，正好对应 Genesis 的 The Tester 徽章条件。</div>') +
+    (wallet.msg ? '<div style="font-size:12px;color:#b03a2a;margin-top:6px">' + wallet.msg + '</div>' : '');
+  $('pingBtn').addEventListener('click', pingOnChain);
+  $('disconnectBtn').addEventListener('click', disconnectWallet);
+}
+function switchIdentity(addr){
+  saveMeta(); saveScores();
+  idSuffix = addr ? '@' + addr.toLowerCase() : '';
+  loadMeta(); loadScores(); lastEntryId = 0;
+  wallet.sqk = null; wallet.squeeks = null; wallet.power = null; wallet.claimable = null;
+  wallet.pingHash = addr ? (localStorage.getItem('hsb_ping@' + addr.toLowerCase()) || null) : null;
+  renderMeta(); renderLB(); renderMapBar();
+  restart();
+}
+async function ensureSepolia(){
+  const cid = await window.ethereum.request({ method:'eth_chainId' });
+  if(cid === SEPOLIA_HEX) return true;
+  try{
+    await window.ethereum.request({ method:'wallet_switchEthereumChain', params:[{ chainId: SEPOLIA_HEX }] });
+    return true;
+  }catch(e){
+    if(e && e.code === 4902){
+      await window.ethereum.request({ method:'wallet_addEthereumChain', params:[{
+        chainId: SEPOLIA_HEX, chainName: 'Ethereum Sepolia',
+        nativeCurrency: { name:'Sepolia Ether', symbol:'ETH', decimals:18 },
+        rpcUrls: ['https://ethereum-sepolia-rpc.publicnode.com'],
+        blockExplorerUrls: ['https://sepolia.etherscan.io']
+      }] });
+      return true;
+    }
+    throw e;
+  }
+}
+async function connectWallet(){
+  wallet.msg = '';
+  if(!window.ethereum){
+    wallet.msg = '没检测到钱包插件 — 请用装了 MetaMask（或支持 EVM 钱包）的浏览器打开；手机可用钱包自带浏览器。';
+    renderWallet(); return;
+  }
+  try{
+    const accs = await window.ethereum.request({ method:'eth_requestAccounts' });
+    if(!accs || !accs.length) throw new Error('no account');
+    await ensureSepolia();
+    const addr = accs[0];
+    const msg = '仓鼠种子弹珠 · 登录签名\n地址：' + addr + '\n时间：' + new Date().toISOString();
+    await window.ethereum.request({ method:'personal_sign', params:[msg, addr] });
+    wallet.address = addr; wallet.signed = true;
+    switchIdentity(addr);
+    renderWallet();
+    fetchWalletAssets();
+    showBanner('👛 钱包已连接：' + shortAddr(addr));
+    squeak();
+  }catch(e){
+    wallet.msg = '连接被取消或失败' + (e && e.message ? '：' + String(e.message).slice(0, 80) : '');
+    renderWallet();
+  }
+}
+function disconnectWallet(){
+  wallet.address = null; wallet.signed = false; wallet.msg = '';
+  switchIdentity(null);
+  renderWallet();
+  showBanner('已断开钱包，回到游客存档');
+}
+async function fetchWalletAssets(){
+  if(!wallet.address) return;
+  try{
+    const bal = await window.ethereum.request({ method:'eth_call', params:[{
+      to: SQK_ADDR, data: '0x70a08231' + wallet.address.slice(2).toLowerCase().padStart(64, '0')
+    }, 'latest'] });
+    wallet.sqk = fmtUnits(BigInt(bal).toString(), 18) + ' SQK';
+  }catch(e){ wallet.sqk = '读取失败'; }
+  renderWallet();
+  try{
+    const res = await fetch('https://api.squeekchain.com/v1/accounts/' + wallet.address, { cache:'no-store' });
+    const d = await res.json();
+    if(d && d.status === 'available'){
+      const tc = d.tokenCounts || {};
+      wallet.squeeks = (tc.wallet || 0) + (tc.staking || 0);
+      const pw = d.power || {};
+      wallet.power = (pw.nftPower || 0) + (pw.sqkPower || 0);
+      wallet.claimable = fmtUnits((d.rewards || {}).claimableBaseUnits || 0, 18) + ' SQK';
+    }
+  }catch(e){ /* 资产读不到不影响玩 */ }
+  renderWallet();
+}
+async function pingOnChain(){
+  if(!wallet.address || wallet.pingHash) return;
+  wallet.msg = '';
+  try{
+    await ensureSepolia();
+    const data = '0x095ea7b3' + wallet.address.slice(2).toLowerCase().padStart(64, '0') + '0'.padStart(64, '0');
+    const hash = await window.ethereum.request({ method:'eth_sendTransaction', params:[{ from: wallet.address, to: SQK_ADDR, data: data }] });
+    wallet.pingHash = hash;
+    try{ localStorage.setItem('hsb_ping@' + wallet.address.toLowerCase(), hash); }catch(e){}
+    renderWallet();
+    showBanner('⛓️ 打卡交易已发出！');
+    squeak();
+  }catch(e){
+    wallet.msg = '打卡没发出去' + (e && e.message ? '：' + String(e.message).slice(0, 80) : '') + '（需要一点 Sepolia 测试 ETH 付 gas）';
+    renderWallet();
+  }
+}
+if(window.ethereum && window.ethereum.on){
+  window.ethereum.on('accountsChanged', accs => {
+    if(!accs || !accs.length){ if(wallet.address) disconnectWallet(); }
+    else if(wallet.address && accs[0].toLowerCase() !== wallet.address.toLowerCase()){
+      wallet.address = accs[0]; wallet.signed = false;
+      switchIdentity(accs[0]); renderWallet(); fetchWalletAssets();
+    }
+  });
+  window.ethereum.on('chainChanged', () => { if(wallet.address) fetchWalletAssets(); });
+}
+renderWallet();
+
+/* ============ 真仓鼠 API ============ */
+const ham = { ok:false, stale:false, running:false, rpm:0, distKm:0, height:0, progress:0, round:null, demo:false };
+let lastRound = null;
+async function pollAPI(){
+  try{
+    const ctl = new AbortController(); const to = setTimeout(()=>ctl.abort(), 4500);
+    const res = await fetch('https://api.squeekchain.com/v1/status', {signal:ctl.signal, cache:'no-store'});
+    clearTimeout(to);
+    if(!res.ok) throw new Error('http '+res.status);
+    const d = await res.json();
+    const m = d.measurement || {};
+    ham.ok = true; ham.demo = false;
+    ham.stale = (m.freshness && m.freshness !== 'online');
+    ham.rpm = (m.rpmMilli||0)/1000;
+    ham.running = ham.rpm > 1;
+    ham.distKm = (m.distanceMm||0)/1e6;
+    const anc = (d.builder && d.builder.anchor) || {};
+    ham.height = +(anc.blockHeight||0);
+    ham.progress = (+(anc.blockProgress||0))/1e9;
+    const rd = anc.settledThroughRound;
+    if(rd !== undefined && rd !== null){
+      if(lastRound !== null && +rd > lastRound && !gameOver){
+        bonusGolden = true; showBanner('⛓️ 新一轮结算上链！送一颗金种子');
+        squeak();
+      }
+      lastRound = +rd;
+    }
+  }catch(e){
+    ham.stale = true;
+    if(!ham.ok){ ham.demo = true; }
+  }
+  updateLiveBar();
+}
+function updateLiveBar(){
+  if(ham.demo){
+    liveDot.className = 'dot stale';
+    liveText.textContent = 'API 暂不可达 · 演示模式（仓鼠在梦里跑）';
+    return;
+  }
+  liveDot.className = 'dot ' + (ham.stale ? 'stale' : (ham.running ? 'run' : 'sleep'));
+  const st = ham.running ? ('🏃 奔跑中 ' + ham.rpm.toFixed(0) + ' RPM') : '💤 睡觉中';
+  liveText.textContent = 'Squeektoshi ' + st + ' · 已跑 ' + ham.distKm.toFixed(2) + ' km · 区块 #' + ham.height + (ham.stale ? ' · 数据过期' : '');
+}
+pollAPI(); setInterval(pollAPI, 5000);
+
+/* ============ 声音 ============ */
+let audioCtx = null, soundOn = true;
+function beep(f, t, type, vol){
+  if(!soundOn) return;
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = type||'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(vol||0.06, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + (t||0.08));
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + (t||0.08));
+  }catch(e){}
+}
+function squeak(){ beep(1250,0.07,'sine',0.05); setTimeout(()=>beep(1650,0.09,'sine',0.05), 70); }
+
+/* ============ 投种子 ============ */
+function nextIsGolden(){ return bonusGolden || ((ballNo+1) % goldenEvery() === 0); }
+function refreshHUD(){
+  scoreEl.textContent = score;
+  seedsEl.textContent = ballsLeft;
+  const tgt = targetScore();
+  const pct = Math.min(100, score/tgt*100);
+  fillEl.style.width = pct + '%';
+  const s = 1 + Math.min(0.55, score/tgt*0.55);
+  cheeksEl.setAttribute('transform', 'translate(31 33) scale(' + s + ') translate(-31 -33)');
+  cheekCap.textContent = score>=tgt ? '颊囊塞满啦！' : (score>=tgt/2 ? '颊囊鼓起来了' : (score>0 ? '颊囊装了一点' : '颊囊空空'));
+  nextEl.textContent = ballsLeft<=0 ? '投完了' : ('下一颗：' + (nextIsGolden() ? '⭐ 金种子 ×2' : '普通种子') + (harvestReady ? ' · 丰收灯亮 ×2' : '') + (comboMult>1 ? ' · 连击 ×1.5' : ''));
+  dropBtn.disabled = !!ball || gameOver || ballsLeft<=0;
+}
+function drop(){
+  if(ball || gameOver || ballsLeft<=0) return;
+  ballsLeft--; ballNo++;
+  const golden = nextIsGolden(); if(bonusGolden && golden) bonusGolden = false;
+  let mult = 1;
+  if(golden) mult *= 2;
+  if(harvestReady){ mult *= 2; harvestReady = false; }
+  if(comboMult > 1){ mult *= comboMult; comboMult = 1; }
+  ball = { x:aimX, y:86, vx:(Math.random()-0.5)*0.4, vy:0.5, r:9.5, golden:golden, mult:mult, pegTouch:0, born:performance.now(), still:0 };
+  beep(660, 0.06, 'triangle', 0.05);
+  refreshHUD();
+}
+function showBanner(txt){
+  bannerEl.textContent = txt; bannerEl.classList.add('show');
+  clearTimeout(bannerTimer); bannerTimer = setTimeout(()=>bannerEl.classList.remove('show'), 2100);
+}
+function endBall(kind, binIdx){
+  if(kind === 'bin'){
+    const b = BINS[binIdx];
+    if(b.v < 0){
+      score = Math.max(0, score + b.v);
+      lastBin = -1; comboMult = 1; harvestReady = false;
+      showBanner('🤢 落进臭臭角！发霉木屑 ' + b.v + ' 分，丰收灯熄了');
+      beep(150, 0.16, 'square', 0.05);
+    } else {
+      let v = b.v;
+      if(binIdx === 3 && ham.running) v = 200;
+      if(!ham.running && ham.ok) v = Math.round(v * 1.1);
+      const pts = Math.round(v * ball.mult * (1 + 0.05 * meta.up.harvest));
+      score += pts;
+      showBanner((ball.golden?'⭐ 金种子 ':'🌻 ') + b.name + ' +' + pts);
+      if(binIdx === lastBin){ comboMult = 1.5; } else { comboMult = 1; }
+      lastBin = binIdx;
+      squeak();
+    }
+  } else if(kind === 'stolen'){
+    score = Math.max(0, score - 10);
+    lastBin = -1; comboMult = 1; harvestReady = false;
+    beetle.stun = 50;
+    showBanner('🪲 种子被捣蛋甲虫抢走啦！-10 分');
+    beep(420, 0.1, 'sawtooth', 0.04); setTimeout(()=>beep(240, 0.14, 'sawtooth', 0.04), 90);
+  } else if(kind === 'pocket'){
+    ballsLeft++; showBanner('🐹 颊囊塞住啦！吐出来重投（不消耗）'); squeak();
+  } else {
+    lastBin = -1; comboMult = 1; showBanner('掉进木屑堆啦… 0 分');
+  }
+  ball = null;
+  if(score > best){ best = score; localStorage.setItem('hsb_best', best); bestEl.textContent = '最高 '+best; }
+  if(ballsLeft <= 0){ finishGame(); }
+  refreshHUD();
+}
+function finishGame(){
+  if(gameOver) return;
+  gameOver = true;
+  const win = score >= targetScore();
+  const oldLv = levelFromExp(meta.exp);
+  const nutsEarned = Math.floor(score/2) + (win ? 50 : 0);
+  meta.nuts += nutsEarned; meta.exp += score; saveMeta(); renderMeta(); renderMapBar();
+  const newLv = levelFromExp(meta.exp);
+  const rank = recordScore(win);
+  $('overTitle').textContent = win ? '🎉 囤粮成功，过冬啦！' : '🌙 粮仓还没装满';
+  $('overText').innerHTML = '本局得分 <b>' + score + '</b> 分' + (win ? '<br>Squeektoshi 的颊囊都塞满了 🐹' : '<br>差 ' + (targetScore()-score) + ' 分就到 ' + targetScore() + '，再来一局试试手气')
+    + (rank > 0 ? '<br>🏆 本机排行榜第 <b>' + rank + '</b> 名' : '')
+    + '<br>结算：🌰 金瓜子 +' + nutsEarned + ' · 经验 +' + score
+    + (newLv > oldLv ? '<br>⬆️ 升级！Lv.' + newLv + ' ' + LEVELS[newLv-1].title + '，新装扮解锁了，去盘面看看仓鼠头' : '');
+  overEl.classList.add('show');
+}
+function restart(){
+  score=0; ballsLeft=runBalls(); ballNo=0; ball=null; lastBin=-1; comboMult=1;
+  pegHits=0; harvestReady=false; bonusGolden=false; gameOver=false;
+  boardSeed = hashStr('seedpinball-' + todayStr + '-' + (ham.height||0));
+  buildBoard(); overEl.classList.remove('show'); refreshHUD();
+}
+
+/* ============ 物理 ============ */
+let wheelAngle = 0, wheelOmega = 0.004, pegThreshold = 20;
+const beetle = { x:90, y:520, dir:1, stun:0 };
+function physStep(dtF){
+  /* 演示模式：跑/睡交替 */
+  if(ham.demo){
+    const cyc = (Date.now() % 24000);
+    ham.running = cyc < 14000;
+    ham.rpm = ham.running ? 62 + Math.sin(Date.now()/700)*14 : 0;
+  }
+  const targetOmega = ham.running ? Math.min(0.14, Math.max(0.02, ham.rpm/120*0.14)) : 0.004;
+  wheelOmega += (targetOmega - wheelOmega) * 0.03 * dtF;
+  wheelAngle += wheelOmega * dtF;
+  for(const s of spinners) s.a += (0.025 + wheelOmega*0.6) * dtF;
+
+  /* 捣蛋甲虫巡逻（仓鼠狂奔时它也更急；防虫喷雾让它变慢） */
+  if(beetle.stun > 0){ beetle.stun -= dtF; }
+  else {
+    const bSpeed = (ham.running ? 2.0 : 1.15) * (1 - 0.25 * meta.up.spray) * MAPS[currentMap].beetleMult;
+    beetle.x += beetle.dir * bSpeed * dtF;
+    if(beetle.x > W-36){ beetle.x = W-36; beetle.dir = -1; }
+    if(beetle.x < 36){ beetle.x = 36; beetle.dir = 1; }
+  }
+
+  if(!ball) return;
+  const b = ball;
+  b.vy += 0.21 * dtF * (ham.running ? 1 : 0.82);
+  b.vx *= 0.999; b.vy *= 0.999;
+  b.x += b.vx * dtF; b.y += b.vy * dtF;
+
+  /* 墙 */
+  if(b.x < b.r){ b.x = b.r; b.vx = Math.abs(b.vx)*0.55; }
+  if(b.x > W-b.r){ b.x = W-b.r; b.vx = -Math.abs(b.vx)*0.55; }
+  if(b.y < b.r+6){ b.y = b.r+6; b.vy = Math.abs(b.vy)*0.4; }
+
+  /* 颊囊口袋 */
+  for(const p of POCKETS){
+    if(Math.hypot(b.x-p.x, b.y-p.y) < 15){ endBall('pocket'); return; }
+  }
+  /* 捣蛋甲虫抢种子 */
+  if(Math.hypot(b.x-beetle.x, b.y-beetle.y) < b.r + 13){ endBall('stolen'); return; }
+  /* 橡子钉 */
+  for(const pg of pegs){
+    const dx = b.x-pg.x, dy = b.y-pg.y, d = Math.hypot(dx,dy), min = b.r+pg.r;
+    if(d > 0 && d < min){
+      const nx = dx/d, ny = dy/d;
+      b.x = pg.x + nx*min; b.y = pg.y + ny*min;
+      const vn = b.vx*nx + b.vy*ny;
+      if(vn < 0){
+        b.vx -= 1.72*vn*nx; b.vy -= 1.72*vn*ny;
+        b.vx += (Math.random()-0.5)*0.14;
+        pg.hit = 6; b.pegTouch++; pegHits++;
+        beep(880 + Math.random()*320, 0.045, 'sine', 0.028);
+        if(pegHits >= pegThreshold){
+          pegThreshold += 20; harvestReady = true;
+          showBanner('🌟 丰收灯亮了！下一颗 ×2'); squeak();
+        }
+      }
+    }
+  }
+  /* 胡萝卜风车针（加长版：半长 26，按旋转线段算碰撞） */
+  const SPIN_LEN = 26, SPIN_OMEGA = 0.025 + wheelOmega*0.6;
+  for(const s of spinners){
+    const ux = Math.cos(s.a), uy = Math.sin(s.a);
+    const ax = s.x - ux*SPIN_LEN, ay = s.y - uy*SPIN_LEN;
+    const abx = ux*SPIN_LEN*2, aby = uy*SPIN_LEN*2;
+    const tt = Math.max(0, Math.min(1, ((b.x-ax)*abx + (b.y-ay)*aby) / (SPIN_LEN*SPIN_LEN*4)));
+    const px = ax + abx*tt, py = ay + aby*tt;
+    const dx = b.x-px, dy = b.y-py, d = Math.hypot(dx,dy), min = b.r+5;
+    if(d > 0.01 && d < min){
+      const nx = dx/d, ny = dy/d;
+      b.x = px + nx*min; b.y = py + ny*min;
+      const vn = b.vx*nx + b.vy*ny;
+      if(vn < 0){ b.vx -= 1.8*vn*nx; b.vy -= 1.8*vn*ny; }
+      /* 针转动的切向甩力：离中心越远甩得越狠 */
+      const qx = px - s.x, qy = py - s.y;
+      b.vx += -qy * SPIN_OMEGA * 0.55; b.vy += qx * SPIN_OMEGA * 0.55;
+      beep(520, 0.05, 'triangle', 0.04);
+    } else if(d <= 0.01){
+      b.vy += 1.2; b.vx += (Math.random()<0.5?-1:1)*0.8;
+    }
+  }
+  /* 大跑轮：轮缘碰撞 + 切向甩力 */
+  {
+    const dx = b.x-WHEEL.x, dy = b.y-WHEEL.y, d = Math.hypot(dx,dy), min = b.r+WHEEL.r;
+    if(d > 0 && d < min){
+      const nx = dx/d, ny = dy/d;
+      b.x = WHEEL.x + nx*min; b.y = WHEEL.y + ny*min;
+      const vn = b.vx*nx + b.vy*ny;
+      if(vn < 0){ b.vx -= 1.8*vn*nx; b.vy -= 1.8*vn*ny; }
+      const tx = -ny, ty = nx, surf = wheelOmega * WHEEL.r;
+      b.vx += tx * surf * 0.55; b.vy += ty * surf * 0.55;
+      if(Math.abs(wheelOmega) > 0.03) beep(340, 0.06, 'sawtooth', 0.02);
+    }
+  }
+  /* 粮仓隔板（竖段） */
+  for(let i=1;i<BINS.length;i++){
+    const x = i*BIN_W;
+    if(b.y > BIN_TOP-6 && Math.abs(b.x-x) < b.r+2.5 && b.y < H-14){
+      if(b.x < x){ b.x = x-b.r-2.5; b.vx = -Math.abs(b.vx)*0.5; }
+      else { b.x = x+b.r+2.5; b.vx = Math.abs(b.vx)*0.5; }
+    }
+  }
+  /* 落格 */
+  if(b.y > H-30){
+    const idx = Math.max(0, Math.min(BINS.length-1, Math.floor(b.x/BIN_W)));
+    endBall('bin', idx); return;
+  }
+  /* 防卡死 */
+  const sp = Math.hypot(b.vx, b.vy);
+  if(sp < 0.32){ b.still += dtF; if(b.still > 80){ b.vx += (Math.random()<0.5?-1:1)*1.1; b.vy -= 0.6; b.still = 0; } }
+  else b.still = 0;
+  if(performance.now() - b.born > 15000){ endBall('lost'); }
+}
+
+/* ============ 绘制 ============ */
+function drawSeed(x, y, r, golden, ang){
+  ctx.save(); ctx.translate(x,y); ctx.rotate(ang||0);
+  if(golden){ ctx.shadowColor = '#ffcf3f'; ctx.shadowBlur = 14; }
+  ctx.beginPath(); ctx.ellipse(0,0,r*0.78,r,0,0,Math.PI*2);
+  ctx.fillStyle = golden ? '#f7b731' : '#5d4a36'; ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.beginPath(); ctx.ellipse(0,0,r*0.5,r*0.78,0,0,Math.PI*2);
+  ctx.fillStyle = golden ? '#ffe08a' : '#e8d9b0'; ctx.fill();
+  ctx.strokeStyle = golden ? '#c47f17' : '#8a6f4d'; ctx.lineWidth = 1.1;
+  for(const off of [-r*0.26, 0, r*0.26]){
+    ctx.beginPath(); ctx.moveTo(off, -r*0.66); ctx.quadraticCurveTo(off*0.4, 0, off, r*0.66); ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawHamsterHead(x, y, s, sleepy){
+  ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
+  ctx.fillStyle = '#d9a05f';
+  ctx.beginPath(); ctx.arc(-17,-13,9,0,Math.PI*2); ctx.arc(17,-13,9,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#f6c9c0';
+  ctx.beginPath(); ctx.arc(-17,-13,4.5,0,Math.PI*2); ctx.arc(17,-13,4.5,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(0,0,25,21,0,0,Math.PI*2); ctx.fillStyle = '#eec27f'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(-15,8,9.5,8,0,0,Math.PI*2); ctx.ellipse(15,8,9.5,8,0,0,Math.PI*2);
+  ctx.fillStyle = '#f9dcae'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(0,9,12,8.5,0,0,Math.PI*2); ctx.fillStyle = '#fdf3dd'; ctx.fill();
+  ctx.fillStyle = '#33231a';
+  if(sleepy){
+    ctx.strokeStyle = '#33231a'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(-9,-3,3.4,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
+    ctx.beginPath(); ctx.arc(9,-3,3.4,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.arc(-9,-3,3,0,Math.PI*2); ctx.arc(9,-3,3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(-8, -4.2, 1.1, 0, Math.PI*2); ctx.arc(10, -4.2, 1.1, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.beginPath(); ctx.ellipse(0,6,3.6,2.6,0,0,Math.PI*2); ctx.fillStyle = '#e88a7d'; ctx.fill();
+  ctx.strokeStyle = '#b0714f'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(0,8.5); ctx.quadraticCurveTo(0,12,-4.5,12);
+  ctx.moveTo(0,8.5); ctx.quadraticCurveTo(0,12,4.5,12); ctx.stroke();
+  ctx.strokeStyle = 'rgba(160,120,70,.75)'; ctx.lineWidth = 1.1;
+  for(const sd of [-1,1]){
+    ctx.beginPath(); ctx.moveTo(sd*20,4); ctx.lineTo(sd*33,2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(sd*20,9); ctx.lineTo(sd*32,10.5); ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawWheelHamster(){
+  /* 跑轮里的小仓鼠（侧面） */
+  const cx = WHEEL.x, cy = WHEEL.y + WHEEL.r - 26;
+  ctx.save(); ctx.translate(cx, cy);
+  if(ham.running || (ham.demo && ham.running)){
+    const ph = wheelAngle * 3.2;
+    ctx.strokeStyle = '#8a5a28'; ctx.lineWidth = 3.4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-6,12); ctx.lineTo(-9 + Math.sin(ph)*6, 21); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(8,12); ctx.lineTo(11 + Math.sin(ph+Math.PI)*6, 21); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(-2,2,19,12.5,0,0,Math.PI*2); ctx.fillStyle = '#eec27f'; ctx.fill();
+    ctx.beginPath(); ctx.arc(16,-4,9.5,0,Math.PI*2); ctx.fillStyle = '#eec27f'; ctx.fill();
+    ctx.beginPath(); ctx.arc(11,-12,4.6,0,Math.PI*2); ctx.fillStyle = '#d9a05f'; ctx.fill();
+    ctx.beginPath(); ctx.arc(11,-12,2.2,0,Math.PI*2); ctx.fillStyle = '#f6c9c0'; ctx.fill();
+    ctx.beginPath(); ctx.arc(18.5,-5,1.7,0,Math.PI*2); ctx.fillStyle = '#33231a'; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(25,-1.5,2.4,1.8,0,0,Math.PI*2); ctx.fillStyle = '#e88a7d'; ctx.fill();
+    ctx.strokeStyle = '#d9a05f'; ctx.lineWidth = 2.6;
+    ctx.beginPath(); ctx.moveTo(-20,0); ctx.quadraticCurveTo(-28,-4,-26,-11); ctx.stroke();
+  } else {
+    /* 蜷着睡觉 */
+    ctx.beginPath(); ctx.ellipse(0,8,20,11,0,0,Math.PI*2); ctx.fillStyle = '#eec27f'; ctx.fill();
+    ctx.beginPath(); ctx.arc(13,2,9,0,Math.PI*2); ctx.fillStyle = '#eec27f'; ctx.fill();
+    ctx.beginPath(); ctx.arc(8,-5,4.4,0,Math.PI*2); ctx.fillStyle = '#d9a05f'; ctx.fill();
+    ctx.strokeStyle = '#33231a'; ctx.lineWidth = 1.7; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(15,1,3,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
+    const t = Date.now()/900;
+    ctx.fillStyle = 'rgba(90,100,200,.85)'; ctx.font = 'bold 13px sans-serif';
+    ctx.fillText('Z', 26, -8 - (t%1)*4);
+    ctx.font = 'bold 10px sans-serif';
+    ctx.fillText('z', 34, -16 - (t%1)*4);
+  }
+  ctx.restore();
+}
+function drawBinIcon(kind, x, y){
+  ctx.save(); ctx.translate(x,y);
+  if(kind==='bowl'){
+    ctx.beginPath(); ctx.arc(0,0,13,0.15*Math.PI,0.85*Math.PI); ctx.closePath();
+    ctx.fillStyle = '#c65f3d'; ctx.fill();
+    ctx.fillStyle = '#f2c14e';
+    for(const dx of [-6,0,6]){ ctx.beginPath(); ctx.arc(dx,-2,3,0,Math.PI*2); ctx.fill(); }
+  } else if(kind==='nest'){
+    ctx.strokeStyle = '#b98c4a'; ctx.lineWidth = 2.4; ctx.lineCap='round';
+    for(let i=-2;i<=2;i++){ ctx.beginPath(); ctx.arc(i*5, 2-Math.abs(i), 6, 0.2*Math.PI, 0.95*Math.PI); ctx.stroke(); }
+    ctx.fillStyle = '#f2c14e'; ctx.beginPath(); ctx.arc(0,-3,3.4,0,Math.PI*2); ctx.fill();
+  } else if(kind==='jar'){
+    ctx.fillStyle = 'rgba(190,220,235,.75)';
+    ctx.beginPath(); ctx.roundRect(-10,-9,20,19,5); ctx.fill();
+    ctx.strokeStyle = '#7d99a8'; ctx.lineWidth = 1.6; ctx.stroke();
+    ctx.fillStyle = '#f7b731';
+    for(let i=0;i<6;i++){ const a=i*Math.PI/3; ctx.beginPath(); ctx.ellipse(Math.cos(a)*6,-13+Math.sin(a)*3.4,4.6,2.8,a,0,Math.PI*2); ctx.fill(); }
+    ctx.beginPath(); ctx.arc(0,-13,3.2,0,Math.PI*2); ctx.fillStyle = '#8a5a28'; ctx.fill();
+  } else if(kind==='bad'){
+    ctx.beginPath(); ctx.ellipse(0,5,14,7.5,0,0,Math.PI*2); ctx.fillStyle = '#6f7d5a'; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-5,1,6,4,0,0,Math.PI*2); ctx.fillStyle = '#87986d'; ctx.fill();
+    ctx.strokeStyle = 'rgba(90,110,60,.85)'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+    for(const dx of [-7,0,7]){ ctx.beginPath(); ctx.moveTo(dx,-4); ctx.quadraticCurveTo(dx-3,-9,dx,-13); ctx.stroke(); }
+    ctx.fillStyle = '#4c5a3a';
+    ctx.beginPath(); ctx.arc(9,-9,1.6,0,Math.PI*2); ctx.arc(13,-5,1.3,0,Math.PI*2); ctx.fill();
+  } else if(kind==='house'){
+    ctx.fillStyle = '#a5712e';
+    ctx.beginPath(); ctx.moveTo(-14,-2); ctx.lineTo(0,-14); ctx.lineTo(14,-2); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#c98d4b'; ctx.fillRect(-10,-2,20,13);
+    ctx.fillStyle = '#6b3d07';
+    ctx.beginPath(); ctx.arc(0,11,5,Math.PI,0); ctx.rect(-5,6,10,5); ctx.fill();
+    ctx.fillStyle = '#eec27f'; ctx.beginPath(); ctx.arc(8,-7,2.6,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#33231a'; ctx.beginPath(); ctx.arc(8.8,-7.6,0.9,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+function drawBeetle(){
+  const b = beetle;
+  ctx.save(); ctx.translate(b.x, b.y); ctx.scale(b.dir, 1);
+  if(b.stun > 0){ ctx.rotate(Math.sin(Date.now()/40)*0.12); }
+  ctx.strokeStyle = '#3a3230'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+  const lp = Math.sin(Date.now()/45)*4;
+  for(const sgn of [-1,1]){
+    ctx.beginPath(); ctx.moveTo(sgn*6,6); ctx.lineTo(sgn*11,12+ (sgn>0?lp:-lp)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(sgn*1,7); ctx.lineTo(sgn*3,13-(sgn>0?lp:-lp)); ctx.stroke();
+  }
+  ctx.beginPath(); ctx.ellipse(0,0,16,11,0,0,Math.PI*2); ctx.fillStyle = '#4a3f3a'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(-2,-2,10,6,0,0,Math.PI*2); ctx.fillStyle = '#6b5a4e'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(6,-8); ctx.quadraticCurveTo(14,-15,19,-13); ctx.strokeStyle = '#3a3230'; ctx.lineWidth = 2.4; ctx.stroke();
+  ctx.beginPath(); ctx.arc(10,-4,4.6,0,Math.PI*2); ctx.fillStyle = '#33291f'; ctx.fill();
+  ctx.fillStyle = '#ff5f45'; ctx.beginPath(); ctx.arc(11.5,-5,1.7,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.3;
+  ctx.beginPath(); ctx.moveTo(13,1); ctx.lineTo(16,-1); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = '#7a4636'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('捣蛋甲虫', b.x, b.y + 26);
+}
+function draw(){
+  ctx.save();
+  if(shake > 0){ ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake); shake *= 0.88; if(shake<0.3) shake=0; }
+  /* 背景：笼子里的原木色 */
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0, MAPS[currentMap].theme[0]); g.addColorStop(1, MAPS[currentMap].theme[1]);
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  /* 地图专属景色 */
+  if(MAPS[currentMap].gen === 'valley'){
+    ctx.fillStyle = 'rgba(140,165,80,.28)';
+    ctx.beginPath(); ctx.arc(40, 118, 120, Math.PI, 0); ctx.fill();
+    ctx.beginPath(); ctx.arc(392, 118, 130, Math.PI, 0); ctx.fill();
+    for(const sx of [16, W-16]){
+      ctx.strokeStyle = '#6f9e3f'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(sx, 210); ctx.quadraticCurveTo(sx+ (sx<W/2?5:-5), 160, sx, 128); ctx.stroke();
+      ctx.fillStyle = '#f7b731';
+      for(let i=0;i<7;i++){ const a=i*Math.PI*2/7; ctx.beginPath(); ctx.ellipse(sx+Math.cos(a)*9, 118+Math.sin(a)*6, 6.4, 3.6, a, 0, Math.PI*2); ctx.fill(); }
+      ctx.beginPath(); ctx.arc(sx, 118, 4.6, 0, Math.PI*2); ctx.fillStyle = '#8a5a28'; ctx.fill();
+    }
+  } else if(MAPS[currentMap].gen === 'rings'){
+    ctx.fillStyle = 'rgba(45,55,110,.14)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#fdf6d8';
+    ctx.beginPath(); ctx.arc(52, 96, 17, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(253,246,216,.5)';
+    ctx.beginPath(); ctx.arc(340, 70, 2.2, 0, Math.PI*2); ctx.arc(382, 130, 1.8, 0, Math.PI*2); ctx.arc(36, 200, 1.8, 0, Math.PI*2); ctx.fill();
+    /* 粮仓筒仓 */
+    ctx.fillStyle = 'rgba(150,130,110,.5)';
+    ctx.beginPath(); ctx.roundRect(384, 210, 30, 92, 6); ctx.fill();
+    ctx.beginPath(); ctx.arc(399, 210, 15, Math.PI, 0); ctx.fill();
+  }
+  /* 顶部区块进度 */
+  ctx.fillStyle = 'rgba(120,80,30,.25)'; ctx.fillRect(0,0,W,5);
+  ctx.fillStyle = '#7ddc5a'; ctx.fillRect(0,0,W*Math.max(0,Math.min(1,ham.progress)),5);
+
+  /* 左上小木屋（躲避屋） */
+  ctx.save(); ctx.translate(6,8); ctx.globalAlpha = 0.92;
+  ctx.fillStyle = '#b07a3f'; ctx.beginPath(); ctx.moveTo(0,20); ctx.lineTo(26,4); ctx.lineTo(52,20); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#cf9a58'; ctx.fillRect(6,20,40,24);
+  ctx.fillStyle = '#6b3d07'; ctx.beginPath(); ctx.arc(26,44,8,Math.PI,0); ctx.fill();
+  ctx.restore();
+  /* 右上饮水器 */
+  ctx.save(); ctx.translate(382,10); ctx.globalAlpha = 0.95;
+  ctx.fillStyle = 'rgba(165,205,230,.8)'; ctx.beginPath(); ctx.roundRect(6,0,24,42,8); ctx.fill();
+  ctx.fillStyle = 'rgba(120,170,205,.9)'; ctx.fillRect(6,26,24,16);
+  ctx.fillStyle = '#9aa3ab'; ctx.fillRect(0,40,10,12);
+  ctx.beginPath(); ctx.arc(2,54,3,0,Math.PI*2); ctx.fillStyle = '#7d8891'; ctx.fill();
+  ctx.restore();
+
+  /* 颊囊口袋 */
+  for(const p of POCKETS){
+    ctx.beginPath(); ctx.arc(p.x,p.y,19,0,Math.PI*2); ctx.fillStyle = '#f2a49b'; ctx.fill();
+    ctx.beginPath(); ctx.arc(p.x,p.y,12.5,0,Math.PI*2); ctx.fillStyle = '#f9c6bd'; ctx.fill();
+    ctx.fillStyle = '#a34a3e'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('颊囊', p.x, p.y+30);
+  }
+  /* 橡子钉 */
+  for(const pg of pegs){
+    if(pg.hit > 0){ pg.hit--; ctx.beginPath(); ctx.arc(pg.x,pg.y,pg.r+5,0,Math.PI*2); ctx.strokeStyle = 'rgba(255,170,40,.8)'; ctx.lineWidth = 2.4; ctx.stroke(); }
+    ctx.beginPath(); ctx.ellipse(pg.x,pg.y+1.5,pg.r,pg.r+1.6,0,0,Math.PI*2); ctx.fillStyle = '#a06a2c'; ctx.fill();
+    ctx.beginPath(); ctx.arc(pg.x,pg.y-2.4,pg.r*0.98,Math.PI,0); ctx.fillStyle = '#6e4520'; ctx.fill();
+    ctx.fillRect(pg.x-1.1, pg.y-pg.r-4.4, 2.2, 3.6);
+  }
+  /* 胡萝卜风车针（加长） */
+  for(const s of spinners){
+    ctx.save(); ctx.translate(s.x,s.y); ctx.rotate(s.a);
+    ctx.fillStyle = '#ef7d31';
+    ctx.beginPath(); ctx.moveTo(0,-26); ctx.quadraticCurveTo(7,0,0,26); ctx.quadraticCurveTo(-7,0,0,-26); ctx.fill();
+    ctx.strokeStyle = 'rgba(190,90,20,.6)'; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(-3.4,-12); ctx.lineTo(3.4,-12); ctx.moveTo(-3.8,2); ctx.lineTo(3.8,2); ctx.moveTo(-3,15); ctx.lineTo(3,15); ctx.stroke();
+    ctx.fillStyle = '#57a047';
+    ctx.beginPath(); ctx.moveTo(0,-26); ctx.lineTo(-6,-34); ctx.lineTo(0,-30); ctx.lineTo(3,-35); ctx.lineTo(6,-27); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    ctx.beginPath(); ctx.arc(s.x,s.y,3.8,0,Math.PI*2); ctx.fillStyle = '#6e4520'; ctx.fill();
+  }
+  /* 大跑轮 */
+  ctx.save(); ctx.translate(WHEEL.x, WHEEL.y);
+  ctx.strokeStyle = '#8a5a28'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-WHEEL.r+8, WHEEL.r+16); ctx.lineTo(0, WHEEL.r-6); ctx.lineTo(WHEEL.r-8, WHEEL.r+16); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,WHEEL.r,0,Math.PI*2);
+  ctx.strokeStyle = '#c07f35'; ctx.lineWidth = 7; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,WHEEL.r-9,0,Math.PI*2);
+  ctx.strokeStyle = 'rgba(160,110,50,.4)'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.save(); ctx.rotate(wheelAngle);
+  ctx.strokeStyle = 'rgba(150,100,45,.65)'; ctx.lineWidth = 3.4;
+  for(let i=0;i<6;i++){ const a = i*Math.PI/3; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(a)*(WHEEL.r-8), Math.sin(a)*(WHEEL.r-8)); ctx.stroke(); }
+  ctx.restore();
+  ctx.beginPath(); ctx.arc(0,0,7,0,Math.PI*2); ctx.fillStyle = '#8a5a28'; ctx.fill();
+  ctx.restore();
+  drawWheelHamster();
+  /* 跑轮标签 */
+  ctx.fillStyle = '#8a5a28'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(ham.running ? '真仓鼠同款跑轮 · 转速同步中' : '真仓鼠同款跑轮 · 它睡了，轮子慢转', WHEEL.x, WHEEL.y + WHEEL.r + 30);
+
+  drawBeetle();
+
+  /* 粮仓格 */
+  for(let i=0;i<BINS.length;i++){
+    const x = i*BIN_W;
+    ctx.fillStyle = BINS[i].v < 0 ? 'rgba(110,125,90,.5)' : (i%2 ? 'rgba(255,246,220,.55)' : 'rgba(233,201,140,.5)');
+    ctx.fillRect(x, BIN_TOP, BIN_W, H-BIN_TOP);
+    if(i===3 && ham.running){ ctx.fillStyle = 'rgba(255,205,60,.4)'; ctx.fillRect(x, BIN_TOP, BIN_W, H-BIN_TOP); }
+    drawBinIcon(BINS[i].icon, x+BIN_W/2, BIN_TOP+26);
+    const dispV = BINS[i].v < 0 ? BINS[i].v : (i===3 && ham.running ? 200 : (ham.ok && !ham.running ? Math.round(BINS[i].v*1.1) : BINS[i].v));
+    ctx.fillStyle = BINS[i].v < 0 ? '#b03a2a' : '#6b3d07'; ctx.font = 'bold 17px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(String(dispV), x+BIN_W/2, BIN_TOP+58);
+    ctx.font = '10.5px sans-serif'; ctx.fillStyle = '#9a6a30';
+    ctx.fillText(BINS[i].name, x+BIN_W/2, BIN_TOP+76);
+  }
+  ctx.strokeStyle = '#a5712e'; ctx.lineWidth = 3.4;
+  for(let i=0;i<=BINS.length;i++){ ctx.beginPath(); ctx.moveTo(i*BIN_W, BIN_TOP); ctx.lineTo(i*BIN_W, H); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(0,BIN_TOP); ctx.lineTo(W,BIN_TOP); ctx.stroke();
+  /* 木屑 */
+  ctx.strokeStyle = 'rgba(190,145,80,.8)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  for(const s of shavings){ ctx.beginPath(); ctx.arc(s.x, s.y, s.l/2, s.a, s.a+2.2); ctx.stroke(); }
+
+  /* 投放仓鼠 + 瞄准线 */
+  const bob = Math.sin(Date.now()/380)*2;
+  if(!ball && ballsLeft>0 && !gameOver){
+    ctx.save(); ctx.setLineDash([4,6]); ctx.strokeStyle = 'rgba(140,95,40,.45)'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(aimX, 92); ctx.lineTo(aimX, 132); ctx.stroke(); ctx.restore();
+  }
+  drawHamsterHead(aimX, 52+bob, 0.92, !ham.running && ham.ok);
+  /* 等级装扮：Lv2 围巾 · Lv3 墨镜 · Lv5 金铃铛 · Lv6 皇冠 */
+  if(curLevel >= 2){
+    ctx.fillStyle = '#d84a3a';
+    ctx.beginPath(); ctx.roundRect(aimX-16, 52+bob+13, 32, 7, 3.5); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(aimX+9, 52+bob+19); ctx.lineTo(aimX+17, 52+bob+19); ctx.lineTo(aimX+13, 52+bob+30); ctx.closePath(); ctx.fill();
+  }
+  if(curLevel >= 3 && ham.running){
+    ctx.fillStyle = '#26221f';
+    ctx.beginPath(); ctx.roundRect(aimX-17, 52+bob-7.5, 34, 9, 4.5); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.35)';
+    ctx.beginPath(); ctx.roundRect(aimX-13, 52+bob-6, 9, 3.4, 1.7); ctx.fill();
+  }
+  if(curLevel >= 5){
+    ctx.beginPath(); ctx.arc(aimX+15, 52+bob+23, 4.4, 0, Math.PI*2); ctx.fillStyle = '#f7b731'; ctx.fill();
+    ctx.strokeStyle = '#c47f17'; ctx.lineWidth = 1.1;
+    ctx.beginPath(); ctx.moveTo(aimX+11.4, 52+bob+25); ctx.lineTo(aimX+18.6, 52+bob+25); ctx.stroke();
+  }
+  if(curLevel >= 6){
+    ctx.fillStyle = '#ffcf3f'; ctx.strokeStyle = '#c47f17'; ctx.lineWidth = 1;
+    const cy0 = 52+bob-27;
+    ctx.beginPath();
+    ctx.moveTo(aimX-10, cy0+8); ctx.lineTo(aimX-10, cy0); ctx.lineTo(aimX-5, cy0+5); ctx.lineTo(aimX, cy0-2);
+    ctx.lineTo(aimX+5, cy0+5); ctx.lineTo(aimX+10, cy0); ctx.lineTo(aimX+10, cy0+8); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+  }
+  if(!ball && ballsLeft>0 && !gameOver){
+    ctx.fillStyle = '#d9a05f';
+    ctx.beginPath(); ctx.arc(aimX-13, 74+bob, 5, 0, Math.PI*2); ctx.arc(aimX+13, 74+bob, 5, 0, Math.PI*2); ctx.fill();
+    drawSeed(aimX, 82+bob, 10, nextIsGolden(), 0.5);
+  }
+  /* 弹珠种子 */
+  if(ball){
+    drawSeed(ball.x, ball.y, ball.r+1, ball.golden, Math.atan2(ball.vy, ball.vx)+Math.PI/2);
+  }
+  /* 夜场 */
+  if(ham.ok && !ham.running){
+    ctx.fillStyle = 'rgba(35,40,95,.16)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#f5eeda';
+    ctx.beginPath(); ctx.arc(376,116,13,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(35,40,95,.30)';
+    ctx.beginPath(); ctx.arc(370,112,11,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* ============ 输入 ============ */
+function pointerX(e){
+  const r = cv.getBoundingClientRect();
+  return Math.max(26, Math.min(W-26, (e.clientX - r.left) * W / r.width));
+}
+cv.addEventListener('pointermove', e => { aimX = pointerX(e); });
+cv.addEventListener('pointerdown', e => { aimX = pointerX(e); drop(); });
+window.addEventListener('keydown', e => {
+  if(e.code === 'ArrowLeft') aimX = Math.max(26, aimX-14);
+  if(e.code === 'ArrowRight') aimX = Math.min(W-26, aimX+14);
+  if(e.code === 'Space'){ e.preventDefault(); drop(); }
+  if(e.code === 'KeyR') restart();
+});
+dropBtn.addEventListener('click', drop);
+$('restartBtn').addEventListener('click', restart);
+$('againBtn').addEventListener('click', restart);
+$('soundBtn').addEventListener('click', function(){ soundOn = !soundOn; this.textContent = '声音：' + (soundOn?'开':'关'); });
+$('helpBtn').addEventListener('click', () => $('helpPanel').classList.toggle('open'));
+
+/* ============ 主循环 ============ */
+let lastT = performance.now();
+function loop(t){
+  const dtF = Math.min(2.2, (t - lastT)/16.67); lastT = t;
+  physStep(dtF);
+  draw();
+  requestAnimationFrame(loop);
+}
+refreshHUD();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
