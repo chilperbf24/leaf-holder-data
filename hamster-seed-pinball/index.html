@@ -144,6 +144,15 @@
   .lbrow .dt { flex:1; color:#9a6a30; font-size:13.5px; }
   .lbrow.fresh { background:#ffedb8; border-radius:8px; }
   .lbempty { color:#9a6a30; font-size:14.5px; padding:8px 0; }
+  /* 英文排版：英文词长，字号略收、按钮不换行，避免挤爆 */
+  html[lang="en"] .uppanel h3 { font-size:15.5px; }
+  html[lang="en"] .btns button { font-size:13.5px; white-space:nowrap; padding:11px 1px; }
+  html[lang="en"] .lbtabs button { font-size:12.5px; white-space:nowrap; }
+  html[lang="en"] .stagecur { font-size:16px; }
+  html[lang="en"] .lbrow .dt { font-size:12.5px; }
+  html[lang="en"] .card .lab { font-size:11.5px; }
+  html[lang="en"] .lbpager button { font-size:12.5px; }
+  html[lang="en"] .uprow .ds { font-size:12px; }
   /* 高度适配（放最后，确保盖过前面的大屏规则）：盘面宽度同时受屏幕高度限制，整盘必须完整可见 */
   @media (min-width:1081px) {
     .centerCol { width:min(820px, 94vw, calc((100vh - 480px) * 0.65625)); width:min(820px, 94vw, calc((100dvh - 480px) * 0.65625)); }
@@ -227,7 +236,7 @@
   </div>
 
   <div class="boardbox">
-    <canvas id="cv" width="840" height="1280"></canvas>
+    <canvas id="cv" width="420" height="640"></canvas>
     <div class="banner" id="banner"></div>
     <div class="over" id="over">
       <h2 id="overTitle">🎉 囤粮成功！</h2>
@@ -291,7 +300,18 @@
 /* ============ 基础 ============ */
 const W = 420, H = 640;
 const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
-ctx.scale(2, 2); /* 画布 2 倍像素渲染，放大显示不糊 */
+/* 画布按实际显示尺寸 × 设备像素比渲染：显示多大就画多清，字不糊 */
+function fitCanvas(){
+  try{
+    const r = cv.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const k = Math.max(1, Math.min(3, Math.round(r.width * dpr / W)));
+    if(cv.width !== W * k){ cv.width = W * k; cv.height = H * k; }
+    ctx.setTransform(k, 0, 0, k, 0, 0);
+  }catch(e){}
+}
+fitCanvas();
+window.addEventListener('resize', fitCanvas);
 const DPR = Math.min(window.devicePixelRatio || 1, 2);
 cv.width = W * DPR; cv.height = H * DPR; ctx.scale(DPR, DPR);
 
@@ -739,8 +759,7 @@ function fmtUnits(v, dec){
 function renderWallet(){
   const box = $('walletBody');
   if(!wallet.address){
-    box.innerHTML = '<div style="font-size:14.5px;line-height:1.7;color:#7a5a28">' + t('walletOff') + '</div>' +
-      '<button id="connectBtn" style="margin-top:8px;width:100%">' + t('connect') + '</button>' +
+    box.innerHTML = '<button id="connectBtn" style="width:100%">' + t('connect') + '</button>' +
       (wallet.msg ? '<div style="font-size:13px;color:#b03a2a;margin-top:6px">' + wallet.msg + '</div>' : '');
     $('connectBtn').addEventListener('click', connectWallet);
     renderPing(); renderAssets();
