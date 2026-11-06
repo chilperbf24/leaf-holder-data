@@ -402,6 +402,14 @@ zh: {
   stamLab:'⚡ 体力', stamNext:'下一点', stamFull:'已满',
   bNoStam:'⚡ 体力用完了，等恢复或用金瓜子补（小屋里买）— 每天签到也 +3 体力',
   rigName:'⛏ 矿场', rigDesc:'矿力获取 +10% / 级（花矿力升级）', rigBtn:'升级',
+  chestName:'🎁 种子补给箱', chestDesc:'随机开出：金瓜子 / 体力 / 幸运铃铛，小概率大奖 200 🌰', chestBtn:'开箱 100 ⛏',
+  bellName:'🔔 幸运铃铛', bellDesc:'下一局金种子更密（间隔 -2），一次性', bellBtn:'买 80 ⛏', bellReady:'已备好 · 下局生效',
+  swapStamName:'⚡ 矿力换体力', swapStamDesc:'30 矿力 → +2 体力', swapStamBtn:'换 30 ⛏',
+  swapNutsName:'🌰 矿力换金瓜子', swapNutsDesc:'50 矿力 → 20 金瓜子', swapNutsBtn:'换 50 ⛏',
+  lampName:'🔦 矿工头灯', lampDesc:'投放仓鼠戴上头灯（永久装扮）', lampBtn:'买 600 ⛏', lampOwned:'已拥有',
+  bChestNuts:g => '🎁 开箱：+' + g + ' 🌰', bChestStam:'🎁 开箱：+2 ⚡ 体力', bChestBell:'🎁 开箱：🔔 幸运铃铛（下局生效）', bChestJackpot:'🎁 大奖！+200 🌰',
+  bBellBought:'🔔 铃铛备好了，下一局金种子更密', bSwapStam:'⚡ +2 体力', bSwapNuts:'🌰 +20 金瓜子', bLampBought:'🔦 头灯戴上了！',
+  bMinePoor:'⛏ 矿力不够，多打几局攒矿力',
   stamBuyName:'⚡ 补体力', stamBuyDesc:'+3 点体力，马上能玩', stamBuyBtn:'买 20 🌰',
   bRigUp:lv => '⛏ 矿场升到 ' + lv + ' 级！矿力获取提升', bStamBought:'⚡ 体力 +3',
   ciBtn:'📅 今日签到', ciDone:'今日已签到 ✓', ciStreak:'连续签到 ', ciTotal:'累计 ', ciDays:' 天',
@@ -458,6 +466,14 @@ en: {
   stamLab:'⚡ Energy', stamNext:'next in', stamFull:'full',
   bNoStam:'⚡ Out of energy — wait for regen or refill with Golden Seeds (Hamster House); daily check-in also gives +3',
   rigName:'⛏ Mining Rig', rigDesc:'+10% mining power gain / level (costs mining power)', rigBtn:'Upgrade',
+  chestName:'🎁 Seed Supply Chest', chestDesc:'Random: Golden Seeds / Energy / Lucky Bell, small chance of a 200 🌰 jackpot', chestBtn:'Open 100 ⛏',
+  bellName:'🔔 Lucky Bell', bellDesc:'Next run: golden seeds come faster (interval -2), one-time', bellBtn:'Buy 80 ⛏', bellReady:'Ready · applies next run',
+  swapStamName:'⚡ Power → Energy', swapStamDesc:'30 power → +2 energy', swapStamBtn:'Swap 30 ⛏',
+  swapNutsName:'🌰 Power → Seeds', swapNutsDesc:'50 power → 20 Golden Seeds', swapNutsBtn:'Swap 50 ⛏',
+  lampName:'🔦 Miner Lamp', lampDesc:'Your dropper hamster wears a head lamp (permanent)', lampBtn:'Buy 600 ⛏', lampOwned:'Owned',
+  bChestNuts:g => '🎁 Chest: +' + g + ' 🌰', bChestStam:'🎁 Chest: +2 ⚡ energy', bChestBell:'🎁 Chest: 🔔 Lucky Bell (next run)', bChestJackpot:'🎁 JACKPOT! +200 🌰',
+  bBellBought:'🔔 Bell ready — golden seeds come faster next run', bSwapStam:'⚡ +2 energy', bSwapNuts:'🌰 +20 Golden Seeds', bLampBought:'🔦 Lamp on!',
+  bMinePoor:'⛏ Not enough mining power — play more runs',
   stamBuyName:'⚡ Refill Energy', stamBuyDesc:'+3 energy, play right away', stamBuyBtn:'Buy 20 🌰',
   bRigUp:lv => '⛏ Rig upgraded to Lv.' + lv + '! Mining gain up', bStamBought:'⚡ Energy +3',
   ciBtn:'📅 Check In Today', ciDone:'Checked in today ✓', ciStreak:'Streak ', ciTotal:'Total ', ciDays:'d',
@@ -615,7 +631,8 @@ function levelFromExp(exp){
   return lv;
 }
 function runBalls(){ return 12 + meta.up.seeds*2; }
-function goldenEvery(){ return Math.max(3, 5 - meta.up.luck); }
+let runBell = false;
+function goldenEvery(){ const g = Math.max(3, 5 - meta.up.luck); return runBell ? Math.max(2, g - 2) : g; }
 function renderMeta(){
   curLevel = levelFromExp(meta.exp);
   $('metaText').textContent = 'Lv.' + curLevel + ' ' + (LANG === 'en' ? LEVELS[curLevel-1].titleEn : LEVELS[curLevel-1].title) + ' · ' + t('exp') + ' ' + meta.exp;
@@ -637,9 +654,20 @@ function renderMeta(){
   const stamFullNow = stamNow() >= STAM_MAX;
   const stamBtn = stamFullNow ? '<button class="maxed" disabled>' + t('stamFull') + '</button>'
     : '<button data-eco="stam">' + t('stamBuyBtn') + '</button>';
+  const bellBtn = meta.bell ? '<button class="maxed" disabled>' + t('bellReady') + '</button>'
+    : '<button data-eco="bell">' + t('bellBtn') + '</button>';
+  const lampBtn = meta.lamp ? '<button class="maxed" disabled>' + t('lampOwned') + '</button>'
+    : '<button data-eco="lamp">' + t('lampBtn') + '</button>';
+  const swapStamBtn = stamFullNow ? '<button class="maxed" disabled>' + t('stamFull') + '</button>'
+    : '<button data-eco="swapstam">' + t('swapStamBtn') + '</button>';
   const ecoEl = $('ecoRows');
   if(ecoEl) ecoEl.innerHTML =
     '<div class="uprow"><div class="info"><div class="nm">' + t('rigName') + '</div><div class="ds">' + t('rigDesc') + '</div></div><div class="pips">' + rigPips + '</div>' + rigBtn + '</div>' +
+    '<div class="uprow"><div class="info"><div class="nm">' + t('chestName') + '</div><div class="ds">' + t('chestDesc') + '</div></div><div class="pips"></div><button data-eco="chest">' + t('chestBtn') + '</button></div>' +
+    '<div class="uprow"><div class="info"><div class="nm">' + t('bellName') + '</div><div class="ds">' + t('bellDesc') + '</div></div><div class="pips"></div>' + bellBtn + '</div>' +
+    '<div class="uprow"><div class="info"><div class="nm">' + t('swapStamName') + '</div><div class="ds">' + t('swapStamDesc') + '</div></div><div class="pips"></div>' + swapStamBtn + '</div>' +
+    '<div class="uprow"><div class="info"><div class="nm">' + t('swapNutsName') + '</div><div class="ds">' + t('swapNutsDesc') + '</div></div><div class="pips"></div><button data-eco="swapnuts">' + t('swapNutsBtn') + '</button></div>' +
+    '<div class="uprow"><div class="info"><div class="nm">' + t('lampName') + '</div><div class="ds">' + t('lampDesc') + '</div></div><div class="pips"></div>' + lampBtn + '</div>' +
     '<div class="uprow"><div class="info"><div class="nm">' + t('stamBuyName') + '</div><div class="ds">' + t('stamBuyDesc') + '</div></div><div class="pips"></div>' + stamBtn + '</div>';
   renderStam();
 }
@@ -660,6 +688,34 @@ $('ecoRows').addEventListener('click', e => {
     if((meta.mine || 0) < RIG_COSTS[rig]){ showBanner('⛏ ' + t('mineWord') + ' ' + (LANG === 'en' ? 'not enough — play more runs to earn it' : '不够，多打几局攒矿力')); return; }
     meta.mine -= RIG_COSTS[rig]; meta.rig = rig + 1;
     saveMeta(); renderMeta(); showBanner(t('bRigUp')(meta.rig)); squeak();
+  } else if(k === 'chest'){
+    if((meta.mine || 0) < 100){ showBanner(t('bMinePoor')); return; }
+    meta.mine -= 100;
+    const r = Math.random(); let msg;
+    if(r < 0.45){ const g = 30 + Math.floor(Math.random() * 61); meta.nuts += g; msg = t('bChestNuts')(g); }
+    else if(r < 0.70){ stamNow(); meta.stam.v = Math.min(STAM_MAX, meta.stam.v + 2); msg = t('bChestStam'); }
+    else if(r < 0.90){ meta.bell = true; msg = t('bChestBell'); }
+    else { meta.nuts += 200; msg = t('bChestJackpot'); }
+    saveMeta(); renderMeta(); showBanner(msg); squeak();
+  } else if(k === 'bell'){
+    if(meta.bell) return;
+    if((meta.mine || 0) < 80){ showBanner(t('bMinePoor')); return; }
+    meta.mine -= 80; meta.bell = true;
+    saveMeta(); renderMeta(); showBanner(t('bBellBought')); squeak();
+  } else if(k === 'swapstam'){
+    if(stamNow() >= STAM_MAX) return;
+    if((meta.mine || 0) < 30){ showBanner(t('bMinePoor')); return; }
+    meta.mine -= 30; meta.stam.v = Math.min(STAM_MAX, meta.stam.v + 2);
+    saveMeta(); renderMeta(); showBanner(t('bSwapStam')); squeak();
+  } else if(k === 'swapnuts'){
+    if((meta.mine || 0) < 50){ showBanner(t('bMinePoor')); return; }
+    meta.mine -= 50; meta.nuts += 20;
+    saveMeta(); renderMeta(); showBanner(t('bSwapNuts')); squeak();
+  } else if(k === 'lamp'){
+    if(meta.lamp) return;
+    if((meta.mine || 0) < 600){ showBanner(t('bMinePoor')); return; }
+    meta.mine -= 600; meta.lamp = true;
+    saveMeta(); renderMeta(); showBanner(t('bLampBought')); squeak();
   } else if(k === 'stam'){
     if(stamNow() >= STAM_MAX) return;
     if((meta.nuts || 0) < 20){ showBanner(t('bNuts')(20 - (meta.nuts || 0))); return; }
@@ -1119,7 +1175,7 @@ function endBall(kind, binIdx){
 }
 function finishGame(){
   if(gameOver) return;
-  gameOver = true;
+  gameOver = true; runBell = false;
   const win = score >= targetScore();
   const oldLv = levelFromExp(meta.exp);
   const nutsEarned = Math.floor(score/2) + (win ? 50 : 0);
@@ -1177,6 +1233,8 @@ function payRun(){
 }
 function startRun(){
   if(!payRun()) return;
+  runBell = !!meta.bell;
+  if(meta.bell){ meta.bell = false; saveMeta(); }
   restart(); renderMeta();
 }
 
@@ -1631,6 +1689,14 @@ function draw(){
     ctx.moveTo(aimX-10, cy0+8); ctx.lineTo(aimX-10, cy0); ctx.lineTo(aimX-5, cy0+5); ctx.lineTo(aimX, cy0-2);
     ctx.lineTo(aimX+5, cy0+5); ctx.lineTo(aimX+10, cy0); ctx.lineTo(aimX+10, cy0+8); ctx.closePath();
     ctx.fill(); ctx.stroke();
+  }
+  if(meta.lamp){
+    ctx.fillStyle = 'rgba(255,226,122,.15)';
+    ctx.beginPath(); ctx.moveTo(aimX-4, 52+bob-11); ctx.lineTo(aimX+4, 52+bob-11); ctx.lineTo(aimX+17, 52+bob+36); ctx.lineTo(aimX-17, 52+bob+36); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#5a4632';
+    ctx.beginPath(); ctx.roundRect(aimX-15, 52+bob-20, 30, 5, 2.5); ctx.fill();
+    ctx.beginPath(); ctx.arc(aimX, 52+bob-17, 5.4, 0, Math.PI*2); ctx.fillStyle = '#ffe27a'; ctx.fill();
+    ctx.strokeStyle = '#c47f17'; ctx.lineWidth = 1.2; ctx.stroke();
   }
   if(!ball && ballsLeft>0 && !gameOver){
     ctx.fillStyle = '#d9a05f';
