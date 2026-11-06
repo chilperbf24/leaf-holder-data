@@ -181,6 +181,7 @@
 <div class="uppanel">
     <h3 id="houseTitle">🏠 仓鼠小屋 · 升级（金瓜子在每局结算时按得分发放）</h3>
     <div id="upRows"></div>
+    <div id="ecoRows"></div>
   </div>
 
 <div class="uppanel" id="pingPanel">
@@ -200,6 +201,7 @@
       <span class="nuts"><span id="nutsLab">🌰 金瓜子</span> <span id="nutsVal">0</span></span>
     </div>
     <div class="expbar"><div id="expFill"></div></div>
+    <div id="stamText" style="font-size:13.5px;color:#ffd9a0;margin-top:4px"></div>
   </div>
 
   <div class="mapbar" id="mapBar"></div>
@@ -397,6 +399,11 @@ zh: {
   pingFirst:'先连接钱包', pingDone:' 已打卡', pingTx:'交易：', pingNote:'approve(自己, 0)，没转任何币。',
   pingIntro:'给 SQK 合约发一笔 <b>approve(自己, 0)</b>：不转币、不授权额度，只付一点 Sepolia 测试 gas，就是 The Tester 要的那笔链上交易。',
   pingBtn:'⛓️ 打卡',
+  stamLab:'⚡ 体力', stamNext:'下一点', stamFull:'已满',
+  bNoStam:'⚡ 体力用完了，等恢复或用金瓜子补（小屋里买）— 每天签到也 +3 体力',
+  rigName:'⛏ 矿场', rigDesc:'矿力获取 +10% / 级（花矿力升级）', rigBtn:'升级',
+  stamBuyName:'⚡ 补体力', stamBuyDesc:'+3 点体力，马上能玩', stamBuyBtn:'买 20 🌰',
+  bRigUp:lv => '⛏ 矿场升到 ' + lv + ' 级！矿力获取提升', bStamBought:'⚡ 体力 +3',
   ciBtn:'📅 今日签到', ciDone:'今日已签到 ✓', ciStreak:'连续签到 ', ciTotal:'累计 ', ciDays:' 天',
   ciNote:'每天签到发一笔链上交易（approve 自己 0，不转币），奖励金瓜子：30 起，连续签到每天 +5，封顶 80。第一次签到同时满足 The Tester 徽章条件。',
   ciTomorrow:'明天再来，连续签到别断。', mineWord:'矿力',
@@ -448,6 +455,11 @@ en: {
   pingFirst:'Connect wallet first', pingDone:' checked in', pingTx:'Tx: ', pingNote:'approve(self, 0) — no tokens moved.',
   pingIntro:'Send an <b>approve(self, 0)</b> to the SQK contract: moves no tokens, grants no allowance, just a little Sepolia test gas — that is the on-chain transaction The Tester asks for.',
   pingBtn:'⛓️ Check In',
+  stamLab:'⚡ Energy', stamNext:'next in', stamFull:'full',
+  bNoStam:'⚡ Out of energy — wait for regen or refill with Golden Seeds (Hamster House); daily check-in also gives +3',
+  rigName:'⛏ Mining Rig', rigDesc:'+10% mining power gain / level (costs mining power)', rigBtn:'Upgrade',
+  stamBuyName:'⚡ Refill Energy', stamBuyDesc:'+3 energy, play right away', stamBuyBtn:'Buy 20 🌰',
+  bRigUp:lv => '⛏ Rig upgraded to Lv.' + lv + '! Mining gain up', bStamBought:'⚡ Energy +3',
   ciBtn:'📅 Check In Today', ciDone:'Checked in today ✓', ciStreak:'Streak ', ciTotal:'Total ', ciDays:'d',
   ciNote:'One on-chain tx per day (approve self, 0 — moves no tokens). Reward in Golden Seeds: 30, +5 per streak day, capped at 80. Your first check-in also satisfies The Tester badge.',
   ciTomorrow:'Come back tomorrow to keep the streak.', mineWord:'Mining',
@@ -586,14 +598,17 @@ function metaKey(){ return 'hsb_meta_v1' + idSuffix; }
 function scoresKey(){ return 'hsb_scores_v1' + idSuffix; }
 function loadMeta(){
   meta = { nuts:0, exp:0, cleared:0, up:{seeds:0, harvest:0, luck:0, spray:0} };
+  let hadSave = false;
   try{
     const saved = JSON.parse(localStorage.getItem(metaKey()) || 'null');
-    if(saved && saved.up) meta = Object.assign(meta, saved);
+    if(saved && saved.up){ meta = Object.assign(meta, saved); hadSave = true; }
   }catch(e){}
+  if(!hadSave){ meta.nuts = 50; saveMeta(); }
 }
 loadMeta();
 let curLevel = 1;
 function saveMeta(){ try{ localStorage.setItem(metaKey(), JSON.stringify(meta)); }catch(e){} }
+const STAM_MAX = 10, STAM_REGEN_MS = 30 * 60 * 1000, RIG_COSTS = [100, 250, 500, 1000, 2000];
 function levelFromExp(exp){
   let lv = 1;
   for(let i=0;i<LEVELS.length;i++) if(exp >= LEVELS[i].exp) lv = i+1;
@@ -615,6 +630,18 @@ function renderMeta(){
       : '<button data-up="' + u.key + '">' + t('upBtn') + ' ' + u.costs[lv] + ' 🌰</button>';
     return '<div class="uprow"><div class="info"><div class="nm">' + (LANG === 'en' ? u.nameEn : u.name) + '</div><div class="ds">' + (LANG === 'en' ? u.descEn : u.desc) + '</div></div><div class="pips">' + pips + '</div>' + btn + '</div>';
   }).join('');
+  const rig = meta.rig || 0, rigMaxed = rig >= RIG_COSTS.length;
+  const rigPips = '●'.repeat(rig) + '○'.repeat(RIG_COSTS.length - rig);
+  const rigBtn = rigMaxed ? '<button class="maxed" disabled>' + t('maxed') + '</button>'
+    : '<button data-eco="rig">' + t('rigBtn') + ' ' + RIG_COSTS[rig] + ' ⛏</button>';
+  const stamFullNow = stamNow() >= STAM_MAX;
+  const stamBtn = stamFullNow ? '<button class="maxed" disabled>' + t('stamFull') + '</button>'
+    : '<button data-eco="stam">' + t('stamBuyBtn') + '</button>';
+  const ecoEl = $('ecoRows');
+  if(ecoEl) ecoEl.innerHTML =
+    '<div class="uprow"><div class="info"><div class="nm">' + t('rigName') + '</div><div class="ds">' + t('rigDesc') + '</div></div><div class="pips">' + rigPips + '</div>' + rigBtn + '</div>' +
+    '<div class="uprow"><div class="info"><div class="nm">' + t('stamBuyName') + '</div><div class="ds">' + t('stamBuyDesc') + '</div></div><div class="pips"></div>' + stamBtn + '</div>';
+  renderStam();
 }
 function buyUpgrade(key){
   const u = UPGRADES.find(x => x.key === key); if(!u) return;
@@ -625,6 +652,22 @@ function buyUpgrade(key){
   showBanner(t('bUpgraded')(LANG === 'en' ? u.nameEn : u.name, lv+1)); squeak();
   if(key === 'seeds' && !ball && !gameOver){ ballsLeft += 2; refreshHUD(); }
 }
+$('ecoRows').addEventListener('click', e => {
+  const k = e.target && e.target.dataset ? e.target.dataset.eco : null;
+  if(k === 'rig'){
+    const rig = meta.rig || 0;
+    if(rig >= RIG_COSTS.length) return;
+    if((meta.mine || 0) < RIG_COSTS[rig]){ showBanner('⛏ ' + t('mineWord') + ' ' + (LANG === 'en' ? 'not enough — play more runs to earn it' : '不够，多打几局攒矿力')); return; }
+    meta.mine -= RIG_COSTS[rig]; meta.rig = rig + 1;
+    saveMeta(); renderMeta(); showBanner(t('bRigUp')(meta.rig)); squeak();
+  } else if(k === 'stam'){
+    if(stamNow() >= STAM_MAX) return;
+    if((meta.nuts || 0) < 20){ showBanner(t('bNuts')(20 - (meta.nuts || 0))); return; }
+    meta.nuts -= 20; meta.stam.v = Math.min(STAM_MAX, meta.stam.v + 3);
+    saveMeta(); renderMeta(); showBanner(t('bStamBought')); squeak();
+  }
+});
+setInterval(renderStam, 1000);
 $('upRows').addEventListener('click', e => {
   const k = e.target && e.target.dataset ? e.target.dataset.up : null;
   if(k) buyUpgrade(k);
@@ -743,6 +786,7 @@ function switchMap(i){
   if(i === currentMap) return;
   if(!PREVIEW && i > (meta.cleared || 0)){ showBanner(t('bLocked')(i+1, (meta.cleared || 0) + 1)); beep(180, 0.12, 'square', 0.04); return; }
   if(ball){ showBanner(t('bWaitBall')); return; }
+  if(!payRun()) return;
   currentMap = i;
   try{ localStorage.setItem('hsb_map', String(i)); }catch(e){}
   boardSeed = hashStr('seedpinball-' + todayStr + '-' + i);
@@ -924,7 +968,9 @@ async function pingOnChain(){
     wallet.pingHash = hash;
     try{ localStorage.setItem('hsb_ping@' + wallet.address.toLowerCase(), hash); }catch(e){}
     const reward = 30 + Math.min(50, (ci.streak - 1) * 5);
-    meta.nuts += reward; saveMeta(); renderMeta();
+    meta.nuts += reward;
+    stamNow(); if(meta.stam) meta.stam.v = Math.min(STAM_MAX, meta.stam.v + 3);
+    saveMeta(); renderMeta(); renderStam();
     renderPing();
     showBanner(t('bCheckedIn')(reward, ci.streak));
     squeak();
@@ -1079,7 +1125,7 @@ function finishGame(){
   const nutsEarned = Math.floor(score/2) + (win ? 50 : 0);
   const wasFrontier = win && currentMap === (meta.cleared || 0);
   if(win && !PREVIEW) meta.cleared = Math.max(meta.cleared || 0, currentMap + 1);
-  const mineGain = Math.max(1, Math.round(score/10)) + (win ? 20 : 0);
+  const mineGain = Math.round((Math.max(1, Math.round(score/10)) + (win ? 20 : 0)) * (1 + 0.1 * (meta.rig || 0)));
   meta.mine = (meta.mine || 0) + mineGain;
   meta.nuts += nutsEarned; meta.exp += score; saveMeta(); renderMeta(); renderMapBar();
   const newLv = levelFromExp(meta.exp);
@@ -1098,6 +1144,40 @@ function restart(){
   pegHits=0; harvestReady=false; bonusGolden=false; gameOver=false;
   boardSeed = hashStr('seedpinball-' + todayStr + '-s' + currentMap + '-' + (ham.height||0));
   buildBoard(); overEl.classList.remove('show'); refreshHUD();
+}
+
+/* ============ 体力（每天固定上限，随时间恢复）+ 矿场 ============ */
+function stamNow(){
+  if(!meta.stam) meta.stam = { v: STAM_MAX, ts: Date.now() };
+  const st = meta.stam;
+  if(st.v >= STAM_MAX){ st.ts = Date.now(); return st.v; }
+  const gain = Math.floor((Date.now() - st.ts) / STAM_REGEN_MS);
+  if(gain > 0){
+    st.v = Math.min(STAM_MAX, st.v + gain);
+    st.ts = st.v >= STAM_MAX ? Date.now() : st.ts + gain * STAM_REGEN_MS;
+    saveMeta();
+  }
+  return st.v;
+}
+function renderStam(){
+  const el = $('stamText'); if(!el) return;
+  const v = stamNow();
+  let txt = t('stamLab') + ' ' + v + ' / ' + STAM_MAX;
+  if(v < STAM_MAX){
+    const ms = Math.max(0, meta.stam.ts + STAM_REGEN_MS - Date.now());
+    const mm = Math.floor(ms / 60000), ss = Math.floor(ms % 60000 / 1000);
+    txt += ' · ' + t('stamNext') + ' ' + mm + ':' + String(ss).padStart(2, '0');
+  } else txt += ' · ' + t('stamFull');
+  if(el.textContent !== txt) el.textContent = txt;
+}
+function payRun(){
+  if(stamNow() < 1){ showBanner(t('bNoStam')); beep(180, 0.12, 'square', 0.04); return false; }
+  meta.stam.v -= 1; saveMeta(); renderStam();
+  return true;
+}
+function startRun(){
+  if(!payRun()) return;
+  restart(); renderMeta();
 }
 
 /* ============ 物理 ============ */
@@ -1583,11 +1663,11 @@ window.addEventListener('keydown', e => {
   if(e.code === 'ArrowLeft') aimX = Math.max(26, aimX-14);
   if(e.code === 'ArrowRight') aimX = Math.min(W-26, aimX+14);
   if(e.code === 'Space'){ e.preventDefault(); drop(); }
-  if(e.code === 'KeyR') restart();
+  if(e.code === 'KeyR') startRun();
 });
 dropBtn.addEventListener('click', drop);
-$('restartBtn').addEventListener('click', restart);
-$('againBtn').addEventListener('click', restart);
+$('restartBtn').addEventListener('click', startRun);
+$('againBtn').addEventListener('click', startRun);
 $('nextBtn').addEventListener('click', () => { if(currentMap < MAPS.length - 1) switchMap(currentMap + 1); });
 $('soundBtn').addEventListener('click', function(){ soundOn = !soundOn; this.textContent = soundOn ? t('soundOn') : t('soundOff'); });
 $('langBtn').addEventListener('click', () => { LANG = LANG === 'en' ? 'zh' : 'en'; try{ localStorage.setItem('hsb_lang', LANG); }catch(e){} applyLang(); });
