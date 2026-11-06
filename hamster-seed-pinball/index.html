@@ -1346,6 +1346,48 @@ function draw(){
     ctx.fillStyle = 'rgba(150,130,110,.5)';
     ctx.beginPath(); ctx.roundRect(384, 210, 30, 92, 6); ctx.fill();
     ctx.beginPath(); ctx.arc(399, 210, 15, Math.PI, 0); ctx.fill();
+  } else if(MAPS[currentMap].gen === 'grid'){
+    /* 木屑原野：太阳 + 木屑丘 + 小野花 */
+    ctx.fillStyle = 'rgba(247,183,49,.5)';
+    ctx.beginPath(); ctx.arc(368, 92, 20, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(247,183,49,.18)';
+    ctx.beginPath(); ctx.arc(368, 92, 32, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(176,122,63,.20)';
+    ctx.beginPath(); ctx.arc(30, 560, 95, Math.PI, 0); ctx.fill();
+    ctx.beginPath(); ctx.arc(396, 566, 105, Math.PI, 0); ctx.fill();
+    for(let i=0;i<6;i++){
+      const fx = 18 + (i%3)*16 + Math.floor(i/3)*368, fy = 250 + (i%3)*74;
+      ctx.fillStyle = 'rgba(255,255,255,.75)';
+      for(let p=0;p<5;p++){ const a = p*Math.PI*2/5; ctx.beginPath(); ctx.arc(fx+Math.cos(a)*4.4, fy+Math.sin(a)*4.4, 2.8, 0, Math.PI*2); ctx.fill(); }
+      ctx.fillStyle = '#f7b731'; ctx.beginPath(); ctx.arc(fx, fy, 2.4, 0, Math.PI*2); ctx.fill();
+    }
+  } else if(MAPS[currentMap].gen === 'cross'){
+    /* 十字谷仓：大谷仓剪影 + 栅栏 */
+    ctx.fillStyle = 'rgba(163,74,62,.30)';
+    ctx.fillRect(338, 452, 62, 88);
+    ctx.beginPath(); ctx.moveTo(330, 452); ctx.lineTo(369, 424); ctx.lineTo(408, 452); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(90,45,35,.35)'; ctx.fillRect(360, 492, 18, 48);
+    ctx.fillStyle = 'rgba(255,240,210,.5)'; ctx.fillRect(346, 466, 12, 12); ctx.fillRect(384, 466, 12, 12);
+    ctx.strokeStyle = 'rgba(122,77,22,.4)'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    for(let fx=14; fx<=86; fx+=18){
+      ctx.beginPath(); ctx.moveTo(fx, 492); ctx.lineTo(fx, 528); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(8, 502); ctx.lineTo(96, 502); ctx.moveTo(8, 518); ctx.lineTo(96, 518); ctx.stroke();
+  } else if(MAPS[currentMap].gen === 'zigzag'){
+    /* 之字麦田：暖阳 + 整片麦穗 */
+    ctx.fillStyle = 'rgba(247,183,49,.20)';
+    ctx.beginPath(); ctx.arc(210, 60, 130, 0, Math.PI); ctx.fill();
+    ctx.strokeStyle = 'rgba(190,140,40,.55)'; ctx.lineWidth = 2.4; ctx.lineCap = 'round';
+    for(let wx=14; wx<W-6; wx+=17){
+      const base = 544, sway = Math.sin(wx*1.7)*3;
+      ctx.beginPath(); ctx.moveTo(wx, base); ctx.quadraticCurveTo(wx+sway, base-24, wx+sway*1.6, base-40); ctx.stroke();
+      ctx.fillStyle = 'rgba(222,170,60,.8)';
+      for(let gLine=0; gLine<3; gLine++){
+        const gy = base - 26 - gLine*6, gx = wx + sway*1.2 + gLine*sway*0.2;
+        ctx.beginPath(); ctx.ellipse(gx-4, gy, 4.6, 2.2, -0.6, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(gx+4, gy, 4.6, 2.2, 0.6, 0, Math.PI*2); ctx.fill();
+      }
+    }
   }
   /* 顶部区块进度 */
   ctx.fillStyle = 'rgba(120,80,30,.25)'; ctx.fillRect(0,0,W,5);
