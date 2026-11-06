@@ -52,6 +52,13 @@
   .boardbox { position:relative; border-radius:18px; overflow:hidden; border:3px solid #a5712e;
               box-shadow:0 10px 28px rgba(0,0,0,.5); background:#f3dfba; }
   canvas { display:block; width:100%; height:auto; touch-action:none; }
+  @media (min-width:2000px) {
+    .wrap { width:min(96vw, 2240px); }
+    .centerCol { width:min(820px, 94vw); }
+    .side { max-width:580px; }
+    body { font-size:18px; }
+    .card .val { font-size:30px; }
+  }
   @media (min-width:1500px) {
     body { font-size:17px; }
     header h1 { font-size:32px; }
