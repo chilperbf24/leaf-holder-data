@@ -9,24 +9,24 @@
   body { font-size:15.5px; font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; background:#2b1c10;
          color:#3a2410; display:flex; flex-direction:column; align-items:center; min-height:100vh;
          background-image:radial-gradient(ellipse at 50% -10%, #4a3018 0%, #2b1c10 60%); }
-  .wrap { width:min(97vw, 1140px); padding:10px 0 22px; }
+  .wrap { width:min(98vw, 1680px); padding:10px 0 22px; }
   .topbar { display:flex; gap:14px; align-items:flex-start; justify-content:space-between; }
   .topbar header { flex:1; min-width:0; padding-top:6px; }
-  #walletPanel { width:324px; flex:none; margin-top:0; }
+  #walletPanel { width:clamp(300px, 24vw, 400px); flex:none; margin-top:0; }
   @media (max-width:720px) {
     .topbar { flex-direction:column; }
     #walletPanel { width:100%; }
   }
   .layout { display:flex; gap:14px; align-items:flex-start; justify-content:center; }
-  .centerCol { width:min(460px, 100%); flex:none; }
-  .side { flex:1; min-width:230px; max-width:330px; }
+  .centerCol { width:min(680px, 94vw); flex:none; }
+  .side { flex:1; min-width:230px; max-width:470px; }
   .side .uppanel { margin-top:0; }
   @media (max-width:1080px) {
     .layout { flex-direction:column; align-items:center; }
     .centerCol { order:1; }
     .sideL { order:2; }
     .sideR { order:3; }
-    .side { max-width:460px; width:100%; }
+    .side { max-width:680px; width:100%; }
   }
   header { text-align:center; color:#ffe9c4; padding:6px 0 8px; }
   header h1 { font-size:27px; letter-spacing:2px; }
@@ -52,6 +52,13 @@
   .boardbox { position:relative; border-radius:18px; overflow:hidden; border:3px solid #a5712e;
               box-shadow:0 10px 28px rgba(0,0,0,.5); background:#f3dfba; }
   canvas { display:block; width:100%; height:auto; touch-action:none; }
+  @media (min-width:1500px) {
+    body { font-size:17px; }
+    header h1 { font-size:32px; }
+    .card .val { font-size:28px; }
+    .stagecur { font-size:20px; }
+    .uppanel h3 { font-size:19px; }
+  }
   @media (max-width:520px) {
     .wrap { padding:6px 0 16px; }
     header h1 { font-size:23px; }
@@ -209,7 +216,7 @@
   </div>
 
   <div class="boardbox">
-    <canvas id="cv" width="420" height="640"></canvas>
+    <canvas id="cv" width="840" height="1280"></canvas>
     <div class="banner" id="banner"></div>
     <div class="over" id="over">
       <h2 id="overTitle">🎉 囤粮成功！</h2>
@@ -273,6 +280,7 @@
 /* ============ 基础 ============ */
 const W = 420, H = 640;
 const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+ctx.scale(2, 2); /* 画布 2 倍像素渲染，放大显示不糊 */
 const DPR = Math.min(window.devicePixelRatio || 1, 2);
 cv.width = W * DPR; cv.height = H * DPR; ctx.scale(DPR, DPR);
 
