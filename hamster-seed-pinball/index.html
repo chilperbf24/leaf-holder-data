@@ -381,7 +381,7 @@ zh: {
   walletOff:'没连钱包也能玩，但成绩只记为“游客”。连接后：存档和排行榜绑定你的地址，还能链上打卡拿 The Tester 徽章进度。你的 SQK 与 Squeeks 显示在左边的资产面板。',
   connect:'连接钱包', addr:'地址：', signed:' <span style="color:#3f9e2c">✓ 已签名验证</span>', disconnect:'断开钱包',
   assetHint:'连接右上角的钱包后，这里显示你持有的 SQK 余额、Squeeks 数量、算力和待领 SQK。',
-  sqkBal:'SQK 余额：', mySqueeks:'我的 Squeeks：', squeeksUnit:' 只', power:'算力 ', claimable:'待领 SQK：', loading:'读取中…',
+  zhiBal:'吱吱币：', sqkBal:'SQK 余额：', mySqueeks:'我的 Squeeks：', squeeksUnit:' 只', power:'算力 ', claimable:'待领 SQK：', loading:'读取中…',
   pingOff:'向 Squeekchain 的 SQK 合约发一笔交易，正好对应 Genesis 的 <b>The Tester</b> 徽章条件。先连上右上角的钱包，这里就能打卡了。',
   pingFirst:'先连接钱包', pingDone:' 已打卡', pingTx:'交易：', pingNote:'approve(自己, 0)，没转任何币。',
   pingIntro:'给 SQK 合约发一笔 <b>approve(自己, 0)</b>：不转币、不授权额度，只付一点 Sepolia 测试 gas，就是 The Tester 要的那笔链上交易。',
@@ -445,7 +445,7 @@ en: {
   walletOff:'You can play without a wallet, but scores are recorded as “Guest”. Connect to bind saves and the leaderboard to your address and to check in on-chain for The Tester progress. Your SQK and Squeeks show in the asset panel on the left.',
   connect:'Connect Wallet', addr:'Address: ', signed:' <span style="color:#3f9e2c">✓ Signature verified</span>', disconnect:'Disconnect',
   assetHint:'Connect the wallet at the top right and your SQK balance, Squeeks, power and claimable SQK will show here.',
-  sqkBal:'SQK Balance: ', mySqueeks:'My Squeeks: ', squeeksUnit:'', power:'Power ', claimable:'Claimable SQK: ', loading:'Loading…',
+  zhiBal:'Squeak Coins: ', sqkBal:'SQK Balance: ', mySqueeks:'My Squeeks: ', squeeksUnit:'', power:'Power ', claimable:'Claimable SQK: ', loading:'Loading…',
   pingOff:'Send one transaction to Squeekchain\'s SQK contract — exactly the Genesis <b>The Tester</b> badge condition. Connect the wallet at the top right first.',
   pingFirst:'Connect wallet first', pingDone:' checked in', pingTx:'Tx: ', pingNote:'approve(self, 0) — no tokens moved.',
   pingIntro:'Send an <b>approve(self, 0)</b> to the SQK contract: moves no tokens, grants no allowance, just a little Sepolia test gas — that is the on-chain transaction The Tester asks for.',
@@ -611,7 +611,7 @@ function loadMeta(){
 }
 loadMeta();
 let curLevel = 1;
-function saveMeta(){ try{ localStorage.setItem(metaKey(), JSON.stringify(meta)); }catch(e){} }
+function saveMeta(){ try{ localStorage.setItem(metaKey(), JSON.stringify(meta)); }catch(e){} try{ renderAssets(); }catch(e){} }
 const STAM_MAX = 10, STAM_REGEN_MS = 30 * 60 * 1000, RIG_COSTS = [100, 250, 500, 1000, 2000];
 function levelFromExp(exp){
   let lv = 1;
@@ -625,7 +625,6 @@ function renderMeta(){
   curLevel = levelFromExp(meta.exp);
   $('metaText').textContent = 'Lv.' + curLevel + ' ' + (LANG === 'en' ? LEVELS[curLevel-1].titleEn : LEVELS[curLevel-1].title) + ' · ' + t('exp') + ' ' + meta.exp;
   $('nutsVal').textContent = meta.nuts;
-  $('metaText').textContent += ' · 🪙 ' + t('mineWord') + ' ' + (meta.mine || 0);
   const cur = LEVELS[curLevel-1].exp, nxt = (LEVELS[curLevel] ? LEVELS[curLevel].exp : cur);
   $('expFill').style.width = (curLevel >= LEVELS.length ? 100 : Math.min(100, (meta.exp-cur)/(nxt-cur)*100)) + '%';
   $('upRows').innerHTML = UPGRADES.map(u => {
@@ -638,7 +637,7 @@ function renderMeta(){
   const rig = meta.rig || 0, rigMaxed = rig >= RIG_COSTS.length;
   const rigPips = '●'.repeat(rig) + '○'.repeat(RIG_COSTS.length - rig);
   const rigBtn = rigMaxed ? '<button class="maxed" disabled>' + t('maxed') + '</button>'
-    : '<button data-eco="rig">' + t('rigBtn') + ' ' + RIG_COSTS[rig] + ' ⛏</button>';
+    : '<button data-eco="rig">' + t('rigBtn') + ' ' + RIG_COSTS[rig] + ' 🪙</button>';
   const stamFullNow = stamNow() >= STAM_MAX;
   const stamBtn = stamFullNow ? '<button class="maxed" disabled>' + t('stamFull') + '</button>'
     : '<button data-eco="stam">' + t('stamBuyBtn') + '</button>';
@@ -673,7 +672,7 @@ $('ecoRows').addEventListener('click', e => {
   if(k === 'rig'){
     const rig = meta.rig || 0;
     if(rig >= RIG_COSTS.length) return;
-    if((meta.mine || 0) < RIG_COSTS[rig]){ showBanner('⛏ ' + t('mineWord') + ' ' + (LANG === 'en' ? 'not enough — play more runs to earn it' : '不够，多打几局攒吱吱币')); return; }
+    if((meta.mine || 0) < RIG_COSTS[rig]){ showBanner('🪙 ' + t('mineWord') + ' ' + (LANG === 'en' ? 'not enough — play more runs to earn it' : '不够，多打几局攒吱吱币')); return; }
     meta.mine -= RIG_COSTS[rig]; meta.rig = rig + 1;
     saveMeta(); renderMeta(); showBanner(t('bRigUp')(meta.rig)); squeak();
   } else if(k === 'chest'){
@@ -877,11 +876,13 @@ function renderAssets(){
   const box = $('assetBody');
   if(!box) return;
   if(!wallet.address){
-    box.innerHTML = '<div style="font-size:14.5px;line-height:1.7;color:#7a5a28">' + t('assetHint') + '</div>';
+    box.innerHTML = '<div style="font-size:14.5px;line-height:1.7;color:#7a5a28">' + t('assetHint') + '</div>' +
+      '<div style="font-size:15px;line-height:1.9">' + t('zhiBal') + '<b>' + (meta.mine || 0) + ' 🪙</b></div>';
     return;
   }
   box.innerHTML =
     '<div style="font-size:15px;line-height:1.9">' +
+    t('zhiBal') + '<b>' + (meta.mine || 0) + ' 🪙</b><br>' +
     t('sqkBal') + '<b>' + (wallet.sqk === null ? t('loading') : wallet.sqk) + '</b><br>' +
     t('mySqueeks') + '<b>' + (wallet.squeeks === null ? t('loading') : wallet.squeeks + t('squeeksUnit')) + '</b> · ' + t('power') + '<b>' + (wallet.power === null ? '…' : wallet.power) + '</b><br>' +
     t('claimable') + '<b>' + (wallet.claimable === null ? '…' : wallet.claimable) + '</b></div>';
