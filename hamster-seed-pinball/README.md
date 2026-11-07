@@ -78,3 +78,5 @@ Community game built for the Squeekchain Genesis Code program. Not affiliated
 with or endorsed by the Squeekchain team. No betting, no token sales; in-game
 currencies cannot be exchanged for anything. Sepolia testnet only — test
 assets have no value.
+
+squeekchain-project: 7bb77c9d-4529-4193-98e7-fbbb0ec7508d
