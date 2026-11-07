@@ -1176,9 +1176,9 @@ function finishGame(){
   const wasFrontier = win && currentMap === (meta.cleared || 0);
   const rewarded = wasFrontier && !PREVIEW;
   const stageNo = currentMap + 1;
-  const nutsEarned = rewarded ? 80 + stageNo * 10 : 0;
+  const nutsEarned = rewarded ? 40 + stageNo * 3 : 0;
   if(win && !PREVIEW) meta.cleared = Math.max(meta.cleared || 0, currentMap + 1);
-  const mineGain = rewarded ? Math.round((40 + stageNo * 5) * (1 + 0.1 * (meta.rig || 0))) : 0;
+  const mineGain = rewarded ? Math.round((25 + stageNo * 2) * (1 + 0.1 * (meta.rig || 0))) : 0;
   meta.mine = (meta.mine || 0) + mineGain;
   meta.nuts += nutsEarned; meta.exp += expGain; saveMeta(); renderMeta(); renderMapBar();
   const newLv = levelFromExp(meta.exp);
