@@ -420,7 +420,7 @@ zh: {
   fScore:s => '本局得分 <b>' + s + '</b> 分', fCheeks:'<br>Squeektoshi 的颊囊都塞满了 🐹',
   fShort:(d, tg) => '<br>差 ' + d + ' 分就到 ' + tg + '，再来一局试试手气',
   fUnlock:n => '<br>🔓 第 ' + n + ' 关解锁了！', fRank:r => '<br>🏆 本机排行榜第 <b>' + r + '</b> 名',
-  fSettle:(a, b) => '<br>结算：🌰 金瓜子 +' + a + ' · 经验 +' + b,
+  fSettle:(a, b) => '<br>结算：🌰 金瓜子 +' + a + ' · 经验 +' + b, fExpOnly:(b) => '<br>结算：经验 +' + b, fRepeat:'<br>本关之前已过关 — 重复过关不发金瓜子 / 吱吱币', fNoReward:'<br>未过关 — 本局不发金瓜子 / 吱吱币',
   fLevelUp:(lv, title) => '<br>⬆️ 升级！Lv.' + lv + ' ' + title + '，新装扮解锁了，去盘面看看仓鼠头',
   cBeetle:'捣蛋甲虫', cPouch:'颊囊', cWheelRun:'真仓鼠同款跑轮 · 转速同步中', cWheelSleep:'真仓鼠同款跑轮 · 它睡了，轮子慢转',
   eNoWallet:'没检测到钱包插件 — 请用装了 MetaMask（或支持 EVM 钱包）的浏览器打开；手机可用钱包自带浏览器。'
@@ -484,7 +484,7 @@ en: {
   fScore:s => 'You scored <b>' + s + '</b> pts', fCheeks:'<br>Squeektoshi\'s cheeks are stuffed 🐹',
   fShort:(d, tg) => '<br>' + d + ' pts short of ' + tg + ' — one more run!',
   fUnlock:n => '<br>🔓 Stage ' + n + ' unlocked!', fRank:r => '<br>🏆 Local leaderboard rank <b>#' + r + '</b>',
-  fSettle:(a, b) => '<br>Rewards: 🌰 Golden Seeds +' + a + ' · XP +' + b,
+  fSettle:(a, b) => '<br>Rewards: 🌰 Golden Seeds +' + a + ' · XP +' + b, fExpOnly:(b) => '<br>Rewards: XP +' + b, fRepeat:'<br>Already cleared before — repeat clears pay no Golden Seeds / Squeak Coins', fNoReward:'<br>No clear — this run pays no Golden Seeds / Squeak Coins',
   fLevelUp:(lv, title) => '<br>⬆️ Level up! Lv.' + lv + ' ' + title + ' — new look unlocked, check the dropper hamster',
   cBeetle:'TROUBLE BEETLE', cPouch:'POUCH', cWheelRun:'The real hamster wheel · RPM in sync', cWheelSleep:'The real hamster wheel · asleep, slow spin',
   eNoWallet:'No wallet extension detected — open this page in a browser with MetaMask (or another EVM wallet); on mobile, use your wallet\'s built-in browser.'
@@ -1172,11 +1172,13 @@ function finishGame(){
   gameOver = true; runBell = false;
   const win = score >= targetScore();
   const oldLv = levelFromExp(meta.exp);
-  const nutsEarned = Math.floor(score/4) + (win ? 25 : 0);
   const expGain = Math.round(score/2);
   const wasFrontier = win && currentMap === (meta.cleared || 0);
+  const rewarded = wasFrontier && !PREVIEW;
+  const stageNo = currentMap + 1;
+  const nutsEarned = rewarded ? 80 + stageNo * 10 : 0;
   if(win && !PREVIEW) meta.cleared = Math.max(meta.cleared || 0, currentMap + 1);
-  const mineGain = Math.round((Math.max(1, Math.round(score/10)) + (win ? 20 : 0)) * (1 + 0.1 * (meta.rig || 0)));
+  const mineGain = rewarded ? Math.round((40 + stageNo * 5) * (1 + 0.1 * (meta.rig || 0))) : 0;
   meta.mine = (meta.mine || 0) + mineGain;
   meta.nuts += nutsEarned; meta.exp += expGain; saveMeta(); renderMeta(); renderMapBar();
   const newLv = levelFromExp(meta.exp);
@@ -1185,7 +1187,8 @@ function finishGame(){
   $('overText').innerHTML = t('fScore')(score) + (win ? t('fCheeks') : t('fShort')(targetScore()-score, targetScore()))
     + (wasFrontier && currentMap < MAPS.length - 1 ? t('fUnlock')(currentMap+2) : '')
     + (rank > 0 ? t('fRank')(rank) : '')
-    + t('fSettle')(nutsEarned, expGain) + t('fMine')(mineGain, meta.mine)
+    + (rewarded ? t('fSettle')(nutsEarned, expGain) + t('fMine')(mineGain, meta.mine)
+      : t('fExpOnly')(expGain) + (win ? t('fRepeat') : t('fNoReward')))
     + (newLv > oldLv ? t('fLevelUp')(newLv, LANG === 'en' ? LEVELS[newLv-1].titleEn : LEVELS[newLv-1].title) : '');
   $('overText').innerHTML = $('overText').innerHTML.replaceAll('🪙', COIN_SVG);
   $('nextBtn').style.display = (win && currentMap < MAPS.length - 1) ? '' : 'none';
