@@ -38,19 +38,19 @@
     <b>仓鼠特征</b>：盘面正中的大转轮是仓鼠跑轮，里面的小仓鼠会跟着真仓鼠一起跑/睡；两侧粉色的是<b>颊囊口袋</b>，种子掉进去会被仓鼠塞进颊囊再吐出来重投，不消耗；金种子分值 ×2；连续落进同一个格，连击让下一颗 ×1.5；撞满 20 次钉子点亮丰收灯，下一颗 ×2。<br>
     <b>真仓鼠联动</b>：转速、跑/睡状态、距离、区块进度都来自 Squeekchain 公开 API 的真仓鼠 Squeektoshi。它跑起来时跑轮飞转、窝心格 100→200；它睡觉时是夜场，种子下落更慢更好瞄，落格 +10%。玩的时候赶上链上新一轮结算，白送一颗金种子。<br>
     <b>钱包</b>：右上角可连接 EVM 钱包（仅 Sepolia 测试网）：连接后存档与排行榜绑定钱包地址，并显示你的 SQK 余额、Squeeks 数量、算力和待领 SQK；“链上打卡”向 SQK 合约发一笔 approve(自己, 0)（不转币），对应 Genesis 的 The Tester 条件。不连钱包也能玩，成绩记为游客。<br>
-    <h4>💰 经济系统：金瓜子 · 矿力 · 体力</h4>
+    <h4>💰 经济系统：金瓜子 · 吱吱币 · 体力</h4>
     <b>金瓜子 🌰</b>（升级货币）：来源 — 每局结算（得分每 4 分换 1 个，过关再奖 25 个）、每日签到（15 起）；去处 — 小屋四系升级、20 🌰 补 3 点体力。新号开局送 50。<br>
-    <b>矿力 ⛏</b>（玩游戏挖出来的）：每局按得分产出（得分每 10 分换 1 点，过关再奖 20 点，矿场等级再加成）；去处一共 6 条 — 升<b>矿场</b>（5 级，每级 +10% 产出）· 开<b>补给箱</b>（100 矿力，随机出 🌰/体力/铃铛/大奖）· 买<b>幸运铃铛</b>（80，下一局金种子更密）· <b>换体力</b>（30 → +2）· <b>换金瓜子</b>（50 → 10）· 买<b>矿工头灯</b>（600，永久装扮）。矿力按地址记账，是将来主网奖励按比例分配的依据。<br>
-    <b>体力 ⚡</b>：上限 10 点，开一局耗 1 点；每 30 分钟自动回 1 点（满格 5 小时）；每日签到 +3，也能用金瓜子或矿力补。没体力就开不了新局 — 歇一会儿，或者去签到。<br>
+    <b>吱吱币 🪙</b>（玩游戏挖出来的）：每局按得分产出（得分每 10 分换 1 点，过关再奖 20 点，矿场等级再加成）；去处一共 6 条 — 升<b>矿场</b>（5 级，每级 +10% 产出）· 开<b>补给箱</b>（100 吱吱币，随机出 🌰/体力/铃铛/大奖）· 买<b>幸运铃铛</b>（80，下一局金种子更密）· <b>换体力</b>（30 → +2）· <b>换金瓜子</b>（50 → 10）· 买<b>矿工头灯</b>（600，永久装扮）。吱吱币按地址记账，是将来主网奖励按比例分配的依据。<br>
+    <b>体力 ⚡</b>：上限 10 点，开一局耗 1 点；每 30 分钟自动回 1 点（满格 5 小时）；每日签到 +3，也能用金瓜子或吱吱币补。没体力就开不了新局 — 歇一会儿，或者去签到。<br>
     <b>每日签到 📅</b>：连钱包后每天点一次，发一笔链上交易（approve 自己 0，不转币，只花一点 Sepolia 测试 gas），奖励金瓜子 15 起、连续签到每天 +3（封顶 39）再 +3 体力，断签连续天数清零。第一次签到同时满足 Genesis 的 <b>The Tester</b> 徽章条件。<br>
     <h4>🎚️ 难度一览（随关数提升）</h4>
     目标分：第 1 关 300 · 第 10 关 480 · 第 20 关 680 · 第 30 关 830 · 第 40 关 980 · 第 50 关 <b>1130</b>。甲虫速度 ×0.95 → ×2.80；散钉越来越多（最多 +26）；胡萝卜风车 2 个起，第 9/15/25/35/45 关各 +1，第 50 关共 7 个。网址加 <b>?preview</b> 可以预览全部 50 关（预览通关不计入正式进度）。<br>
     <h4>🐹 关于 Squeekchain 与这个游戏</h4>
-    Squeekchain 是以太坊上的“仓鼠动力”玩具链：真仓鼠 Squeektoshi 在跑轮 WHEELY9000 上跑出的工作量结算上链，完成一个区块发行 6,900 SQK（总量封顶 21 亿，10% 预挖做协议自有流动性），由 9,999 张 Squeeks NFT 按算力比例分享。本游戏是提交到 <b>Genesis Code</b> 的社区小游戏：把真仓鼠的转速、跑/睡、轮次结算实时做进玩法里。游戏内的金瓜子和矿力都是游戏内记账，不是链上代币、不承诺兑换；本项目不碰白名单与 NFT 发售。<br>
+    Squeekchain 是以太坊上的“仓鼠动力”玩具链：真仓鼠 Squeektoshi 在跑轮 WHEELY9000 上跑出的工作量结算上链，完成一个区块发行 6,900 SQK（总量封顶 21 亿，10% 预挖做协议自有流动性）。本游戏是提交到 <b>Genesis Code</b> 的社区小游戏：把真仓鼠的转速、跑/睡、轮次结算实时做进玩法里。游戏内的金瓜子和吱吱币都是游戏内记账，不是链上代币、不承诺兑换；你积累的吱吱币，就是将来按比例分奖励的账本。<br>
     <h4>❓ 常见问题</h4>
     <b>不连钱包能玩吗？</b>能，成绩记为“游客”，存档在本机浏览器里。<br>
     <b>换设备/清缓存了存档还在吗？</b>存档只存本机（按游客/钱包地址分开），清掉就没了，暂时没有云端同步。<br>
-    <b>体力用完了怎么办？</b>等恢复（30 分钟 +1）、每日签到 +3，或在小屋用 20 🌰 / 30 矿力补。<br>
+    <b>体力用完了怎么办？</b>等恢复（30 分钟 +1）、每日签到 +3，或在小屋用 20 🌰 / 30 吱吱币补。<br>
     <b>签到为什么要发链上交易？</b>那笔 approve(自己, 0) 不转币、不给额度，纯粹是 Genesis 的 The Tester 要的链上动作证明；需要钱包里有一点 Sepolia 测试 ETH 付 gas。<br>
     <span class="disc">社区小游戏原型 · 数据：api.squeekchain.com · 不下注、分数不兑换任何东西 · 不承诺徽章或白名单。</span>
     </div>
@@ -62,19 +62,19 @@
     <b>Hamster features</b>: The big wheel in the middle is a real running wheel — the little hamster inside runs and sleeps with the real one. The pink pockets on the sides are <b>cheek pouches</b>: a seed landing there is stuffed into the cheeks and spat back for a free re-drop. Golden seeds score ×2; landing in the same bin twice in a row makes the next seed ×1.5; 20 peg hits light the harvest light, next seed ×2.<br>
     <b>Live link</b>: Wheel speed, run/sleep state, distance and block progress all come from Squeekchain's public API and the real hamster Squeektoshi. When it runs, the wheel spins fast and the house bin pays 100→200; when it sleeps it's night mode — seeds fall slower and bins pay +10%. A new on-chain settlement round while you play grants a bonus golden seed.<br>
     <b>Wallet</b>: Connect an EVM wallet (Sepolia testnet only) at the top right: your saves and leaderboard bind to your address, the asset panel (left) shows your SQK balance, Squeeks, power and claimable SQK, and the on-chain check-in sends an approve(self, 0) to the SQK contract (moves no tokens) — the Genesis <b>The Tester</b> condition. Guests can play without a wallet.<br>
-    <h4>💰 Economy: Golden Seeds · Mining Power · Energy</h4>
+    <h4>💰 Economy: Golden Seeds · Squeak Coins · Energy</h4>
     <b>Golden Seeds 🌰</b> (upgrade currency): Earned from run settlement (1 per 4 points of score, +25 more on a clear) and the daily check-in (from 15); spent on the four House upgrades and on energy refills (20 🌰 → +3). New accounts start with 50.<br>
-    <b>Mining Power ⛏</b> (what playing mines): Each run pays 1 per 10 points of score, +20 more on a clear, boosted by your Rig level. Six ways to spend it — <b>Mining Rig</b> upgrades (5 levels, +10% gain each) · <b>Supply Chest</b> (100, random 🌰/energy/bell/jackpot) · <b>Lucky Bell</b> (80, denser golden seeds next run) · <b>swap to energy</b> (30 → +2) · <b>swap to Golden Seeds</b> (50 → 10) · <b>Miner Lamp</b> (600, permanent cosmetic). Mining Power is kept as a per-address ledger — the basis for proportional mainnet rewards later.<br>
-    <b>Energy ⚡</b>: 10 max, 1 per run; regenerates +1 every 30 minutes (full in 5 hours); daily check-in grants +3, and you can refill with Golden Seeds or Mining Power. No energy, no new run — rest, or check in.<br>
+    <b>Squeak Coins 🪙</b> (what playing mines): Each run pays 1 per 10 points of score, +20 more on a clear, boosted by your Rig level. Six ways to spend it — <b>Mining Rig</b> upgrades (5 levels, +10% gain each) · <b>Supply Chest</b> (100, random 🌰/energy/bell/jackpot) · <b>Lucky Bell</b> (80, denser golden seeds next run) · <b>swap to energy</b> (30 → +2) · <b>swap to Golden Seeds</b> (50 → 10) · <b>Miner Lamp</b> (600, permanent cosmetic). Squeak Coins is kept as a per-address ledger — the basis for proportional mainnet rewards later.<br>
+    <b>Energy ⚡</b>: 10 max, 1 per run; regenerates +1 every 30 minutes (full in 5 hours); daily check-in grants +3, and you can refill with Golden Seeds or Squeak Coins. No energy, no new run — rest, or check in.<br>
     <b>Daily check-in 📅</b>: With a wallet connected, one tap a day sends an on-chain tx (approve self, 0 — moves no tokens, just a little Sepolia test gas). Reward: 15 Golden Seeds +3 per streak day (cap 39) and +3 energy; missing a day resets the streak. Your first check-in also satisfies the Genesis <b>The Tester</b> badge condition.<br>
     <h4>🎚️ Difficulty at a glance (scales with stage)</h4>
     Targets: Stage 1 = 300 · 10 = 480 · 20 = 680 · 30 = 830 · 40 = 980 · Stage 50 = <b>1130</b>. Beetle speed ×0.95 → ×2.80; scatter pegs grow (up to +26); carrot spinners start at 2 and gain +1 at stages 9/15/25/35/45 — 7 on stage 50. Add <b>?preview</b> to the URL to preview all 50 stages (preview clears don't count).<br>
     <h4>🐹 About Squeekchain and this game</h4>
-    Squeekchain is a hamster-powered toychain on Ethereum: the real hamster Squeektoshi runs the WHEELY9000 wheel, his settled work completes blocks that issue 6,900 SQK each (2.1B lifetime cap; 10% premine funds protocol-owned liquidity), shared by 9,999 Squeeks NFTs pro-rata by power. This game is a community submission to <b>Genesis Code</b>: it wires the hamster's live RPM, run/sleep state and settlement rounds directly into the gameplay. Golden Seeds and Mining Power are in-game ledger points, not on-chain tokens, and nothing here promises redemption; this project does not run whitelist or NFT sales.<br>
+    Squeekchain is a hamster-powered toychain on Ethereum: the real hamster Squeektoshi runs the WHEELY9000 wheel, his settled work completes blocks that issue 6,900 SQK each (2.1B lifetime cap; 10% premine funds protocol-owned liquidity). This game is a community submission to <b>Genesis Code</b>: it wires the hamster's live RPM, run/sleep state and settlement rounds directly into the gameplay. Golden Seeds and Squeak Coins are in-game ledger points, not on-chain tokens, and nothing here promises redemption; the Squeak Coins you accumulate is the ledger proportional rewards would follow.<br>
     <h4>❓ FAQ</h4>
     <b>Can I play without a wallet?</b> Yes — scores are recorded as Guest and saved in this browser.<br>
     <b>New device or cleared cache?</b> Saves live only on this device (separate per guest/wallet), so clearing them deletes progress; no cloud sync yet.<br>
-    <b>Out of energy?</b> Wait for regen (+1 per 30 min), check in daily (+3), or refill in the House with 20 🌰 / 30 ⛏.<br>
+    <b>Out of energy?</b> Wait for regen (+1 per 30 min), check in daily (+3), or refill in the House with 20 🌰 / 30 🪙.<br>
     <b>Why does check-in send an on-chain tx?</b> The approve(self, 0) moves no tokens and grants no allowance — it is simply the on-chain action proof Genesis asks for The Tester. You need a little Sepolia test ETH for gas.<br>
     <span class="disc">Community mini-game prototype · Data: api.squeekchain.com · No betting, scores redeem for nothing, no badge or whitelist is promised.</span>
     </div>
@@ -85,7 +85,7 @@
 </div>
 <script>
   var lang = 'zh';
-  try { lang = localStorage.getItem('hsb_lang') === 'en' ? 'en' : 'zh'; } catch(e) {}
+  try { lang = localStorage.getItem('hsb_lang') !== 'zh' ? 'en' : 'zh'; } catch(e) {}
   function apply(){
     document.getElementById('gZh').style.display = lang === 'en' ? 'none' : '';
     document.getElementById('gEn').style.display = lang === 'en' ? '' : 'none';
