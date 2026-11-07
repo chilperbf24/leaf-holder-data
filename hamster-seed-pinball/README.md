@@ -10,8 +10,8 @@ wheel spins at the **live RPM of Squeektoshi**, the real hamster behind
 
 ## Play / 试玩
 
-- **Live:** https://fromwo.github.io/hamster-seed-pinball/
-- **Guide / 玩法介绍：** https://fromwo.github.io/hamster-seed-pinball/guide.html
+- **Live:** https://fromwo.github.io/hamster-pinball/
+- **Guide / 玩法介绍：** https://fromwo.github.io/hamster-pinball/guide.html
 - Or open `index.html` in any browser — single file, no build step, no dependencies.
 
 ## How it uses Squeekchain / 如何接入 Squeekchain
