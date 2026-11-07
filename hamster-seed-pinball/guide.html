@@ -49,6 +49,8 @@
     目标分：第 1 关 300 · 第 10 关 480 · 第 20 关 680 · 第 30 关 830 · 第 40 关 980 · 第 50 关 <b>1130</b>。甲虫速度 ×0.95 → ×2.80；散钉越来越多（最多 +26）；胡萝卜风车 2 个起，第 9/15/25/35/45 关各 +1，第 50 关共 7 个。网址加 <b>?preview</b> 可以预览全部 50 关（预览通关不计入正式进度）。<br>
     <h4>🐹 关于 Squeekchain 与这个游戏</h4>
     Squeekchain 是以太坊上的“仓鼠动力”玩具链：真仓鼠 Squeektoshi 在跑轮 WHEELY9000 上跑出的工作量结算上链，完成一个区块发行 6,900 SQK（总量封顶 21 亿，10% 预挖做协议自有流动性）。本游戏是提交到 <b>Genesis Code</b> 的社区小游戏：把真仓鼠的转速、跑/睡、轮次结算实时做进玩法里。游戏内的金瓜子和吱吱币都是游戏内记账，不是链上代币、不承诺兑换；你积累的吱吱币，就是将来按比例分奖励的账本。<br>
+    <h4>⛏ 挖矿模型：算力怎么算、币怎么分</h4>
+    不是每天固定分，是<b>每出一个块固定发 6,900 SQK</b>。块由仓鼠的真实跑量决定：跑满一个块需要的工作量，链就结算一个块——跑得多出块多、睡着了就慢，所以每天出多少块是浮动的（测试网目前约 290 块/天）。每个块的 6,900 按<b>算力占比</b>分：你分得 = 6,900 × 你的算力 ÷ 全网总算力。<b>算力 = NFT 算力 + SQK 算力</b>：Squeeks 要存进挖矿合约才有算力（放钱包里是 0），等级决定算力上限，两只同级合成可升级（烧掉一只）；再质押 SQK 把算力往上限顶。挖矿要等 9,999 只 Squeeks 全部铸完才正式激活，之前的量不补发。本游戏资产面板里显示的“算力”，读的就是这套链上数值。<br>
     <h4>❓ 常见问题</h4>
     <b>不连钱包能玩吗？</b>能，成绩记为“游客”，存档在本机浏览器里。<br>
     <b>换设备/清缓存了存档还在吗？</b>存档只存本机（按游客/钱包地址分开），清掉就没了，暂时没有云端同步。<br>
@@ -73,6 +75,8 @@
     Targets: Stage 1 = 300 · 10 = 480 · 20 = 680 · 30 = 830 · 40 = 980 · Stage 50 = <b>1130</b>. Beetle speed ×0.95 → ×2.80; scatter pegs grow (up to +26); carrot spinners start at 2 and gain +1 at stages 9/15/25/35/45 — 7 on stage 50. Add <b>?preview</b> to the URL to preview all 50 stages (preview clears don't count).<br>
     <h4>🐹 About Squeekchain and this game</h4>
     Squeekchain is a hamster-powered toychain on Ethereum: the real hamster Squeektoshi runs the WHEELY9000 wheel, his settled work completes blocks that issue 6,900 SQK each (2.1B lifetime cap; 10% premine funds protocol-owned liquidity). This game is a community submission to <b>Genesis Code</b>: it wires the hamster's live RPM, run/sleep state and settlement rounds directly into the gameplay. Golden Seeds and Squeak Coins are in-game ledger points, not on-chain tokens, and nothing here promises redemption; the Squeak Coins you accumulate is the ledger proportional rewards would follow.<br>
+    <h4>⛏ The mining model: how Power works, how SQK is split</h4>
+    It is not a fixed daily amount — <b>every completed block issues a fixed 6,900 SQK</b>. Blocks complete on the hamster's real work: once he has run one block's worth, the chain settles a block — the more he runs, the more blocks; asleep, it slows down. Blocks per day float (testnet is doing roughly 290/day right now). Each block's 6,900 is split <b>pro-rata by Power</b>: your share = 6,900 × your Power ÷ total Power. <b>Power = NFT Power + SQK Power</b>: Squeeks must be deposited into the mining contract to count (idle in a wallet = 0); level sets the power cap, merging two of the same level levels up and burns one; staking SQK pushes power up toward the cap. Mining activates only once all 9,999 Squeeks are minted, with no backpay. The Power shown in this game's asset panel is exactly this on-chain number.<br>
     <h4>❓ FAQ</h4>
     <b>Can I play without a wallet?</b> Yes — scores are recorded as Guest and saved in this browser.<br>
     <b>New device or cleared cache?</b> Saves live only on this device (separate per guest/wallet), so clearing them deletes progress; no cloud sync yet.<br>
