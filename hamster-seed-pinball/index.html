@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>仓鼠弹珠 · Hamster Pinball</title>
+<link rel="icon" type="image/svg+xml" href="zhi.svg">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   body { font-size:15.5px; font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; background:#2b1c10;
@@ -303,6 +304,7 @@ fitCanvas();
 window.addEventListener('resize', fitCanvas);
 
 const $ = id => document.getElementById(id);
+const COIN_SVG = '<svg viewBox="0 0 48 48" width="1.15em" height="1.15em" style="vertical-align:-0.18em" aria-label="吱吱币"><circle cx="24" cy="24" r="20.5" fill="#f7b731" stroke="#b97a1a" stroke-width="3"/><circle cx="24" cy="24" r="15.8" fill="#ffd964"/><circle cx="15.5" cy="14.5" r="4.6" fill="#eda93f" stroke="#b97a1a" stroke-width="1.4"/><circle cx="32.5" cy="14.5" r="4.6" fill="#eda93f" stroke="#b97a1a" stroke-width="1.4"/><circle cx="15.5" cy="14.5" r="2.1" fill="#f6c9c0"/><circle cx="32.5" cy="14.5" r="2.1" fill="#f6c9c0"/><ellipse cx="24" cy="26.5" rx="10.6" ry="9.2" fill="#f6d493"/><circle cx="16.8" cy="29.5" r="2.6" fill="#f9b8a0" opacity="0.65"/><circle cx="31.2" cy="29.5" r="2.6" fill="#f9b8a0" opacity="0.65"/><circle cx="19.8" cy="24.8" r="1.8" fill="#4a2c0a"/><circle cx="28.2" cy="24.8" r="1.8" fill="#4a2c0a"/><ellipse cx="24" cy="30" rx="4.8" ry="3.4" fill="#fff3d6"/><ellipse cx="24" cy="28.4" rx="1.7" ry="1.2" fill="#e2707a"/><rect x="23" y="31.6" width="2" height="2.4" rx="0.7" fill="#ffffff" stroke="#d9c9a8" stroke-width="0.5"/></svg>';
 const scoreEl=$('score'), seedsEl=$('seeds'), bestEl=$('best'), fillEl=$('storefill'),
       nextEl=$('nextinfo'), liveDot=$('livedot'), liveText=$('livetext'),
       bannerEl=$('banner'), cheeksEl=$('cheeks'), cheekCap=$('cheekcap'),
@@ -396,7 +398,7 @@ zh: {
   lampName:'🔦 矿工头灯', lampDesc:'投放仓鼠戴上头灯（永久装扮）', lampBtn:'买 600 🪙', lampOwned:'已拥有',
   bChestNuts:g => '🎁 开箱：+' + g + ' 🌰', bChestStam:'🎁 开箱：+2 ⚡ 体力', bChestBell:'🎁 开箱：🔔 幸运铃铛（下局生效）', bChestJackpot:'🎁 大奖！+100 🌰',
   bBellBought:'🔔 铃铛备好了，下一局金种子更密', bSwapStam:'⚡ +2 体力', bSwapNuts:'🌰 +10 金瓜子', bLampBought:'🔦 头灯戴上了！',
-  bMinePoor:'🪙 吱吱币不够，多打几局攒吱吱币',
+  bMinePoor:'吱吱币不够，多打几局攒吱吱币',
   stamBuyName:'⚡ 补体力', stamBuyDesc:'+3 点体力，马上能玩', stamBuyBtn:'买 20 🌰',
   bRigUp:lv => '⛏ 矿场升到 ' + lv + ' 级！吱吱币获取提升', bStamBought:'⚡ 体力 +3',
   ciBtn:'📅 今日签到', ciDone:'今日已签到 ✓', ciStreak:'连续签到 ', ciTotal:'累计 ', ciDays:' 天',
@@ -460,7 +462,7 @@ en: {
   lampName:'🔦 Miner Lamp', lampDesc:'Your dropper hamster wears a head lamp (permanent)', lampBtn:'Buy 600 🪙', lampOwned:'Owned',
   bChestNuts:g => '🎁 Chest: +' + g + ' 🌰', bChestStam:'🎁 Chest: +2 ⚡ energy', bChestBell:'🎁 Chest: 🔔 Lucky Bell (next run)', bChestJackpot:'🎁 JACKPOT! +100 🌰',
   bBellBought:'🔔 Bell ready — golden seeds come faster next run', bSwapStam:'⚡ +2 energy', bSwapNuts:'🌰 +10 Golden Seeds', bLampBought:'🔦 Lamp on!',
-  bMinePoor:'🪙 Not enough squeak coins — play more runs',
+  bMinePoor:'Not enough squeak coins — play more runs',
   stamBuyName:'⚡ Refill Energy', stamBuyDesc:'+3 energy, play right away', stamBuyBtn:'Buy 20 🌰',
   bRigUp:lv => '⛏ Rig upgraded to Lv.' + lv + '! Mining gain up', bStamBought:'⚡ Energy +3',
   ciBtn:'📅 Check In Today', ciDone:'Checked in today ✓', ciStreak:'Streak ', ciTotal:'Total ', ciDays:'d',
@@ -648,14 +650,14 @@ function renderMeta(){
   const swapStamBtn = stamFullNow ? '<button class="maxed" disabled>' + t('stamFull') + '</button>'
     : '<button data-eco="swapstam">' + t('swapStamBtn') + '</button>';
   const ecoEl = $('ecoRows');
-  if(ecoEl) ecoEl.innerHTML =
+  if(ecoEl){ ecoEl.innerHTML = (
     '<div class="uprow"><div class="info"><div class="nm">' + t('rigName') + '</div><div class="ds">' + t('rigDesc') + '</div></div><div class="pips">' + rigPips + '</div>' + rigBtn + '</div>' +
     '<div class="uprow"><div class="info"><div class="nm">' + t('chestName') + '</div><div class="ds">' + t('chestDesc') + '</div></div><div class="pips"></div><button data-eco="chest">' + t('chestBtn') + '</button></div>' +
     '<div class="uprow"><div class="info"><div class="nm">' + t('bellName') + '</div><div class="ds">' + t('bellDesc') + '</div></div><div class="pips"></div>' + bellBtn + '</div>' +
     '<div class="uprow"><div class="info"><div class="nm">' + t('swapStamName') + '</div><div class="ds">' + t('swapStamDesc') + '</div></div><div class="pips"></div>' + swapStamBtn + '</div>' +
     '<div class="uprow"><div class="info"><div class="nm">' + t('swapNutsName') + '</div><div class="ds">' + t('swapNutsDesc') + '</div></div><div class="pips"></div><button data-eco="swapnuts">' + t('swapNutsBtn') + '</button></div>' +
     '<div class="uprow"><div class="info"><div class="nm">' + t('lampName') + '</div><div class="ds">' + t('lampDesc') + '</div></div><div class="pips"></div>' + lampBtn + '</div>' +
-    '<div class="uprow"><div class="info"><div class="nm">' + t('stamBuyName') + '</div><div class="ds">' + t('stamBuyDesc') + '</div></div><div class="pips"></div>' + stamBtn + '</div>';
+    '<div class="uprow"><div class="info"><div class="nm">' + t('stamBuyName') + '</div><div class="ds">' + t('stamBuyDesc') + '</div></div><div class="pips"></div>' + stamBtn + '</div>').replaceAll('🪙', COIN_SVG); }
   renderStam();
 }
 function buyUpgrade(key){
@@ -672,7 +674,7 @@ $('ecoRows').addEventListener('click', e => {
   if(k === 'rig'){
     const rig = meta.rig || 0;
     if(rig >= RIG_COSTS.length) return;
-    if((meta.mine || 0) < RIG_COSTS[rig]){ showBanner('🪙 ' + t('mineWord') + ' ' + (LANG === 'en' ? 'not enough — play more runs to earn it' : '不够，多打几局攒吱吱币')); return; }
+    if((meta.mine || 0) < RIG_COSTS[rig]){ showBanner(t('mineWord') + ' ' + (LANG === 'en' ? 'not enough — play more runs to earn it' : '不够，多打几局攒吱吱币')); return; }
     meta.mine -= RIG_COSTS[rig]; meta.rig = rig + 1;
     saveMeta(); renderMeta(); showBanner(t('bRigUp')(meta.rig)); squeak();
   } else if(k === 'chest'){
@@ -877,12 +879,12 @@ function renderAssets(){
   if(!box) return;
   if(!wallet.address){
     box.innerHTML = '<div style="font-size:14.5px;line-height:1.7;color:#7a5a28">' + t('assetHint') + '</div>' +
-      '<div style="font-size:15px;line-height:1.9">' + t('zhiBal') + '<b>' + (meta.mine || 0) + ' 🪙</b></div>';
+      '<div style="font-size:15px;line-height:1.9">' + t('zhiBal') + '<b>' + (meta.mine || 0) + ' ' + COIN_SVG + '</b></div>';
     return;
   }
   box.innerHTML =
     '<div style="font-size:15px;line-height:1.9">' +
-    t('zhiBal') + '<b>' + (meta.mine || 0) + ' 🪙</b><br>' +
+    t('zhiBal') + '<b>' + (meta.mine || 0) + ' ' + COIN_SVG + '</b><br>' +
     t('sqkBal') + '<b>' + (wallet.sqk === null ? t('loading') : wallet.sqk) + '</b><br>' +
     t('mySqueeks') + '<b>' + (wallet.squeeks === null ? t('loading') : wallet.squeeks + t('squeeksUnit')) + '</b> · ' + t('power') + '<b>' + (wallet.power === null ? '…' : wallet.power) + '</b><br>' +
     t('claimable') + '<b>' + (wallet.claimable === null ? '…' : wallet.claimable) + '</b></div>';
@@ -1182,6 +1184,7 @@ function finishGame(){
     + (rank > 0 ? t('fRank')(rank) : '')
     + t('fSettle')(nutsEarned, expGain) + t('fMine')(mineGain, meta.mine)
     + (newLv > oldLv ? t('fLevelUp')(newLv, LANG === 'en' ? LEVELS[newLv-1].titleEn : LEVELS[newLv-1].title) : '');
+  $('overText').innerHTML = $('overText').innerHTML.replaceAll('🪙', COIN_SVG);
   $('nextBtn').style.display = (win && currentMap < MAPS.length - 1) ? '' : 'none';
   overEl.classList.add('show');
 }
