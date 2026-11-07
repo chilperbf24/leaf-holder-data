@@ -392,7 +392,7 @@ zh: {
   stamLab:'⚡ 体力', stamNext:'下一点', stamFull:'已满',
   bNoStam:'⚡ 体力用完了，等恢复或用金瓜子补（小屋里买）— 每天签到也 +3 体力',
   rigName:'⛏ 矿场', rigDesc:'吱吱币获取 +10% / 级（花吱吱币升级）', rigBtn:'升级',
-  minerNeedWallet:'连接钱包后开始挖矿', powerWord:'算力 ', perHour:'每小时产 ', minedNow:'已挖出 ', minerName:'🐹 仓鼠矿机', minerDesc:(p, r) => '算力 ' + p + ' · 每小时产 ' + r + ' 个吱吱币（离线也攒，最多攒 24 小时）',
+  minerNeedWallet:'连接钱包后开始挖矿', powerWord:'算力 ', perHour:'每小时产 ', minedNow:'已挖出 ', minerName:'🐹 仓鼠矿机', minerDesc:(p, r) => '算力 ' + p + ' · 每小时产 ' + r + ' 个吱吱币（离线也攒，最多攒 12 小时，每 12 小时领取一次）',
   claimName:'📦 矿机产出', claimDesc:n => '已挖出 ' + n + ' 个吱吱币，等你领取', claimBtn:'领取',
   bMinerUp:(lv, p) => '🐹 矿机升到 Lv.' + lv + '！算力 ' + p, bClaim:n => '📦 领取矿机产出 +' + n + ' 吱吱币',
   chestName:'🎁 种子补给箱', chestDesc:'随机开出：金瓜子 / 体力 / 幸运铃铛，小概率大奖 100 🌰', chestBtn:'开箱 100 🪙',
@@ -459,7 +459,7 @@ en: {
   stamLab:'⚡ Energy', stamNext:'next in', stamFull:'full',
   bNoStam:'⚡ Out of energy — wait for regen or refill with Golden Seeds (Hamster House); daily check-in also gives +3',
   rigName:'⛏ Mining Rig', rigDesc:'+10% squeak coins gain / level (costs squeak coins)', rigBtn:'Upgrade',
-  minerNeedWallet:'connect a wallet to start mining', powerWord:'Power ', perHour:'makes per hour ', minedNow:'Mined ', minerName:'🐹 Hamster Miner', minerDesc:(p, r) => 'Power ' + p + ' · makes ' + r + ' Squeak Coins per hour (accrues offline too, up to 24h)',
+  minerNeedWallet:'connect a wallet to start mining', powerWord:'Power ', perHour:'makes per hour ', minedNow:'Mined ', minerName:'🐹 Hamster Miner', minerDesc:(p, r) => 'Power ' + p + ' · makes ' + r + ' Squeak Coins per hour (accrues offline too, up to 12h — claim every 12 hours)',
   claimName:'📦 Miner Output', claimDesc:n => n + ' Squeak Coins mined and waiting', claimBtn:'Claim',
   bMinerUp:(lv, p) => '🐹 Miner upgraded to Lv.' + lv + '! Power ' + p, bClaim:n => '📦 Claimed miner output +' + n + ' Squeak Coins',
   chestName:'🎁 Seed Supply Chest', chestDesc:'Random: Golden Seeds / Energy / Lucky Bell, small chance of a 100 🌰 jackpot', chestBtn:'Open 100 🪙',
@@ -635,7 +635,7 @@ function accrueMining(){
   try{ if(!wallet.address) return; }catch(e){ return; }
   const now = Date.now();
   if(!meta.macc) meta.macc = { amt: 0, ts: now };
-  const m = meta.macc, rate = minerRate(), cap = rate * 24;
+  const m = meta.macc, rate = minerRate(), cap = rate * 12;
   const hrs = Math.max(0, (now - m.ts) / 3600000);
   if(hrs > 0){ m.amt = Math.min(cap, m.amt + rate * hrs); m.ts = now; }
 }
