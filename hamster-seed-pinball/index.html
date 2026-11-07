@@ -392,6 +392,9 @@ zh: {
   stamLab:'⚡ 体力', stamNext:'下一点', stamFull:'已满',
   bNoStam:'⚡ 体力用完了，等恢复或用金瓜子补（小屋里买）— 每天签到也 +3 体力',
   rigName:'⛏ 矿场', rigDesc:'吱吱币获取 +10% / 级（花吱吱币升级）', rigBtn:'升级',
+  minerName:'🐹 仓鼠矿机', minerDesc:(p, r) => '算力 ' + p + ' · 每小时产 ' + r + ' 个吱吱币（离线也攒，最多攒 24 小时）',
+  claimName:'📦 矿机产出', claimDesc:n => '已挖出 ' + n + ' 个吱吱币，等你领取', claimBtn:'领取',
+  bMinerUp:(lv, p) => '🐹 矿机升到 Lv.' + lv + '！算力 ' + p, bClaim:n => '📦 领取矿机产出 +' + n + ' 吱吱币',
   chestName:'🎁 种子补给箱', chestDesc:'随机开出：金瓜子 / 体力 / 幸运铃铛，小概率大奖 100 🌰', chestBtn:'开箱 100 🪙',
   bellName:'🔔 幸运铃铛', bellDesc:'下一局金种子更密（间隔 -2），一次性', bellBtn:'买 80 🪙', bellReady:'已备好 · 下局生效',
   swapStamName:'⚡ 吱吱币换体力', swapStamDesc:'30 吱吱币 → +2 体力', swapStamBtn:'换 30 🪙',
@@ -456,6 +459,9 @@ en: {
   stamLab:'⚡ Energy', stamNext:'next in', stamFull:'full',
   bNoStam:'⚡ Out of energy — wait for regen or refill with Golden Seeds (Hamster House); daily check-in also gives +3',
   rigName:'⛏ Mining Rig', rigDesc:'+10% squeak coins gain / level (costs squeak coins)', rigBtn:'Upgrade',
+  minerName:'🐹 Hamster Miner', minerDesc:(p, r) => 'Power ' + p + ' · makes ' + r + ' Squeak Coins per hour (accrues offline too, up to 24h)',
+  claimName:'📦 Miner Output', claimDesc:n => n + ' Squeak Coins mined and waiting', claimBtn:'Claim',
+  bMinerUp:(lv, p) => '🐹 Miner upgraded to Lv.' + lv + '! Power ' + p, bClaim:n => '📦 Claimed miner output +' + n + ' Squeak Coins',
   chestName:'🎁 Seed Supply Chest', chestDesc:'Random: Golden Seeds / Energy / Lucky Bell, small chance of a 100 🌰 jackpot', chestBtn:'Open 100 🪙',
   bellName:'🔔 Lucky Bell', bellDesc:'Next run: golden seeds come faster (interval -2), one-time', bellBtn:'Buy 80 🪙', bellReady:'Ready · applies next run',
   swapStamName:'⚡ Power → Energy', swapStamDesc:'30 power → +2 energy', swapStamBtn:'Swap 30 🪙',
@@ -611,13 +617,43 @@ function loadMeta(){
     const saved = JSON.parse(localStorage.getItem(metaKey()) || 'null');
     if(saved && saved.up){ meta = Object.assign(meta, saved); hadSave = true; }
   }catch(e){}
-  if(!hadSave){ meta.nuts = 50; meta.v2 = 1; saveMeta(); }
+  if(!hadSave){ meta.nuts = 50; meta.v2 = 1; meta.miner = 1; saveMeta(); }
   else if(!meta.v2){ meta.exp = Math.round((meta.exp || 0) * 3); meta.v2 = 1; saveMeta(); }
+  if(meta.miner === undefined){ meta.miner = 1 + (meta.rig || 0); saveMeta(); }
+  accrueMining();
 }
 loadMeta();
 let curLevel = 1;
 function saveMeta(){ try{ localStorage.setItem(metaKey(), JSON.stringify(meta)); }catch(e){} try{ renderAssets(); }catch(e){} }
 const STAM_MAX = 10, STAM_REGEN_MS = 30 * 60 * 1000, RIG_COSTS = [100, 250, 500, 1000, 2000];
+const MINER_MAX = 8, MINER_COSTS = [150, 300, 550, 900, 1400, 2100, 3000];
+function minerLevel(){ return meta.miner || 1; }
+function minerPower(){ return minerLevel() * 40; }
+function minerRate(){ return minerPower() * 0.02; }
+function fmtRate(r){ return String(Math.round(r * 100) / 100); }
+function accrueMining(){
+  const now = Date.now();
+  if(!meta.macc) meta.macc = { amt: 0, ts: now };
+  const m = meta.macc, rate = minerRate(), cap = rate * 24;
+  const hrs = Math.max(0, (now - m.ts) / 3600000);
+  if(hrs > 0){ m.amt = Math.min(cap, m.amt + rate * hrs); m.ts = now; }
+}
+function claimMining(){
+  accrueMining();
+  const n = Math.floor((meta.macc && meta.macc.amt) || 0);
+  if(n < 1) return 0;
+  meta.macc.amt -= n; meta.mine = (meta.mine || 0) + n;
+  saveMeta(); renderMeta(); showBanner(t('bClaim')(n)); squeak();
+  return n;
+}
+function buyMiner(){
+  const lv = minerLevel();
+  if(lv >= MINER_MAX) return;
+  const cost = MINER_COSTS[lv - 1];
+  if((meta.mine || 0) < cost){ showBanner(t('bMinePoor')); return; }
+  meta.mine -= cost; meta.miner = lv + 1;
+  saveMeta(); renderMeta(); showBanner(t('bMinerUp')(lv + 1, minerPower())); squeak();
+}
 function levelFromExp(exp){
   let lv = 1;
   for(let i=0;i<LEVELS.length;i++) if(exp >= LEVELS[i].exp) lv = i+1;
@@ -639,10 +675,13 @@ function renderMeta(){
       : '<button data-up="' + u.key + '">' + t('upBtn') + ' ' + u.costs[lv] + ' 🌰</button>';
     return '<div class="uprow"><div class="info"><div class="nm">' + (LANG === 'en' ? u.nameEn : u.name) + '</div><div class="ds">' + (LANG === 'en' ? u.descEn : u.desc) + '</div></div><div class="pips">' + pips + '</div>' + btn + '</div>';
   }).join('');
-  const rig = meta.rig || 0, rigMaxed = rig >= RIG_COSTS.length;
-  const rigPips = '●'.repeat(rig) + '○'.repeat(RIG_COSTS.length - rig);
-  const rigBtn = rigMaxed ? '<button class="maxed" disabled>' + t('maxed') + '</button>'
-    : '<button data-eco="rig">' + t('rigBtn') + ' ' + RIG_COSTS[rig] + ' 🪙</button>';
+  accrueMining();
+  const mLv = minerLevel(), mMaxed = mLv >= MINER_MAX;
+  const mPips = '●'.repeat(mLv) + '○'.repeat(MINER_MAX - mLv);
+  const mBtn = mMaxed ? '<button class="maxed" disabled>' + t('maxed') + '</button>'
+    : '<button data-eco="minerup">' + t('rigBtn') + ' ' + MINER_COSTS[mLv - 1] + ' 🪙</button>';
+  const claimAmt = Math.floor((meta.macc && meta.macc.amt) || 0);
+  const claimRow = claimAmt >= 1 ? '<div class="uprow"><div class="info"><div class="nm">' + t('claimName') + '</div><div class="ds">' + t('claimDesc')(claimAmt) + '</div></div><div class="pips"></div><button data-eco="claim">' + t('claimBtn') + '</button></div>' : '';
   const stamFullNow = stamNow() >= STAM_MAX;
   const stamBtn = stamFullNow ? '<button class="maxed" disabled>' + t('stamFull') + '</button>'
     : '<button data-eco="stam">' + t('stamBuyBtn') + '</button>';
@@ -654,7 +693,7 @@ function renderMeta(){
     : '<button data-eco="swapstam">' + t('swapStamBtn') + '</button>';
   const ecoEl = $('ecoRows');
   if(ecoEl){ ecoEl.innerHTML = (
-    '<div class="uprow"><div class="info"><div class="nm">' + t('rigName') + '</div><div class="ds">' + t('rigDesc') + '</div></div><div class="pips">' + rigPips + '</div>' + rigBtn + '</div>' +
+    '<div class="uprow"><div class="info"><div class="nm">' + t('minerName') + '</div><div class="ds">' + t('minerDesc')(minerPower(), fmtRate(minerRate())) + '</div></div><div class="pips">' + mPips + '</div>' + mBtn + '</div>' + claimRow +
     '<div class="uprow"><div class="info"><div class="nm">' + t('chestName') + '</div><div class="ds">' + t('chestDesc') + '</div></div><div class="pips"></div><button data-eco="chest">' + t('chestBtn') + '</button></div>' +
     '<div class="uprow"><div class="info"><div class="nm">' + t('bellName') + '</div><div class="ds">' + t('bellDesc') + '</div></div><div class="pips"></div>' + bellBtn + '</div>' +
     '<div class="uprow"><div class="info"><div class="nm">' + t('swapStamName') + '</div><div class="ds">' + t('swapStamDesc') + '</div></div><div class="pips"></div>' + swapStamBtn + '</div>' +
@@ -674,12 +713,8 @@ function buyUpgrade(key){
 }
 $('ecoRows').addEventListener('click', e => {
   const k = e.target && e.target.dataset ? e.target.dataset.eco : null;
-  if(k === 'rig'){
-    const rig = meta.rig || 0;
-    if(rig >= RIG_COSTS.length) return;
-    if((meta.mine || 0) < RIG_COSTS[rig]){ showBanner(t('mineWord') + ' ' + (LANG === 'en' ? 'not enough — play more runs to earn it' : '不够，多打几局攒吱吱币')); return; }
-    meta.mine -= RIG_COSTS[rig]; meta.rig = rig + 1;
-    saveMeta(); renderMeta(); showBanner(t('bRigUp')(meta.rig)); squeak();
+  if(k === 'minerup'){ buyMiner();
+  } else if(k === 'claim'){ claimMining();
   } else if(k === 'chest'){
     if((meta.mine || 0) < 100){ showBanner(t('bMinePoor')); return; }
     meta.mine -= 100;
@@ -1178,7 +1213,7 @@ function finishGame(){
   const stageNo = currentMap + 1;
   const nutsEarned = rewarded ? 40 + stageNo * 3 : 0;
   if(win && !PREVIEW) meta.cleared = Math.max(meta.cleared || 0, currentMap + 1);
-  const mineGain = rewarded ? Math.round((25 + stageNo * 2) * (1 + 0.1 * (meta.rig || 0))) : 0;
+  const mineGain = rewarded ? 25 + stageNo * 2 : 0;
   meta.mine = (meta.mine || 0) + mineGain;
   meta.nuts += nutsEarned; meta.exp += expGain; saveMeta(); renderMeta(); renderMapBar();
   const newLv = levelFromExp(meta.exp);
