@@ -364,7 +364,7 @@ zh: {
   lbTitle:'🏆 本机排行榜 <span style="font-size:12.5px;color:#9a6a30;font-weight:400">（暂存这台设备；全球榜要等正式版接后端）</span>',
   tabScore:'🏆 分数榜', tabLevel:'🎖️ 等级榜', tabStage:'🚩 过关榜',
   labScore:'得分 / 目标', labStore:'过冬粮仓', labSeeds:'剩余种子', nutsLab:'🌰 金瓜子',
-  drop:'投种子 🌻', restart:'重开', help:'📖 介绍', topGuide:'📖 玩法介绍 · 游戏详情 →', pageTitle:'🐹 仓鼠弹珠 · 玩法与详情', pageClose:'✕ 关闭 · 返回游戏', tip:'滑动 / 移动鼠标瞄准 · 点盘面或按空格投种子',
+  drop:'投种子 🌻', restart:'重开', help:'📖 介绍', topGuide:'📖 玩法介绍 · 游戏详情 →', pageTitle:'🐹 仓鼠弹珠 · 玩法与详情', pageClose:'✕ 关闭 · 返回游戏', tip:'滑动 / 移动鼠标瞄准 · 点盘面或按空格投种子 · 一次最多同时 3 颗',
   again:'再来一局', nextStage:'下一关 ▶', guest:'游客', best:'最高 ',
   soundOn:'声音：开', soundOff:'声音：关',
   liveConnecting:'正在连接 Squeektoshi…', liveDemo:'API 暂不可达 · 演示模式（仓鼠在梦里跑）',
@@ -428,7 +428,7 @@ en: {
   lbTitle:'🏆 Local Leaderboard <span style="font-size:12.5px;color:#9a6a30;font-weight:400">(stored on this device; the global board comes with the backend)</span>',
   tabScore:'🏆 Score', tabLevel:'🎖️ Level', tabStage:'🚩 Stage',
   labScore:'Score / Target', labStore:'Winter Granary', labSeeds:'Seeds Left', nutsLab:'🌰 Golden Seeds',
-  drop:'Drop Seed 🌻', restart:'Restart', help:'📖 Guide', topGuide:'📖 How to Play · Game Details →', pageTitle:'🐹 Hamster Pinball · Guide & Details', pageClose:'✕ Close · Back to Game', tip:'Swipe / move mouse to aim · tap the board or press Space to drop',
+  drop:'Drop Seed 🌻', restart:'Restart', help:'📖 Guide', topGuide:'📖 How to Play · Game Details →', pageTitle:'🐹 Hamster Pinball · Guide & Details', pageClose:'✕ Close · Back to Game', tip:'Swipe / move mouse to aim · tap the board or press Space to drop · up to 3 seeds in flight at once',
   again:'Play Again', nextStage:'Next Stage ▶', guest:'Guest', best:'Best ',
   soundOn:'Sound: On', soundOff:'Sound: Off',
   liveConnecting:'Connecting to Squeektoshi…', liveDemo:'API unreachable · Demo mode (dream runs)',
@@ -577,7 +577,8 @@ buildBoard();
 const shavings = []; { const r2 = mulberry32(42); for(let i=0;i<70;i++) shavings.push({x:r2()*W, y:600+r2()*34, a:r2()*Math.PI, l:6+r2()*9}); }
 
 /* ============ 游戏状态 ============ */
-let score=0, ballsLeft=12, ballNo=0, ball=null, lastBin=-1, comboMult=1;
+let score=0, ballsLeft=12, ballNo=0, lastBin=-1, comboMult=1;
+let balls = []; const MAX_BALLS = 3;
 let pegHits=0, harvestReady=false, bonusGolden=false, gameOver=false;
 let aimX = W/2, shake = 0, bannerTimer = 0;
 let best = +(localStorage.getItem('hsb_best')||0);
@@ -665,7 +666,7 @@ function buyUpgrade(key){
   if(meta.nuts < cost){ showBanner(t('bNuts')(cost - meta.nuts)); beep(180, 0.12, 'square', 0.04); return; }
   meta.nuts -= cost; meta.up[key] = lv + 1; saveMeta(); renderMeta();
   showBanner(t('bUpgraded')(LANG === 'en' ? u.nameEn : u.name, lv+1)); squeak();
-  if(key === 'seeds' && !ball && !gameOver){ ballsLeft += 2; refreshHUD(); }
+  if(key === 'seeds' && balls.length===0 && !gameOver){ ballsLeft += 2; refreshHUD(); }
 }
 $('ecoRows').addEventListener('click', e => {
   const k = e.target && e.target.dataset ? e.target.dataset.eco : null;
@@ -828,7 +829,7 @@ function renderMapBar(){
 function switchMap(i){
   if(i === currentMap) return;
   if(!PREVIEW && i > (meta.cleared || 0)){ showBanner(t('bLocked')(i+1, (meta.cleared || 0) + 1)); beep(180, 0.12, 'square', 0.04); return; }
-  if(ball){ showBanner(t('bWaitBall')); return; }
+  if(balls.length){ showBanner(t('bWaitBall')); return; }
   if(!payRun()) return;
   currentMap = i;
   try{ localStorage.setItem('hsb_map', String(i)); }catch(e){}
@@ -1107,17 +1108,17 @@ function refreshHUD(){
   cheeksEl.setAttribute('transform', 'translate(31 33) scale(' + s + ') translate(-31 -33)');
   cheekCap.textContent = score>=tgt ? t('cheek3') : (score>=tgt/2 ? t('cheek2') : (score>0 ? t('cheek1') : t('cheek0')));
   nextEl.textContent = ballsLeft<=0 ? t('nextDone') : (t('nextPfx') + (nextIsGolden() ? t('nextGolden') : t('nextNormal')) + (harvestReady ? t('nextHarvest') : '') + (comboMult>1 ? t('nextCombo') : ''));
-  dropBtn.disabled = !!ball || gameOver || ballsLeft<=0;
+  dropBtn.disabled = balls.length>=MAX_BALLS || gameOver || ballsLeft<=0;
 }
 function drop(){
-  if(ball || gameOver || ballsLeft<=0) return;
+  if(balls.length>=MAX_BALLS || gameOver || ballsLeft<=0) return;
   ballsLeft--; ballNo++;
   const golden = nextIsGolden(); if(bonusGolden && golden) bonusGolden = false;
   let mult = 1;
   if(golden) mult *= 2;
   if(harvestReady){ mult *= 2; harvestReady = false; }
   if(comboMult > 1){ mult *= comboMult; comboMult = 1; }
-  ball = { x:aimX, y:86, vx:(Math.random()-0.5)*0.4, vy:0.5, r:9.5, golden:golden, mult:mult, pegTouch:0, born:performance.now(), still:0 };
+  balls.push({ x:aimX, y:86, vx:(Math.random()-0.5)*0.4, vy:0.5, r:9.5, golden:golden, mult:mult, pegTouch:0, born:performance.now(), still:0 });
   beep(660, 0.06, 'triangle', 0.05);
   refreshHUD();
 }
@@ -1125,7 +1126,7 @@ function showBanner(txt){
   bannerEl.textContent = txt; bannerEl.classList.add('show');
   clearTimeout(bannerTimer); bannerTimer = setTimeout(()=>bannerEl.classList.remove('show'), 2100);
 }
-function endBall(kind, binIdx){
+function endBall(b, kind, binIdx){
   if(kind === 'bin'){
     const b = BINS[binIdx];
     if(b.v < 0){
@@ -1137,9 +1138,9 @@ function endBall(kind, binIdx){
       let v = b.v;
       if(binIdx === 3 && ham.running) v = 200;
       if(!ham.running && ham.ok) v = Math.round(v * 1.1);
-      const pts = Math.round(v * ball.mult * (1 + 0.05 * meta.up.harvest));
+      const pts = Math.round(v * b.mult * (1 + 0.05 * meta.up.harvest));
       score += pts;
-      showBanner(t('bBin')(ball.golden, binName(b), pts));
+      showBanner(t('bBin')(b.golden, binName(b), pts));
       if(binIdx === lastBin){ comboMult = 1.5; } else { comboMult = 1; }
       lastBin = binIdx;
       squeak();
@@ -1155,9 +1156,9 @@ function endBall(kind, binIdx){
   } else {
     lastBin = -1; comboMult = 1; showBanner(t('bShavings'));
   }
-  ball = null;
+  balls = balls.filter(x => x !== b);
   if(score > best){ best = score; localStorage.setItem('hsb_best', best); bestEl.textContent = t('best')+best; }
-  if(ballsLeft <= 0){ finishGame(); }
+  if(ballsLeft <= 0 && balls.length === 0){ finishGame(); }
   refreshHUD();
 }
 function finishGame(){
@@ -1184,7 +1185,7 @@ function finishGame(){
   overEl.classList.add('show');
 }
 function restart(){
-  score=0; ballsLeft=runBalls(); ballNo=0; ball=null; lastBin=-1; comboMult=1;
+  score=0; ballsLeft=runBalls(); ballNo=0; balls=[]; lastBin=-1; comboMult=1;
   pegHits=0; harvestReady=false; bonusGolden=false; gameOver=false;
   boardSeed = hashStr('seedpinball-' + todayStr + '-s' + currentMap + '-' + (ham.height||0));
   buildBoard(); overEl.classList.remove('show'); refreshHUD();
@@ -1250,8 +1251,9 @@ function physStep(dtF){
     if(beetle.x < 36){ beetle.x = 36; beetle.dir = 1; }
   }
 
-  if(!ball) return;
-  const b = ball;
+  for(const b of [...balls]) stepBall(b, dtF);
+}
+function stepBall(b, dtF){
   b.vy += 0.21 * dtF * (ham.running ? 1 : 0.82);
   b.vx *= 0.999; b.vy *= 0.999;
   b.x += b.vx * dtF; b.y += b.vy * dtF;
@@ -1263,10 +1265,10 @@ function physStep(dtF){
 
   /* 颊囊口袋 */
   for(const p of POCKETS){
-    if(Math.hypot(b.x-p.x, b.y-p.y) < 15){ endBall('pocket'); return; }
+    if(Math.hypot(b.x-p.x, b.y-p.y) < 15){ endBall(b, 'pocket'); return; }
   }
   /* 捣蛋甲虫抢种子 */
-  if(Math.hypot(b.x-beetle.x, b.y-beetle.y) < b.r + 13){ endBall('stolen'); return; }
+  if(Math.hypot(b.x-beetle.x, b.y-beetle.y) < b.r + 13){ endBall(b, 'stolen'); return; }
   /* 橡子钉 */
   for(const pg of pegs){
     const dx = b.x-pg.x, dy = b.y-pg.y, d = Math.hypot(dx,dy), min = b.r+pg.r;
@@ -1332,13 +1334,13 @@ function physStep(dtF){
   /* 落格 */
   if(b.y > H-30){
     const idx = Math.max(0, Math.min(BINS.length-1, Math.floor(b.x/BIN_W)));
-    endBall('bin', idx); return;
+    endBall(b, 'bin', idx); return;
   }
   /* 防卡死 */
   const sp = Math.hypot(b.vx, b.vy);
   if(sp < 0.32){ b.still += dtF; if(b.still > 80){ b.vx += (Math.random()<0.5?-1:1)*1.1; b.vy -= 0.6; b.still = 0; } }
   else b.still = 0;
-  if(performance.now() - b.born > 15000){ endBall('lost'); }
+  if(performance.now() - b.born > 15000){ endBall(b, 'lost'); }
 }
 
 /* ============ 绘制 ============ */
@@ -1648,7 +1650,7 @@ function draw(){
 
   /* 投放仓鼠 + 瞄准线 */
   const bob = Math.sin(Date.now()/380)*2;
-  if(!ball && ballsLeft>0 && !gameOver){
+  if(balls.length<MAX_BALLS && ballsLeft>0 && !gameOver){
     ctx.save(); ctx.setLineDash([4,6]); ctx.strokeStyle = 'rgba(140,95,40,.45)'; ctx.lineWidth = 1.6;
     ctx.beginPath(); ctx.moveTo(aimX, 92); ctx.lineTo(aimX, 132); ctx.stroke(); ctx.restore();
   }
@@ -1686,14 +1688,14 @@ function draw(){
     ctx.beginPath(); ctx.arc(aimX, 52+bob-17, 5.4, 0, Math.PI*2); ctx.fillStyle = '#ffe27a'; ctx.fill();
     ctx.strokeStyle = '#c47f17'; ctx.lineWidth = 1.2; ctx.stroke();
   }
-  if(!ball && ballsLeft>0 && !gameOver){
+  if(balls.length<MAX_BALLS && ballsLeft>0 && !gameOver){
     ctx.fillStyle = '#d9a05f';
     ctx.beginPath(); ctx.arc(aimX-13, 74+bob, 5, 0, Math.PI*2); ctx.arc(aimX+13, 74+bob, 5, 0, Math.PI*2); ctx.fill();
     drawSeed(aimX, 82+bob, 10, nextIsGolden(), 0.5);
   }
   /* 弹珠种子 */
-  if(ball){
-    drawSeed(ball.x, ball.y, ball.r+1, ball.golden, Math.atan2(ball.vy, ball.vx)+Math.PI/2);
+  for(const b of balls){
+    drawSeed(b.x, b.y, b.r+1, b.golden, Math.atan2(b.vy, b.vx)+Math.PI/2);
   }
   /* 夜场 */
   if(ham.ok && !ham.running){
