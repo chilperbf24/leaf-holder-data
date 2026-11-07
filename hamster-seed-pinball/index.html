@@ -1134,19 +1134,19 @@ function showBanner(txt){
 }
 function endBall(b, kind, binIdx){
   if(kind === 'bin'){
-    const b = BINS[binIdx];
-    if(b.v < 0){
-      score = Math.max(0, score + b.v);
+    const bin = BINS[binIdx];
+    if(bin.v < 0){
+      score = Math.max(0, score + bin.v);
       lastBin = -1; comboMult = 1; harvestReady = false;
-      showBanner(t('bStink')(b.v));
+      showBanner(t('bStink')(bin.v));
       beep(150, 0.16, 'square', 0.05);
     } else {
-      let v = b.v;
+      let v = bin.v;
       if(binIdx === 3 && ham.running) v = 200;
       if(!ham.running && ham.ok) v = Math.round(v * 1.1);
       const pts = Math.round(v * b.mult * (1 + 0.05 * meta.up.harvest));
       score += pts;
-      showBanner(t('bBin')(b.golden, binName(b), pts));
+      showBanner(t('bBin')(b.golden, binName(bin), pts));
       if(binIdx === lastBin){ comboMult = 1.5; } else { comboMult = 1; }
       lastBin = binIdx;
       squeak();
