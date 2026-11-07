@@ -606,6 +606,16 @@ const UPGRADES = [
   {key:'luck',    name:'金铃铛',   nameEn:'Golden Bell',  desc:'金种子：每 5→4→3 颗一颗', descEn:'Golden seed every 5→4→3 drops', costs:[120,300,700]},
   {key:'spray',   name:'防虫喷雾', nameEn:'Bug Spray',    desc:'捣蛋甲虫速度 -25%/级',    descEn:'Beetle speed -25% / level',     costs:[80,200,450]}
 ];
+const chainClock = { base: 0, at: 0 };
+function chainNow(){ return chainClock.base ? chainClock.base + (Date.now() - chainClock.at) : Date.now(); }
+function chainDayStr(offsetMs){ return dayStr(new Date(chainNow() - (offsetMs || 0))); }
+function sigOf(obj){
+  const keys = Object.keys(obj).filter(k => k !== '_sig').sort();
+  const body = keys.map(k => k + '=' + JSON.stringify(obj[k])).join('|');
+  let h = 5381; const str = 'hsb-v1|' + body;
+  for(let i = 0; i < str.length; i++){ h = ((h << 5) + h + str.charCodeAt(i)) | 0; }
+  return (h >>> 0).toString(36);
+}
 let meta = { nuts:0, exp:0, cleared:0, up:{seeds:0, harvest:0, luck:0, spray:0} };
 let idSuffix = '';
 function metaKey(){ return 'hsb_meta_v1' + idSuffix; }
@@ -615,7 +625,10 @@ function loadMeta(){
   let hadSave = false;
   try{
     const saved = JSON.parse(localStorage.getItem(metaKey()) || 'null');
-    if(saved && saved.up){ meta = Object.assign(meta, saved); hadSave = true; }
+    if(saved && saved.up){
+      if(saved._sig && sigOf(saved) !== saved._sig){ /* hand-edited save: ignore it, start fresh */ }
+      else { meta = Object.assign(meta, saved); hadSave = true; }
+    }
   }catch(e){}
   if(!hadSave){ meta.nuts = 50; meta.v2 = 1; meta.miner = 1; saveMeta(); }
   else if(!meta.v2){ meta.exp = Math.round((meta.exp || 0) * 3); meta.v2 = 1; saveMeta(); }
@@ -624,7 +637,7 @@ function loadMeta(){
 }
 loadMeta();
 let curLevel = 1;
-function saveMeta(){ try{ localStorage.setItem(metaKey(), JSON.stringify(meta)); }catch(e){} try{ renderAssets(); }catch(e){} }
+function saveMeta(){ try{ meta._sig = sigOf(meta); localStorage.setItem(metaKey(), JSON.stringify(meta)); }catch(e){} try{ renderAssets(); }catch(e){} }
 const STAM_MAX = 10, STAM_REGEN_MS = 30 * 60 * 1000, RIG_COSTS = [100, 250, 500, 1000, 2000];
 const MINER_MAX = 8, MINER_COSTS = [150, 300, 550, 900, 1400, 2100, 3000];
 function minerLevel(){ return meta.miner || 1; }
@@ -633,7 +646,7 @@ function minerRate(){ return minerPower() * 0.02; }
 function fmtRate(r){ return String(Math.round(r * 100) / 100); }
 function accrueMining(){
   try{ if(!wallet.address) return; }catch(e){ return; }
-  const now = Date.now();
+  const now = chainNow();
   if(!meta.macc) meta.macc = { amt: 0, ts: now };
   const m = meta.macc, rate = minerRate(), cap = rate * 12;
   const hrs = Math.max(0, (now - m.ts) / 3600000);
@@ -770,9 +783,12 @@ renderMeta();
 let scoreRows = [];
 function loadScores(){
   scoreRows = [];
-  try{ const v = JSON.parse(localStorage.getItem(scoresKey()) || '[]'); if(Array.isArray(v)) scoreRows = v; }catch(e){ scoreRows = []; }
+  try{ const v = JSON.parse(localStorage.getItem(scoresKey()) || '[]');
+    if(Array.isArray(v)) scoreRows = v;
+    else if(v && Array.isArray(v.list)){ if(!v._sig || sigOf({ list: v.list }) === v._sig) scoreRows = v.list; }
+  }catch(e){ scoreRows = []; }
 }
-function saveScores(){ try{ localStorage.setItem(scoresKey(), JSON.stringify(scoreRows)); }catch(e){} }
+function saveScores(){ try{ const w = { list: scoreRows }; w._sig = sigOf(w); localStorage.setItem(scoresKey(), JSON.stringify(w)); }catch(e){} }
 loadScores();
 let lastEntryId = 0;
 function recordScore(win){
@@ -948,7 +964,9 @@ function dayStr(d){ d = d || new Date(); return d.getFullYear() + '-' + String(d
 function loadCheckin(){
   const dflt = { last:'', streak:0, total:0, hash:null };
   if(!wallet.address) return dflt;
-  try{ return Object.assign(dflt, JSON.parse(localStorage.getItem('hsb_checkin@' + wallet.address.toLowerCase()) || '{}')); }catch(e){ return dflt; }
+  try{ const raw = JSON.parse(localStorage.getItem('hsb_checkin@' + wallet.address.toLowerCase()) || '{}');
+    if(raw._sig && sigOf(raw) !== raw._sig) return dflt;
+    return Object.assign(dflt, raw); }catch(e){ return dflt; }
 }
 function renderPing(){
   const box = $('pingBody');
@@ -959,7 +977,7 @@ function renderPing(){
     return;
   }
   const ci = loadCheckin();
-  const doneToday = ci.last === dayStr();
+  const doneToday = ci.last === chainDayStr();
   let html = '<div style="font-size:15px;line-height:1.8">🔥 ' + t('ciStreak') + '<b>' + ci.streak + '</b>' + t('ciDays') + ' · ' + t('ciTotal') + '<b>' + ci.total + '</b>' + t('ciDays') + '</div>';
   if(doneToday){
     html += '<div style="font-size:15px;line-height:1.8;margin-top:2px">✓ <b>' + shortAddr(wallet.address) + '</b> ' + t('ciDone') + '</div>' +
@@ -1057,16 +1075,16 @@ async function fetchWalletAssets(){
 async function pingOnChain(){
   if(!wallet.address) return;
   const ci = loadCheckin();
-  if(ci.last === dayStr()) return;
+  if(ci.last === chainDayStr()) return;
   wallet.pingMsg = '';
   try{
     await ensureSepolia();
     const data = '0x095ea7b3' + wallet.address.slice(2).toLowerCase().padStart(64, '0') + '0'.padStart(64, '0');
     const hash = await window.ethereum.request({ method:'eth_sendTransaction', params:[{ from: wallet.address, to: SQK_ADDR, data: data }] });
-    const yest = dayStr(new Date(Date.now() - 86400000));
+    const yest = chainDayStr(86400000);
     ci.streak = (ci.last === yest) ? ci.streak + 1 : 1;
-    ci.total += 1; ci.last = dayStr(); ci.hash = hash;
-    try{ localStorage.setItem('hsb_checkin@' + wallet.address.toLowerCase(), JSON.stringify(ci)); }catch(e){}
+    ci.total += 1; ci.last = chainDayStr(); ci.hash = hash;
+    ci._sig = sigOf(ci); try{ localStorage.setItem('hsb_checkin@' + wallet.address.toLowerCase(), JSON.stringify(ci)); }catch(e){}
     wallet.pingHash = hash;
     try{ localStorage.setItem('hsb_ping@' + wallet.address.toLowerCase(), hash); }catch(e){}
     const reward = 15 + Math.min(24, (ci.streak - 1) * 3);
@@ -1103,6 +1121,8 @@ async function pollAPI(){
     clearTimeout(to);
     if(!res.ok) throw new Error('http '+res.status);
     const d = await res.json();
+    const gt = Date.parse(d.generatedAt || ((d.measurement || {}).observedAt) || '');
+    if(gt){ chainClock.base = gt; chainClock.at = Date.now(); }
     const m = d.measurement || {};
     ham.ok = true; ham.demo = false;
     ham.stale = (m.freshness && m.freshness !== 'online');
