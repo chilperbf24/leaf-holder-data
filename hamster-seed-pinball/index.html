@@ -125,6 +125,15 @@
   .uprow .nm { font-size:15.5px; font-weight:700; }
   .uprow .ds { font-size:13px; color:#9a6a30; }
   .uprow .pips { font-size:13px; color:#c97b1e; letter-spacing:2px; white-space:nowrap; }
+  .miner-box{ display:flex; gap:10px; align-items:center; background:linear-gradient(180deg,#3a2c17,#241a0d); color:#ffe9b0; border:2px solid #8a6a2f; border-radius:12px; padding:10px 12px; margin:10px 0 4px; }
+  .miner-box .nm{ font-weight:800; font-size:16px; color:#ffd968; }
+  .miner-box .ds{ font-size:12px; color:#e8cf96; margin-top:2px; line-height:1.45; }
+  .miner-box .mined-line{ font-size:13px; margin-top:5px; color:#fff3cf; }
+  .miner-box .mined-line b{ color:#7dff8a; font-size:16px; }
+  .mining-lamp{ color:#7dff8a; font-size:15px; text-shadow:0 0 8px #7dff8a; }
+  .miner-box .pips{ letter-spacing:2px; color:#ffd968; font-size:12px; }
+  .miner-box .miner-side{ margin-left:auto; text-align:right; display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
+  .claim-btn{ background:#57b24a; color:#fff; border:none; border-radius:8px; padding:3px 10px; font-weight:700; cursor:pointer; font-size:13px; }
   .uprow button { flex:none; font-size:14px; padding:8px 10px; border-radius:10px; }
   .uprow button.maxed { background:#e8d5ae; color:#9a6a30; }
   .mapbar { display:flex; gap:5px; margin-bottom:6px; flex-wrap:wrap; }
@@ -192,7 +201,8 @@
 <div class="uppanel">
     <h3 id="houseTitle">🏠 仓鼠小屋 · 升级（金瓜子在每局结算时按得分发放）</h3>
     <div id="upRows"></div>
-    <div id="ecoRows"></div>
+    <div id="minerBox" class="miner-box"></div>
+  <div id="ecoRows"></div>
   </div>
 
 <div class="uppanel" id="pingPanel">
@@ -392,7 +402,7 @@ zh: {
   stamLab:'⚡ 体力', stamNext:'下一点', stamFull:'已满',
   bNoStam:'⚡ 体力用完了，等恢复或用金瓜子补（小屋里买）— 每天签到也 +3 体力',
   rigName:'⛏ 矿场', rigDesc:'吱吱币获取 +10% / 级（花吱吱币升级）', rigBtn:'升级',
-  minerName:'🐹 仓鼠矿机', minerDesc:(p, r) => '算力 ' + p + ' · 每小时产 ' + r + ' 个吱吱币（离线也攒，最多攒 24 小时）',
+  minedNow:'已挖出', minerName:'🐹 仓鼠矿机', minerDesc:(p, r) => '算力 ' + p + ' · 每小时产 ' + r + ' 个吱吱币（离线也攒，最多攒 24 小时）',
   claimName:'📦 矿机产出', claimDesc:n => '已挖出 ' + n + ' 个吱吱币，等你领取', claimBtn:'领取',
   bMinerUp:(lv, p) => '🐹 矿机升到 Lv.' + lv + '！算力 ' + p, bClaim:n => '📦 领取矿机产出 +' + n + ' 吱吱币',
   chestName:'🎁 种子补给箱', chestDesc:'随机开出：金瓜子 / 体力 / 幸运铃铛，小概率大奖 100 🌰', chestBtn:'开箱 100 🪙',
@@ -459,7 +469,7 @@ en: {
   stamLab:'⚡ Energy', stamNext:'next in', stamFull:'full',
   bNoStam:'⚡ Out of energy — wait for regen or refill with Golden Seeds (Hamster House); daily check-in also gives +3',
   rigName:'⛏ Mining Rig', rigDesc:'+10% squeak coins gain / level (costs squeak coins)', rigBtn:'Upgrade',
-  minerName:'🐹 Hamster Miner', minerDesc:(p, r) => 'Power ' + p + ' · makes ' + r + ' Squeak Coins per hour (accrues offline too, up to 24h)',
+  minedNow:'Mined so far:', minerName:'🐹 Hamster Miner', minerDesc:(p, r) => 'Power ' + p + ' · makes ' + r + ' Squeak Coins per hour (accrues offline too, up to 24h)',
   claimName:'📦 Miner Output', claimDesc:n => n + ' Squeak Coins mined and waiting', claimBtn:'Claim',
   bMinerUp:(lv, p) => '🐹 Miner upgraded to Lv.' + lv + '! Power ' + p, bClaim:n => '📦 Claimed miner output +' + n + ' Squeak Coins',
   chestName:'🎁 Seed Supply Chest', chestDesc:'Random: Golden Seeds / Energy / Lucky Bell, small chance of a 100 🌰 jackpot', chestBtn:'Open 100 🪙',
@@ -691,9 +701,16 @@ function renderMeta(){
     : '<button data-eco="lamp">' + t('lampBtn') + '</button>';
   const swapStamBtn = stamFullNow ? '<button class="maxed" disabled>' + t('stamFull') + '</button>'
     : '<button data-eco="swapstam">' + t('swapStamBtn') + '</button>';
+  const minerEl = $('minerBox');
+  if(minerEl){ minerEl.innerHTML =
+    '<div class="mining-lamp">●</div><div class="miner-info"><div class="nm">' + t('minerName') + ' Lv.' + mLv + '</div>' +
+    '<div class="ds">' + t('minerDesc')(minerPower(), fmtRate(minerRate())) + '</div>' +
+    '<div class="mined-line">' + t('minedNow') + ' <b id="mineAcc">' + (((meta.macc && meta.macc.amt) || 0)).toFixed(2) + '</b> ' + t('mineWord') + (claimAmt >= 1 ? ' · <button class="claim-btn" data-eco="claim">' + t('claimBtn') + ' ' + claimAmt + '</button>' : '') + '</div></div>' +
+    '<div class="miner-side"><div class="pips">' + mPips + '</div>' + mBtn + '</div>';
+  }
   const ecoEl = $('ecoRows');
   if(ecoEl){ ecoEl.innerHTML = (
-    '<div class="uprow"><div class="info"><div class="nm">' + t('minerName') + '</div><div class="ds">' + t('minerDesc')(minerPower(), fmtRate(minerRate())) + '</div></div><div class="pips">' + mPips + '</div>' + mBtn + '</div>' + claimRow +
+    claimRow +
     '<div class="uprow"><div class="info"><div class="nm">' + t('chestName') + '</div><div class="ds">' + t('chestDesc') + '</div></div><div class="pips"></div><button data-eco="chest">' + t('chestBtn') + '</button></div>' +
     '<div class="uprow"><div class="info"><div class="nm">' + t('bellName') + '</div><div class="ds">' + t('bellDesc') + '</div></div><div class="pips"></div>' + bellBtn + '</div>' +
     '<div class="uprow"><div class="info"><div class="nm">' + t('swapStamName') + '</div><div class="ds">' + t('swapStamDesc') + '</div></div><div class="pips"></div>' + swapStamBtn + '</div>' +
@@ -711,6 +728,11 @@ function buyUpgrade(key){
   showBanner(t('bUpgraded')(LANG === 'en' ? u.nameEn : u.name, lv+1)); squeak();
   if(key === 'seeds' && balls.length===0 && !gameOver){ ballsLeft += 2; refreshHUD(); }
 }
+$('minerBox').addEventListener('click', e => {
+  const k = e.target && e.target.dataset ? e.target.dataset.eco : null;
+  if(k === 'minerup') buyMiner();
+  else if(k === 'claim') claimMining();
+});
 $('ecoRows').addEventListener('click', e => {
   const k = e.target && e.target.dataset ? e.target.dataset.eco : null;
   if(k === 'minerup'){ buyMiner();
@@ -751,6 +773,17 @@ $('ecoRows').addEventListener('click', e => {
   }
 });
 setInterval(renderStam, 1000);
+let lastClaimFloor = 0;
+setInterval(() => {
+  accrueMining();
+  const amt = (meta.macc && meta.macc.amt) || 0;
+  const el = document.getElementById('mineAcc');
+  if(el) el.textContent = amt.toFixed(2);
+  const lamp = document.querySelector('.mining-lamp');
+  if(lamp) lamp.style.opacity = (Math.floor(Date.now() / 600) % 2) ? '1' : '0.35';
+  if(Math.floor(amt) >= 1 && lastClaimFloor < 1) renderMeta();
+  lastClaimFloor = Math.floor(amt);
+}, 2000);
 $('upRows').addEventListener('click', e => {
   const k = e.target && e.target.dataset ? e.target.dataset.up : null;
   if(k) buyUpgrade(k);
